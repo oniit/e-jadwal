@@ -1,0 +1,31 @@
+{
+  "gedung": [
+    { "kode": "G-01", "nama": "Aula Utama" },
+    { "kode": "G-02", "nama": "Ruang Rapat A" },
+    { "kode": "G-03", "nama": "Ruang Rapat B" },
+    { "kode": "G-04", "nama": "Gedung Olahraga" }
+  ],
+  "barang": [
+    { "kode": "B-01", "nama": "Sofa", "total": "1" },
+    { "kode": "B-01", "nama": "Gong", "total": "1" },
+    { "kode": "B-02", "nama": "Meja Lipat", "total": "40" },
+    { "kode": "B-03", "nama": "Blower", "total": "4" },
+    { "kode": "B-04", "nama": "Kursi", "total": "150" }
+  ],
+  "kendaraan": [
+    { "kode": "K-01", "nama": "HIACE PREMIO", "detail": "11 penumpang" },
+    { "kode": "K-02", "nama": "HIACE COMMUTER", "detail": "15 penumpang" },
+    { "kode": "K-03", "nama": "ISUZU ELF KUNING", "detail": "19 penumpang" },
+    { "kode": "K-04", "nama": "HINO BRI", "detail": "29 penumpang" },
+    { "kode": "K-05", "nama": "HINO TAYO BRI", "detail": "24 penumpang" },
+    { "kode": "K-06", "nama": "HINO ADIPUTRO", "detail": "29 penumpang" },
+    { "kode": "K-07", "nama": "Pick Up Carry Suzuki", "detail": "khusus barang" },
+    { "kode": "K-08", "nama": "Viar Roda 3", "detail": "khusus wilayah kampus" },
+    { "kode": "K-09", "nama": "ISUZU ELF PUTIH", "detail": "19 penumpang" }
+  ],
+  "supir": [
+    { "kode": "S-01", "nama": "Budi Santoso" },
+    { "kode": "S-02", "nama": "Agus Wijaya" },
+    { "kode": "S-03", "nama": "Citra Lestari" }
+  ]
+}

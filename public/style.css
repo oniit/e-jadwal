@@ -1,0 +1,544 @@
+body {
+    color: #111827;
+    font-family: 'Inter', sans-serif;
+    background-color: #f9fafb;
+}
+
+.color-gedung {
+    color: #b8932f !important;
+}
+.color-kendaraan {
+    color: #166a4c !important;
+}
+
+.logo-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.tab-btn {
+    font-size: 1rem;
+    font-weight: 500;
+    padding: 0.75rem 1.5rem;
+    border-bottom-width: 2px;
+    border-color: transparent;
+    transition: all 0.2s;
+    border-radius: 0.5rem 0.5rem 0 0;
+    cursor: pointer;
+    background: none;
+    border: none;
+    color: #6b7280;
+}
+.tab-btn:hover {
+    background: #ffffff;
+}
+#tab-admin.active, #calendar-tab-gedung.active, #admin-tab-gedung.active {
+    background-color: #fffbee;
+    color: #b8932f;
+}
+#tab-kalender.active, #calendar-tab-kendaraan.active, #admin-tab-kendaraan.active {
+    background-color: #f0fff5;
+    color: #059669;
+}
+
+.add-btn {
+    color: white;
+    font-weight: 550;
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.5rem;
+    transition: background-color 0.2s;
+    background-color: #166a4c;
+    white-space: nowrap;
+    min-width: fit-content;
+}
+.add-btn:hover {
+    opacity: 0.9;
+}
+.btn {
+    padding: 0.5rem;
+    font-size: 17px;
+    display: inline-block;
+}
+.btn-edit {
+    color: #047857;
+}
+.btn-delete {
+    color: #b8932f;
+}
+.logout-btn {
+    position: fixed;
+    top: 2rem;
+    right: 2rem;
+    background-color: #ef4444;
+    color: white;
+    font-weight: 600;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.75rem;
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    z-index: 50;
+    transition: background-color 0.2s;
+}
+.logout-btn:hover {
+    background-color: #dc2626;
+}
+.form-input {
+    margin-top: 0.25rem;
+    display: block;
+    width: 100%;
+    border-radius: 0.5rem;
+    border: 1px solid #d1d5db;
+    font-size: 0.875rem;
+    padding: 0.25rem 0.5rem;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    background-color: white;
+}
+.form-input:focus {
+    box-shadow: 0 0 0 3px rgba(22, 106, 76, 0.1);
+    outline: none;
+}
+.filter-menu {
+    padding: 0.5rem;
+    font-size: 0.85rem;
+    border-radius: 0.5rem;
+    border: 1px solid #d1d5db;
+    background-color: white;
+    min-width: 0;
+}
+
+input[type="date"].filter-menu {
+    padding-right: 0.25rem;
+}
+
+.add-btn {
+    color: white;
+    font-weight: 550;
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.5rem;
+    transition: background-color 0.2s;
+    background-color: #166a4c;
+    white-space: nowrap;
+    min-width: fit-content;
+}
+
+.filter-panel {
+    display: grid;
+    gap: 0.5rem;
+    align-items: center;
+    background-color: #f3f4f6;
+    padding: 0.75rem;
+    border-radius: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.table-header {
+    padding: 1rem 1.5rem;
+    text-align: left;
+    font-size: 0.875rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #166a4c;
+}
+
+#gedung-list-table tr:hover, #kendaraan-list-table tr:hover {
+    background-color: #f3f4f6;
+}
+
+.modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background-color: rgba(17, 24, 39, 0.75);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    z-index: 50;
+    transition: opacity 0.3s ease-in-out;
+}
+.modal-backdrop.hidden {
+    opacity: 0 !important;
+    pointer-events: none !important;
+}
+.modal-content {
+    background: #fff;
+    border-radius: 1.5rem;
+    padding: 2.5rem;
+    min-width: 350px;
+    width: 900px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+    position: relative;
+    z-index: 51;
+    transition: transform 0.3s ease-in-out;
+}
+.modal-reset-btn {
+    position: absolute;
+    top: 2.5rem;
+    right: 5rem;
+    font-size: 1.5rem;
+    color: #166a4c;
+    cursor: pointer;
+    z-index: 52;
+}
+.modal-close-btn {
+    position: absolute;
+    top: 1.2rem;
+    right: 2.5rem;
+    font-size: 2.9rem;
+    color: #166a4c;
+    cursor: pointer;
+    z-index: 52;
+}
+.modal-content h3 {
+    color: #b8932f;
+    font-weight: bold;
+}
+
+.fc-event {
+    cursor: pointer;
+    font-weight: 500;
+    border: none !important;
+    border-radius: 0.5rem;
+    margin: 3px 0;
+    padding: 4px 8px !important;
+    min-height: 24px;
+    width: calc(100% - 4px) !important;
+}
+.fc-toolbar-title {
+    font-weight: bold;
+    color: #b8932f;
+}
+.fc-button {
+    background: #166a4c !important;
+    color: #fff;
+    border: none !important;
+}
+.fc-button:hover {
+    background: #145d3f !important;
+}
+.fc-daygrid-event {
+    color: #166a4c;
+    white-space: normal !important; /* Allow text wrapping */
+}
+
+/* Make sortable headers fit content */
+.sortable {
+    cursor: pointer !important;
+    transition: background-color 0.2s ease;
+    position: relative;
+    width: 1%; /* Set to minimum */
+    white-space: nowrap; /* Prevent text wrapping */
+}
+
+.sortable:hover {
+    background-color: rgba(22, 106, 76, 0.1);
+}
+.sort-icon {
+    display: inline-block;
+    margin-left: 5px;
+    align-items: center;
+    justify-content: center;
+    vertical-align: text-top;
+    position: relative;
+    font-size: 11px;
+    flex-shrink: 0;
+}
+
+/* Specific minimum widths for each column */
+.table-header[data-sort="gedung"],
+.table-header[data-sort="kendaraan"] {
+    min-width: 120px; /* Name column */
+}
+
+.table-header[data-sort="peminjam"],
+.table-header[data-sort="pemakai"] {
+    min-width: 100px; /* User column */
+}
+
+.table-header[data-sort="tanggal"] {
+    min-width: 80px; /* Date column */
+}
+
+.table-header[data-sort="barang"] {
+    min-width: 120px; /* Items column */
+}
+
+.table-header[data-sort="supir"] {
+    min-width: 80px; /* Driver column */
+}
+
+.table-header[data-sort="keterangan"] {
+    min-width: 100px; /* Notes column */
+}
+
+/* Last column (actions) */
+.table-header:last-child {
+    min-width: 80px;
+    width: 1%;
+    text-align: right;
+}
+
+/* Make table use fixed layout for more control */
+#admin-content-gedung table,
+#admin-content-kendaraan table {
+    table-layout: fixed;
+}
+
+/* Make table cells match column widths */
+#gedung-list-table td,
+#kendaraan-list-table td {
+    white-space: normal; /* Allow wrapping inside cells */
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+}
+
+/* Action buttons layout */
+#gedung-list-table td:last-child,
+#kendaraan-list-table td:last-child {
+    white-space: nowrap;
+    width: 80px;
+}
+
+/* Buttons for actions (edit/delete) */
+.btn {
+    padding: 0.5rem;
+    font-size: 17px;
+    display: inline-block;
+}
+
+.sort-asc {
+    background-color: rgba(22, 106, 76, 0.15);
+}
+.sort-desc {
+    background-color: rgba(22, 106, 76, 0.15);
+}
+.sortable::after {
+    display: none;
+}
+
+/* Mobile optimizations for calendar */
+@media (max-width: 767px) {
+    .fc .fc-toolbar {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .fc .fc-toolbar-title {
+        font-size: 1.1rem !important;
+        margin-bottom: 0.5rem;
+    }
+    
+    .fc .fc-button {
+        padding: 0.3rem 0.6rem !important;
+        font-size: 0.8rem !important;
+    }
+    
+    .fc .fc-daygrid-day-frame {
+        min-height: 60px; /* Ensure days have enough height */
+    }
+    
+    .fc-view-harness {
+        min-height: 400px; /* Ensure calendar has enough height */
+    }
+    
+    /* Improve day cell display */
+    .fc-daygrid-day-top {
+        justify-content: center;
+        margin-bottom: 3px;
+    }
+    
+    .fc-daygrid-day-number {
+        font-size: 0.9rem;
+        font-weight: 500;
+    }
+    
+    /* Make list view more compact and readable */
+    .fc-list-day-cushion {
+        padding: 6px 8px !important;
+    }
+    
+    .fc-list-event {
+        padding: 6px 0 !important;
+    }
+    
+    .fc-list-event-title {
+        font-weight: 500;
+    }
+    
+    /* Adjust event display specifically for mobile */
+    .fc-event {
+        padding: 2px 6px !important;
+        margin: 1px 0 !important;
+        max-width: none !important;
+    }
+}
+
+/* Calendar specific styles */
+.fc-header-toolbar {
+    flex-wrap: wrap !important;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem !important;
+}
+
+/* Calendar navigation buttons */
+.fc-prev-button, .fc-next-button, .fc-today-button {
+    margin: 0 !important;
+    padding: 0.3rem 0.6rem !important;
+}
+
+/* Calendar view buttons */
+.fc-button-group {
+    display: flex !important;
+}
+
+/* Make smaller calendar tabs for mobile */
+.tab-btn-cal {
+    font-size: 0.9rem;
+    font-weight: 500;
+    padding: 0.4rem 0.8rem;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    background: none;
+    border: none;
+    color: #6b7280;
+}
+
+.tab-btn-cal.active {
+    font-weight: 600;
+}
+
+#calendar-tab-gedung.active {
+    background-color: #fffbee;
+    color: #b8932f;
+}
+
+#calendar-tab-kendaraan.active {
+    background-color: #f0fff5;
+    color: #059669;
+}
+
+/* Calendar event styling */
+.fc-event {
+    cursor: pointer;
+    font-weight: 500;
+    border: none !important;
+    border-radius: 0.5rem;
+    margin: 3px 0;
+    padding: 4px 8px !important;
+    min-height: 24px;
+    width: calc(100% - 4px) !important;
+}
+
+.fc-daygrid-event {
+    color: #166a4c;
+    white-space: normal !important; /* Allow text wrapping */
+}
+
+.fc-event-title {
+    font-weight: 600;
+    overflow: visible !important;
+    white-space: normal !important;
+    display: block !important;
+    line-height: 1.3;
+}
+
+/* Make buttons appear in a single row on mobile */
+@media (max-width: 767px) {
+    .fc .fc-toolbar {
+        display: flex;
+        flex-direction: row !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+        flex-wrap: wrap !important;
+        gap: 0.25rem;
+    }
+    
+    .fc .fc-toolbar-title {
+        font-size: 1rem !important;
+        margin: 0 !important;
+    }
+    
+    /* Calendar navigation and view controls */
+    .fc-header-toolbar .fc-toolbar-chunk {
+        display: flex !important;
+        align-items: center !important;
+        margin: 0 !important;
+    }
+    
+    .fc-header-toolbar .fc-toolbar-chunk:nth-child(1) {
+        order: 1;
+    }
+    
+    .fc-header-toolbar .fc-toolbar-chunk:nth-child(2) {
+        order: 3;
+        width: 100%;
+        justify-content: center;
+        margin-top: 0.5rem !important;
+    }
+    
+    .fc-header-toolbar .fc-toolbar-chunk:nth-child(3) {
+        order: 2;
+    }
+    
+    /* Optimize button sizes */
+    .fc-button {
+        font-size: 0.8rem !important;
+        padding: 0.3rem 0.5rem !important;
+    }
+    
+    /* Calendar asset filter */
+    #calendar-asset-filter {
+        max-width: 150px;
+        font-size: 0.8rem;
+    }
+    
+    /* Calendar event display */
+    .fc-list-event td {
+        padding: 4px 6px !important;
+    }
+    
+    .fc-event-dot {
+        margin-right: 4px !important;
+    }
+}
+
+/* Extra styles for very small screens */
+@media (max-width: 480px) {
+    .fc-header-toolbar {
+        padding-left: 0.2rem;
+        padding-right: 0.2rem;
+    }
+    
+    .fc-button {
+        font-size: 0.75rem !important;
+        padding: 0.2rem 0.4rem !important;
+    }
+    
+    .fc-toolbar-title {
+        font-size: 0.9rem !important;
+        text-align: center;
+    }
+    
+    /* Ensure full width for mobile */
+    .fc-view-harness {
+        width: 100% !important;
+    }
+    
+    /* Even more compact on very small screens */
+    .btn {
+        padding: 0.25rem;
+        font-size: 14px;
+    }
+    
+    #gedung-list-table td,
+    #kendaraan-list-table td {
+        padding: 0.4rem 0.5rem !important;
+    }
+    
+    /* Ensure action buttons don't wrap */
+    #gedung-list-table td:last-child button,
+    #kendaraan-list-table td:last-child button {
+        margin: 0 !important;
+        padding: 0.2rem !important;
+    }
+}

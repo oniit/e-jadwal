@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Peminjaman Aset</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js'></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+    <div class="container mx-auto p-2 sm:p-4 md:p-10 max-w-full w-full">
+        <!-- Header & Logo -->
+        <header class="text-center mb-6">
+            <div class="logo-container flex flex-row items-center justify-center mb-2">
+                <img src="/logo.png" alt="Logo" class="w-11 h-11 sm:w-[70px] sm:h-[70px] mr-2 sm:mr-4 mt-2">
+                <div class="flex flex-col text-left">
+                    <h1 class="text-2xl sm:text-4xl font-bold mt-2 color-kendaraan">PGK Umum</h1>
+                    <p class="font-semibold color-gedung text-xs sm:text-sm">PEMINJAMAN GEDUNG DAN KENDARAAN</p>
+                </div>
+            </div>
+        </header>
+
+        <!-- Navigasi Tab Utama -->
+        <div class="mb-8 border-b border-gray-200">
+            <nav class="-mb-px flex flex-wrap space-x-2 sm:space-x-6 overflow-x-auto" aria-label="Tabs">
+                <button id="tab-admin" class="tab-btn active">
+                    <svg class="w-5 h-5 mr-2 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                    Panel Admin
+                </button>
+                <button id="tab-kalender" class="tab-btn">
+                    <svg class="w-5 h-5 mr-2 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                    Kalender Jadwal
+                </button>
+            </nav>
+        </div>
+
+        <main>
+            <!-- Konten Panel Admin -->
+            <div id="content-admin">
+                 <div class="bg-white p-2 sm:p-4 md:p-6 rounded-xl shadow-lg w-full">
+                    <div class="flex space-x-1 p-1 rounded-xl bg-gray-100 mb-6">
+                        <button id="admin-tab-gedung" class="tab-btn active">Gedung</button>
+                        <button id="admin-tab-kendaraan" class="tab-btn">Kendaraan</button>
+                    </div>
+
+                    <!-- Admin Gedung -->
+                    <div id="admin-content-gedung">
+                        <div id="filters-gedung" class="filter-panel grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 items-center mb-4">
+                            <div class="col-span-1">
+                                <input type="date" id="filter-gedung-start" class="filter-menu w-full" placeholder="Mulai">
+                            </div>
+                            <div class="col-span-1">
+                                <input type="date" id="filter-gedung-end" class="filter-menu w-full" placeholder="Selesai">
+                            </div>
+                            <div class="col-span-2 sm:col-span-1">
+                                <select id="filter-gedung-asset" class="filter-menu w-full"></select>
+                            </div>
+                            <div class="col-span-1 sm:col-span-2 lg:col-span-2 flex">
+                                <input type="text" id="filter-gedung-search" placeholder="Cari..." class="filter-menu flex-grow">
+                            </div>
+                            <div class="col-span-1 lg:col-span-1 flex justify-end">
+                                <button id="btn-add-gedung" class="add-btn px-2 sm:px-3 py-2 text-sm whitespace-nowrap">+ Tambah</button>
+                            </div>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200 rounded-lg overflow-hidden text-xs">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="table-header sortable" data-sort="gedung">
+                                            Nama Gedung <span class="sort-icon"><i class="fa fa-sort"></i></span>
+                                        </th>
+                                        <th class="table-header sortable" data-sort="peminjam">
+                                            Peminjam <span class="sort-icon"><i class="fa fa-sort"></i></span>
+                                        </th>
+                                        <th class="table-header sortable" data-sort="tanggal">
+                                            Tanggal <span class="sort-icon"><i class="fa fa-sort"></i></span>
+                                        </th>
+                                        <th class="table-header sortable" data-sort="barang">
+                                            Barang Dipinjam <span class="sort-icon"><i class="fa fa-sort"></i></span>
+                                        </th>
+                                        <th class="table-header text-right"></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="gedung-list-table" class="bg-white divide-y divide-gray-200"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Admin Kendaraan -->
+                    <div id="admin-content-kendaraan" class="hidden">
+                        <div id="filters-kendaraan" class="filter-panel grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 items-center mb-4">
+                            <div class="col-span-1">
+                                <input type="date" id="filter-kendaraan-start" class="filter-menu w-full" placeholder="Mulai">
+                            </div>
+                            <div class="col-span-1">
+                                <input type="date" id="filter-kendaraan-end" class="filter-menu w-full" placeholder="Selesai">
+                            </div>
+                            <div class="col-span-1">
+                                <select id="filter-kendaraan-asset" class="filter-menu w-full"></select>
+                            </div>
+                            <div class="col-span-1">
+                                <select id="filter-kendaraan-driver" class="filter-menu w-full"></select>
+                            </div>
+                            <div class="col-span-1 lg:col-span-1 flex">
+                                <input type="text" id="filter-kendaraan-search" placeholder="Cari..." class="filter-menu w-full">
+                            </div>
+                            <div class="col-span-1 flex justify-end">
+                                <button id="btn-add-kendaraan" class="add-btn px-2 sm:px-3 py-2 text-sm whitespace-nowrap">+ Tambah</button>
+                            </div>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200 rounded-lg overflow-hidden text-xs">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="table-header sortable" data-sort="kendaraan">
+                                            Nama Kendaraan <span class="sort-icon"><i class="fa fa-sort"></i></span>
+                                        </th>
+                                        <th class="table-header sortable" data-sort="pemakai">
+                                            Pemakai <span class="sort-icon"><i class="fa fa-sort"></i></span>
+                                        </th>
+                                        <th class="table-header sortable" data-sort="tanggal">
+                                            Tanggal <span class="sort-icon"><i class="fa fa-sort"></i></span>
+                                        </th>
+                                        <th class="table-header sortable" data-sort="supir">
+                                            Supir <span class="sort-icon"><i class="fa fa-sort"></i></span>
+                                        </th>
+                                        <th class="table-header sortable" data-sort="keterangan">
+                                            Keterangan <span class="sort-icon"><i class="fa fa-sort"></i></span>
+                                        </th>
+                                        <th class="table-header text-right"></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="kendaraan-list-table" class="bg-white divide-y divide-gray-200"></tbody>
+                            </table>
+                         </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Konten Kalender -->
+            <div id="content-kalender" class="hidden">
+                <div class="bg-white p-2 sm:p-4 md:p-6 rounded-xl shadow-lg w-full">
+                    <!-- Calendar header with filter in one row -->
+                    <div class="flex flex-wrap items-center justify-between mb-4 gap-2">
+                        <div class="flex items-center space-x-2">
+                            <div class="flex space-x-1 p-1 rounded-xl bg-gray-100">
+                                <button id="calendar-tab-gedung" class="tab-btn-cal active">Gedung</button>
+                                <button id="calendar-tab-kendaraan" class="tab-btn-cal">Kendaraan</button>
+                            </div>
+                        </div>
+                        <select id="calendar-asset-filter" class="filter-menu"></select>
+                    </div>
+                    <div id='calendar'></div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modals -->
+    <div id="modal-detail-event" class="modal-backdrop hidden">
+        <div class="modal-content max-w-xs sm:max-w-lg mx-auto">
+            <button class="modal-close-btn" >&times;</button>
+            <h3 id="modal-title" class="text-3xl font-bold mb-6">Detail Peminjaman</h3>
+            <div id="modal-body" class="space-y-4 text-gray-700"></div>
+        </div>
+    </div>
+    <div id="modal-form-gedung" class="modal-backdrop hidden">
+        <div class="modal-content max-w-xs sm:max-w-lg mx-auto">
+             <button class="modal-reset-btn"><i class="fas fa-rotate-left"></i></button>
+             <button class="modal-close-btn">&times;</button>
+             <h3 id="gedung-form-title" class="text-3xl font-bold mb-6">Form Peminjaman Gedung</h3>
+             <form id="form-gedung" class="space-y-4"></form>
+        </div>
+    </div>
+      <div id="modal-form-kendaraan" class="modal-backdrop hidden">
+         <div class="modal-content max-w-xs sm:max-w-lg mx-auto">
+             <button class="modal-reset-btn"><i class="fas fa-rotate-left"></i></button>
+             <button class="modal-close-btn">&times;</button>
+             <h3 id="kendaraan-form-title" class="text-3xl font-bold mb-6">Form Peminjaman Kendaraan</h3>
+             <form id="form-kendaraan" class="space-y-4"></form>
+         </div>
+     </div>
+
+    <script src="/script.js"></script>
+</body>
+</html>
