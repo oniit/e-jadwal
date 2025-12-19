@@ -51,6 +51,8 @@ function initializeApp() {
         assetNamaInput: document.getElementById('asset-nama'),
         assetTipeInput: document.getElementById('asset-tipe'),
         assetDetailInput: document.getElementById('asset-detail'),
+        assetNumInput: document.getElementById('asset-num'),
+        assetNumWrapper: document.getElementById('asset-num-wrapper'),
     };
     elements.allModals = [elements.modalFormGedung, elements.modalFormKendaraan, elements.modalDetailEvent, elements.modalAsset];
 
@@ -71,7 +73,7 @@ function initializeApp() {
                 throw new Error(error.message || 'Operasi gagal, server tidak merespon.');
             }
         },
-        fetchAssets: () => api.fetch('/api/assets'),
+        fetchAssets: () => api.fetch('/api/assets', { cache: 'no-store' }),
         fetchAllBookings: () => api.fetch('/api/bookings'),
         saveBooking: (data, id) => {
             const url = id ? `/api/bookings/${id}` : '/api/bookings';
@@ -308,7 +310,7 @@ function initializeApp() {
         }).sort((a, b) => a.nama.localeCompare(b.nama, 'id'));
 
         if (!filtered.length) {
-            elements.masterTable.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-gray-500">Belum ada data untuk filter ini.</td></tr>';
+            elements.masterTable.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-gray-500">Belum ada data untuk filter ini.</td></tr>';
             return;
         }
 
@@ -320,6 +322,7 @@ function initializeApp() {
                     <td class="${cellClass}">${asset.kode}</td>
                     <td class="${cellClass} font-medium text-gray-900">${asset.nama}</td>
                     <td class="${cellClass}"><span class="${badgeClass}">${asset.tipe}</span></td>
+                    <td class="${cellClass}">${asset.num ?? '-'}</td>
                     <td class="${cellClass}">${asset.detail || '-'}</td>
                     <td class="${cellClass} text-right">
                         <button title="Edit"><i class="fas fa-edit btn btn-edit" data-id="${asset._id}"></i></button>
@@ -330,6 +333,15 @@ function initializeApp() {
         }).join('');
     }
 
+    function setAssetNumVisibility(tipe) {
+        if (!elements.assetNumWrapper) return;
+        const show = tipe === 'barang' || tipe === 'kendaraan';
+        elements.assetNumWrapper.classList.toggle('hidden', !show);
+        if (elements.assetNumInput) {
+            elements.assetNumInput.placeholder = tipe === 'barang' ? 'Qty (misal: 40)' : 'Max penumpang (misal: 15)';
+        }
+    }
+
     function openAssetModal(asset = null) {
         if (!elements.formAsset || !elements.modalAsset) return;
         elements.formAsset.reset();
@@ -337,8 +349,10 @@ function initializeApp() {
         elements.assetKodeInput.value = asset?.kode || '';
         elements.assetNamaInput.value = asset?.nama || '';
         elements.assetTipeInput.value = asset?.tipe || 'gedung';
+        elements.assetNumInput.value = asset?.num ?? '';
         elements.assetDetailInput.value = asset?.detail || '';
         elements.assetFormTitle.innerText = asset ? 'Edit Aset' : 'Tambah Aset';
+        setAssetNumVisibility(elements.assetTipeInput.value);
         elements.modalAsset.classList.remove('hidden');
     }
 
@@ -350,7 +364,13 @@ function initializeApp() {
             nama: elements.assetNamaInput.value.trim(),
             tipe: elements.assetTipeInput.value,
             detail: elements.assetDetailInput.value.trim(),
+            num: elements.assetNumInput && elements.assetNumInput.value !== '' ? Number(elements.assetNumInput.value) : undefined,
         };
+
+        if (payload.num !== undefined && !Number.isFinite(payload.num)) {
+            alert('Nilai angka tidak valid.');
+            return;
+        }
 
         if (!payload.kode || !payload.nama) {
             alert('Kode dan Nama wajib diisi.');
@@ -908,6 +928,9 @@ function initializeApp() {
         }
         if (elements.formAsset) {
             elements.formAsset.addEventListener('submit', handleAssetSubmit);
+        }
+        if (elements.assetTipeInput) {
+            elements.assetTipeInput.addEventListener('change', (e) => setAssetNumVisibility(e.target.value));
         }
 
         if (elements.masterTable) {

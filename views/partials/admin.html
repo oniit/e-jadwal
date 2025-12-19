@@ -161,6 +161,7 @@
                                     <th class="table-header">Kode</th>
                                     <th class="table-header">Nama</th>
                                     <th class="table-header">Tipe</th>
+                                    <th class="table-header">Qty/Max</th>
                                     <th class="table-header">Detail</th>
                                     <th class="table-header text-right"></th>
                                 </tr>
@@ -197,6 +198,10 @@
                         <option value="supir">Supir</option>
                         <option value="barang">Barang</option>
                     </select>
+                </div>
+                <div id="asset-num-wrapper" class="hidden">
+                    <label for="asset-num" class="form-label text-sm">Qty / Max</label>
+                    <input id="asset-num" type="number" min="0" step="1" class="form-input" placeholder="Masukkan angka">
                 </div>
                 <div>
                     <label for="asset-detail" class="form-label text-sm">Detail (Opsional)</label>

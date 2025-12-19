@@ -37,6 +37,7 @@ const getAssets = async (_req, res) => {
             await seedAssetsFromFile();
             assets = await Asset.find({}).lean();
         }
+        res.set('Cache-Control', 'no-store');
         return res.json(groupAssets(assets));
     } catch (err) {
         console.error('[getAssets] Error:', err.message);
@@ -56,10 +57,16 @@ const createAsset = async (req, res) => {
             return res.status(400).json({ message: `Tipe harus salah satu dari: ${ALLOWED_TYPES.join(', ')}.` });
         }
 
+        const parsedNum = payload.num !== undefined && payload.num !== '' ? Number(payload.num) : undefined;
+        if (payload.num !== undefined && payload.num !== '' && !Number.isFinite(parsedNum)) {
+            return res.status(400).json({ message: 'Nilai angka tidak valid.' });
+        }
+
         const asset = new Asset({
             kode: payload.kode,
             nama: payload.nama,
             tipe,
+            num: Number.isFinite(parsedNum) ? parsedNum : undefined,
             detail: payload.detail || ''
         });
 
@@ -82,13 +89,29 @@ const updateAsset = async (req, res) => {
             return res.status(400).json({ message: `Tipe harus salah satu dari: ${ALLOWED_TYPES.join(', ')}.` });
         }
 
+        const parsedNum = payload.num !== undefined && payload.num !== '' ? Number(payload.num) : undefined;
+        if (payload.num !== undefined && payload.num !== '' && !Number.isFinite(parsedNum)) {
+            return res.status(400).json({ message: 'Nilai angka tidak valid.' });
+        }
+
+        const updateDoc = {};
+        if (payload.kode !== undefined) updateDoc.kode = payload.kode;
+        if (payload.nama !== undefined) updateDoc.nama = payload.nama;
+        if (payload.tipe !== undefined) updateDoc.tipe = String(payload.tipe).toLowerCase();
+        if (payload.detail !== undefined) updateDoc.detail = payload.detail;
+
+        const unsetDoc = {};
+        if (payload.num === '' || payload.num === null) {
+            unsetDoc.num = true;
+        } else if (payload.num !== undefined && Number.isFinite(parsedNum)) {
+            updateDoc.num = parsedNum;
+        }
+
         const updated = await Asset.findByIdAndUpdate(
             id,
             {
-                ...(payload.kode !== undefined && { kode: payload.kode }),
-                ...(payload.nama !== undefined && { nama: payload.nama }),
-                ...(payload.tipe !== undefined && { tipe: String(payload.tipe).toLowerCase() }),
-                ...(payload.detail !== undefined && { detail: payload.detail })
+                ...(Object.keys(updateDoc).length ? { $set: updateDoc } : {}),
+                ...(Object.keys(unsetDoc).length ? { $unset: unsetDoc } : {}),
             },
             { new: true, runValidators: true }
         );
