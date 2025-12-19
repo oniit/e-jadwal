@@ -1,37 +1,37 @@
 {
   "gedung": [
-    { "kode": "G-01", "nama": "Gedung ICC" },
-    { "kode": "G-02", "nama": "Gedung Siber Lt. 4" },
-    { "kode": "G-03", "nama": "Gedung Siber Lt. 5" },
-    { "kode": "G-03", "nama": "Gedung Siber Lt. 7" },
-    { "kode": "G-03", "nama": "Gedung Siber Lt. 8" },
-    { "kode": "G-03", "nama": "Gedung Puslab TV" },
-    { "kode": "G-03", "nama": "Gedung Puslab Musik" },
-    { "kode": "G-04", "nama": "Gedung Rektorat Lt. 3" }
+    { "kode": "G-101", "nama": "ICC" },
+    { "kode": "G-102", "nama": "Siber Lt. 4", "detail": "Tidak untuk mahasiswa" },
+    { "kode": "G-103", "nama": "Siber Lt. 5", "detail": "Tidak untuk mahasiswa" },
+    { "kode": "G-104", "nama": "Siber Lt. 7", "detail": "Tidak untuk mahasiswa" },
+    { "kode": "G-105", "nama": "Siber Lt. 8", "detail": "Tidak untuk mahasiswa" },
+    { "kode": "G-106", "nama": "Puslab TV" },
+    { "kode": "G-107", "nama": "Puslab Musik" },
+    { "kode": "G-108", "nama": "Rektorat Lt. 3", "detail": "Tidak untuk lomba" }
   ],
   "barang": [
-    { "kode": "B-01", "nama": "Sofa", "detail": "1" },
-    { "kode": "B-01", "nama": "Gong", "detail": "1" },
-    { "kode": "B-02", "nama": "Meja Lipat", "detail": "40" },
-    { "kode": "B-03", "nama": "Blower", "detail": "4" },
-    { "kode": "B-04", "nama": "Kursi", "detail": "150" }
+    { "kode": "B-101", "nama": "Sofa", "num": 1, "detail": "Set" },
+    { "kode": "B-102", "nama": "Gong", "num": 1, "detail": "Buah" },
+    { "kode": "B-103", "nama": "Meja Lipat", "num": 40, "detail": "Buah" },
+    { "kode": "B-104", "nama": "Blower", "num": 4, "detail": "Buah" },
+    { "kode": "B-105", "nama": "Kursi", "num": 150, "detail": "Buah" }
   ],
   "kendaraan": [
-    { "kode": "K-01", "nama": "HIACE PREMIO", "detail": "11 penumpang" },
-    { "kode": "K-02", "nama": "HIACE COMMUTER", "detail": "15 penumpang" },
-    { "kode": "K-03", "nama": "ISUZU ELF KUNING", "detail": "19 penumpang" },
-    { "kode": "K-04", "nama": "HINO BRI", "detail": "29 penumpang" },
-    { "kode": "K-05", "nama": "HINO TAYO BRI", "detail": "24 penumpang" },
-    { "kode": "K-06", "nama": "HINO ADIPUTRO", "detail": "29 penumpang" },
-    { "kode": "K-07", "nama": "Pick Up Carry Suzuki", "detail": "khusus barang" },
-    { "kode": "K-08", "nama": "Viar Roda 3", "detail": "khusus wilayah kampus" },
-    { "kode": "K-09", "nama": "ISUZU ELF PUTIH", "detail": "19 penumpang" }
+    { "kode": "E 7023 A", "nama": "HiAce Premio", "num": 11, "detail": "Penumpang" },
+    { "kode": "E 7024 A", "nama": "HiAce Commuter", "num": 15, "detail": "Penumpang" },
+    { "kode": "E 7269 A", "nama": "Isuzu Elf Kuning", "num": 19, "detail": "Penumpang" },
+    { "kode": "E 7035 A", "nama": "Isuzu Elf Putih", "num": 19, "detail": "Penumpang" },
+    { "kode": "E 7030 A", "nama": "Hino BRI", "num": 29, "detail": "Penumpang" },
+    { "kode": "E 7019 A", "nama": "Hino TAYO BRI", "num": 24, "detail": "Penumpang" },
+    { "kode": "E 7032 A", "nama": "Hino Adiputro", "num": 29, "detail": "Penumpang" },
+    { "kode": "E 8243 CA", "nama": "Pick Up Carry Suzuki", "detail": "Khusus barang" },
+    { "kode": "-", "nama": "Viar Roda 3", "detail": "Khusus wilayah kampus" }
   ],
   "supir": [
-    { "kode": "S-01", "nama": "Alfian" },
-    { "kode": "S-02", "nama": "Dudung" },
-    { "kode": "S-02", "nama": "Wawang" },
-    { "kode": "S-02", "nama": "Muksin" },
-    { "kode": "S-03", "nama": "Frenky" }
+    { "kode": "S-101", "nama": "Alfian", "detail": "081234567890" },
+    { "kode": "S-102", "nama": "Dudung", "detail": "081234567891" },
+    { "kode": "S-103", "nama": "Wawang", "detail": "081234567892" },
+    { "kode": "S-104", "nama": "Muksin", "detail": "081234567893" },
+    { "kode": "S-105", "nama": "Frenky", "detail": "081234567894" }
   ]
 }

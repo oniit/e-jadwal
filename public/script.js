@@ -1129,6 +1129,27 @@ function initializeApp() {
                     valueA = parseIndonesianDate(dateA);
                     valueB = parseIndonesianDate(dateB);
                     break;
+                case 'kode':
+                    valueA = rowA.cells[0].textContent.trim().toLowerCase();
+                    valueB = rowB.cells[0].textContent.trim().toLowerCase();
+                    break;
+                case 'nama':
+                    valueA = rowA.cells[1].textContent.trim().toLowerCase();
+                    valueB = rowB.cells[1].textContent.trim().toLowerCase();
+                    break;
+                case 'tipe':
+                    valueA = rowA.cells[2].textContent.trim().toLowerCase();
+                    valueB = rowB.cells[2].textContent.trim().toLowerCase();
+                    break;
+                case 'qty':
+                    // Parse numeric value for proper sorting
+                    valueA = parseInt(rowA.cells[3].textContent.trim()) || 0;
+                    valueB = parseInt(rowB.cells[3].textContent.trim()) || 0;
+                    break;
+                case 'detail':
+                    valueA = rowA.cells[4].textContent.trim().toLowerCase();
+                    valueB = rowB.cells[4].textContent.trim().toLowerCase();
+                    break;
                 default:
                     valueA = '';
                     valueB = '';
@@ -1138,6 +1159,8 @@ function initializeApp() {
             let comparison = 0;
             if (valueA instanceof Date && valueB instanceof Date) {
                 comparison = valueA - valueB; // Date comparison
+            } else if (typeof valueA === 'number' && typeof valueB === 'number') {
+                comparison = valueA - valueB; // Numeric comparison
             } else {
                 comparison = valueA.localeCompare(valueB, 'id'); // String comparison using Indonesian locale
             }
