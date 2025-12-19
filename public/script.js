@@ -12,9 +12,11 @@ function initializeApp() {
     const elements = {
         tabKalender: document.getElementById('tab-kalender'),
         tabAdmin: document.getElementById('tab-admin'),
+        tabMaster: document.getElementById('tab-master'),
         calendarEl: document.getElementById('calendar'),
         contentKalender: document.getElementById('content-kalender'),
         contentAdmin: document.getElementById('content-admin'),
+        contentMaster: document.getElementById('content-master'),
         calendarTabGedung: document.getElementById('calendar-tab-gedung'),
         calendarTabKendaraan: document.getElementById('calendar-tab-kendaraan'),
         adminTabGedung: document.getElementById('admin-tab-gedung'),
@@ -23,13 +25,19 @@ function initializeApp() {
         adminContentKendaraan: document.getElementById('admin-content-kendaraan'),
         btnAddGedung: document.getElementById('btn-add-gedung'),
         btnAddKendaraan: document.getElementById('btn-add-kendaraan'),
+        btnAddAsset: document.getElementById('btn-add-asset'),
         modalFormGedung: document.getElementById('modal-form-gedung'),
         modalFormKendaraan: document.getElementById('modal-form-kendaraan'),
         modalDetailEvent: document.getElementById('modal-detail-event'),
+        modalAsset: document.getElementById('modal-asset'),
         formGedung: document.getElementById('form-gedung'),
         formKendaraan: document.getElementById('form-kendaraan'),
+        formAsset: document.getElementById('form-asset'),
         gedungListTable: document.getElementById('gedung-list-table'),
         kendaraanListTable: document.getElementById('kendaraan-list-table'),
+        masterTable: document.getElementById('master-asset-table'),
+        masterFilterType: document.getElementById('master-filter-type'),
+        masterSearch: document.getElementById('master-search'),
         filtersGedung: document.getElementById('filters-gedung'),
         filtersKendaraan: document.getElementById('filters-kendaraan'),
         calendarAssetFilter: document.getElementById('calendar-asset-filter'),
@@ -37,8 +45,14 @@ function initializeApp() {
         modalBody: document.getElementById('modal-body'),
         gedungFormTitle: document.getElementById('gedung-form-title'),
         kendaraanFormTitle: document.getElementById('kendaraan-form-title'),
+        assetFormTitle: document.getElementById('asset-form-title'),
+        assetIdInput: document.getElementById('asset-id'),
+        assetKodeInput: document.getElementById('asset-kode'),
+        assetNamaInput: document.getElementById('asset-nama'),
+        assetTipeInput: document.getElementById('asset-tipe'),
+        assetDetailInput: document.getElementById('asset-detail'),
     };
-    elements.allModals = [elements.modalFormGedung, elements.modalFormKendaraan, elements.modalDetailEvent];
+    elements.allModals = [elements.modalFormGedung, elements.modalFormKendaraan, elements.modalDetailEvent, elements.modalAsset];
 
     // --- API HELPER ---
     const api = {
@@ -65,6 +79,12 @@ function initializeApp() {
             return api.fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
         },
         deleteBooking: (id) => api.fetch(`/api/bookings/${id}`, { method: 'DELETE' }),
+        saveAsset: (data, id) => {
+            const url = id ? `/api/assets/${id}` : '/api/assets';
+            const method = id ? 'PUT' : 'POST';
+            return api.fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+        },
+        deleteAsset: (id) => api.fetch(`/api/assets/${id}`, { method: 'DELETE' }),
     };
 
     // --- UI HELPER ---
@@ -269,6 +289,113 @@ function initializeApp() {
             backgroundColor: 'rgba(184, 147, 47, 0.3)',
         })
     };
+
+    const flattenAssets = () => {
+        if (!state.assets) return [];
+        const { gedung = [], kendaraan = [], supir = [], barang = [] } = state.assets;
+        return [...gedung, ...kendaraan, ...supir, ...barang];
+    };
+
+    function renderMasterTable() {
+        if (!elements.masterTable) return;
+        const typeFilter = elements.masterFilterType ? elements.masterFilterType.value : 'all';
+        const search = elements.masterSearch ? elements.masterSearch.value.trim().toLowerCase() : '';
+
+        const filtered = flattenAssets().filter((asset) => {
+            const matchType = typeFilter === 'all' || asset.tipe === typeFilter;
+            const matchSearch = !search || asset.kode.toLowerCase().includes(search) || asset.nama.toLowerCase().includes(search);
+            return matchType && matchSearch;
+        }).sort((a, b) => a.nama.localeCompare(b.nama, 'id'));
+
+        if (!filtered.length) {
+            elements.masterTable.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-gray-500">Belum ada data untuk filter ini.</td></tr>';
+            return;
+        }
+
+        elements.masterTable.innerHTML = filtered.map((asset) => {
+            const cellClass = "px-4 py-3 whitespace-nowrap text-sm text-gray-700";
+            const badgeClass = "inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700";
+            return `
+                <tr class="table-row" data-asset-id="${asset._id}">
+                    <td class="${cellClass}">${asset.kode}</td>
+                    <td class="${cellClass} font-medium text-gray-900">${asset.nama}</td>
+                    <td class="${cellClass}"><span class="${badgeClass}">${asset.tipe}</span></td>
+                    <td class="${cellClass}">${asset.detail || '-'}</td>
+                    <td class="${cellClass} text-right">
+                        <button title="Edit"><i class="fas fa-edit btn btn-edit" data-id="${asset._id}"></i></button>
+                        <button title="Hapus"><i class="fas fa-trash btn btn-delete" data-id="${asset._id}"></i></button>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    }
+
+    function openAssetModal(asset = null) {
+        if (!elements.formAsset || !elements.modalAsset) return;
+        elements.formAsset.reset();
+        elements.assetIdInput.value = asset?._id || '';
+        elements.assetKodeInput.value = asset?.kode || '';
+        elements.assetNamaInput.value = asset?.nama || '';
+        elements.assetTipeInput.value = asset?.tipe || 'gedung';
+        elements.assetDetailInput.value = asset?.detail || '';
+        elements.assetFormTitle.innerText = asset ? 'Edit Aset' : 'Tambah Aset';
+        elements.modalAsset.classList.remove('hidden');
+    }
+
+    async function handleAssetSubmit(event) {
+        event.preventDefault();
+        const id = elements.assetIdInput.value || null;
+        const payload = {
+            kode: elements.assetKodeInput.value.trim(),
+            nama: elements.assetNamaInput.value.trim(),
+            tipe: elements.assetTipeInput.value,
+            detail: elements.assetDetailInput.value.trim(),
+        };
+
+        if (!payload.kode || !payload.nama) {
+            alert('Kode dan Nama wajib diisi.');
+            return;
+        }
+
+        try {
+            await api.saveAsset(payload, id);
+            alert(`Aset berhasil ${id ? 'diperbarui' : 'ditambahkan'}.`);
+            elements.modalAsset.classList.add('hidden');
+            await refreshAssets();
+        } catch (error) {
+            alert(`Gagal menyimpan aset: ${error.message}`);
+        }
+    }
+
+    async function handleAssetDelete(id) {
+        if (!id) return;
+        if (!confirm('Hapus aset ini? Data yang berkaitan tidak akan otomatis diperbarui.')) return;
+        try {
+            await api.deleteAsset(id);
+            alert('Aset berhasil dihapus.');
+            await refreshAssets();
+        } catch (error) {
+            alert(`Gagal menghapus aset: ${error.message}`);
+        }
+    }
+
+    async function refreshAssets(prefetched = null) {
+        const assets = prefetched || await api.fetchAssets();
+        state.assets = assets || { gedung: [], kendaraan: [], supir: [], barang: [] };
+
+        if (elements.formGedung && elements.formKendaraan) {
+            ui.populateDropdowns(state.assets, {});
+        }
+        if (elements.calendarAssetFilter) {
+            ui.populateCalendarFilter(state.currentCalendarView, state.assets);
+        }
+        if (elements.filtersGedung && elements.filtersKendaraan) {
+            ui.populateAdminFilters('gedung', state.assets);
+            ui.populateAdminFilters('kendaraan', state.assets);
+        }
+
+        renderMasterTable();
+    }
 
     // --- INISIALISASI KALENDER ---
     let calendar = null;
@@ -609,16 +736,24 @@ function initializeApp() {
         if (elements.contentAdmin) {
             elements.contentAdmin.classList.toggle('hidden', tabName !== 'admin');
         }
+        if (elements.contentMaster) {
+            elements.contentMaster.classList.toggle('hidden', tabName !== 'master');
+        }
         if (elements.tabKalender) {
             elements.tabKalender.classList.toggle('active', tabName === 'kalender');
         }
         if (elements.tabAdmin) {
             elements.tabAdmin.classList.toggle('active', tabName === 'admin');
         }
+        if (elements.tabMaster) {
+            elements.tabMaster.classList.toggle('active', tabName === 'master');
+        }
         if (tabName === 'admin') {
             if (elements.filtersGedung) applyAdminFilters('gedung');
             if (elements.filtersKendaraan) applyAdminFilters('kendaraan');
             if (elements.adminTabGedung) switchAdminTab('gedung');
+        } else if (tabName === 'master') {
+            renderMasterTable();
         } else if (tabName === 'kalender' && calendar && calendar.updateSize) {
             setTimeout(() => calendar.updateSize(), 1);
         }
@@ -695,27 +830,14 @@ function initializeApp() {
             }
         }
         
-        // Wait for assets
-        state.assets = await assetsPromise;
-        
         // Only render forms if we're on admin page
         if (elements.formGedung && elements.formKendaraan) {
             ui.renderForms();
         }
-        
-        if(state.assets) {
-            if (elements.formGedung && elements.formKendaraan) {
-                ui.populateDropdowns(state.assets, {});
-            }
-            if (elements.calendarAssetFilter) {
-                ui.populateCalendarFilter('gedung', state.assets);
-            }
-            if (elements.filtersGedung && elements.filtersKendaraan) {
-                ui.populateAdminFilters('gedung', state.assets);
-                ui.populateAdminFilters('kendaraan', state.assets);
-            }
-        }
-        
+        // Wait for assets then render dependent UI
+        const initialAssets = await assetsPromise;
+        await refreshAssets(initialAssets);
+
         // Load data - await to ensure UI is populated
         await refreshDataAndUI(true);
         
@@ -744,6 +866,9 @@ function initializeApp() {
         }
         if (elements.tabAdmin) {
             elements.tabAdmin.addEventListener('click', () => switchMainTab('admin'));
+        }
+        if (elements.tabMaster) {
+            elements.tabMaster.addEventListener('click', () => switchMainTab('master'));
         }
         if (elements.calendarTabGedung) {
             elements.calendarTabGedung.addEventListener('click', () => switchCalendarTab('gedung'));
@@ -776,6 +901,34 @@ function initializeApp() {
                 ui.populateDropdowns(state.assets, {});
                 elements.modalFormKendaraan.classList.remove('hidden');
             });
+        }
+
+        if (elements.btnAddAsset) {
+            elements.btnAddAsset.addEventListener('click', () => openAssetModal());
+        }
+        if (elements.formAsset) {
+            elements.formAsset.addEventListener('submit', handleAssetSubmit);
+        }
+
+        if (elements.masterTable) {
+            elements.masterTable.addEventListener('click', (e) => {
+                const editBtn = e.target.closest('.btn-edit');
+                const deleteBtn = e.target.closest('.btn-delete');
+                const row = e.target.closest('tr[data-asset-id]');
+                if (editBtn && row) {
+                    const asset = flattenAssets().find((a) => a._id === editBtn.dataset.id || a._id === row.dataset.assetId);
+                    openAssetModal(asset);
+                } else if (deleteBtn && row) {
+                    handleAssetDelete(deleteBtn.dataset.id || row.dataset.assetId);
+                }
+            });
+        }
+
+        if (elements.masterFilterType) {
+            elements.masterFilterType.addEventListener('change', renderMasterTable);
+        }
+        if (elements.masterSearch) {
+            elements.masterSearch.addEventListener('input', renderMasterTable);
         }
 
         elements.allModals = elements.allModals.filter(m => m !== null);

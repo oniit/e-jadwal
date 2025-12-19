@@ -18,6 +18,10 @@
                     <svg class="w-5 h-5 mr-2 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
                     Panel Admin
                 </button>
+                <button id="tab-master" class="tab-btn">
+                    <svg class="w-5 h-5 mr-2 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2h-3.586a1 1 0 01-.707-.293l-1.414-1.414A1 1 0 0010.586 5H7a2 2 0 00-2 2v2"></path></svg>
+                    Master Data
+                </button>
                 <button id="tab-kalender" class="tab-btn">
                     <svg class="w-5 h-5 mr-2 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                     Kalender Jadwal
@@ -134,8 +138,73 @@
                 </div>
             </div>
 
+            <div id="content-master" class="hidden">
+                <div class="bg-white p-2 sm:p-4 md:p-6 rounded-xl shadow-lg w-full">
+                    <div class="flex flex-wrap items-center justify-between mb-4 gap-2">
+                        <div class="flex flex-wrap gap-2 items-center">
+                            <select id="master-filter-type" class="filter-menu">
+                                <option value="all">Semua Tipe</option>
+                                <option value="gedung">Gedung</option>
+                                <option value="kendaraan">Kendaraan</option>
+                                <option value="supir">Supir</option>
+                                <option value="barang">Barang</option>
+                            </select>
+                            <input id="master-search" type="text" class="filter-menu" placeholder="Cari kode / nama...">
+                        </div>
+                        <button id="btn-add-asset" class="add-btn px-2 sm:px-3 py-2 text-sm whitespace-nowrap">+ Tambah Aset</button>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200 rounded-lg overflow-hidden text-xs">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="table-header">Kode</th>
+                                    <th class="table-header">Nama</th>
+                                    <th class="table-header">Tipe</th>
+                                    <th class="table-header">Detail</th>
+                                    <th class="table-header text-right"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="master-asset-table" class="bg-white divide-y divide-gray-200"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
             <div id="jadwal-container"></div>
         </main>
+    </div>
+
+    <div id="modal-asset" class="modal-backdrop hidden">
+        <div class="modal-content max-w-xs sm:max-w-lg mx-auto">
+            <button class="modal-close-btn">&times;</button>
+            <h3 id="asset-form-title" class="text-2xl font-bold mb-4">Tambah Aset</h3>
+            <form id="form-asset" class="space-y-4">
+                <input type="hidden" id="asset-id">
+                <div>
+                    <label for="asset-kode" class="form-label text-sm">Kode</label>
+                    <input id="asset-kode" type="text" required class="form-input" placeholder="Misal: G-01">
+                </div>
+                <div>
+                    <label for="asset-nama" class="form-label text-sm">Nama</label>
+                    <input id="asset-nama" type="text" required class="form-input" placeholder="Nama aset">
+                </div>
+                <div>
+                    <label for="asset-tipe" class="form-label text-sm">Tipe</label>
+                    <select id="asset-tipe" required class="form-input">
+                        <option value="gedung">Gedung</option>
+                        <option value="kendaraan">Kendaraan</option>
+                        <option value="supir">Supir</option>
+                        <option value="barang">Barang</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="asset-detail" class="form-label text-sm">Detail (Opsional)</label>
+                    <input id="asset-detail" type="text" class="form-input" placeholder="Kapasitas / keterangan lain">
+                </div>
+                <button type="submit" class="w-full add-btn">Simpan Aset</button>
+            </form>
+        </div>
     </div>
 
     <script src="/loader.js"></script>
