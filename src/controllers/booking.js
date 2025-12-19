@@ -9,22 +9,18 @@ const getAllBookings = async (req, res) => {
     }
 };
 
-// --- FUNGSI HELPER UNTUK VALIDASI ---
 const checkConflict = async (bookingData, id = null) => {
     const { startDate, endDate, assetCode, driverName, bookingType } = bookingData;
 
-    // Kriteria dasar untuk mencari konflik
     const conflictQuery = {
         startDate: { $lt: new Date(endDate) },
         endDate: { $gt: new Date(startDate) },
     };
 
-    // Jika sedang mengedit, abaikan data itu sendiri dari pengecekan
     if (id) {
         conflictQuery._id = { $ne: id };
     }
 
-    // Kriteria spesifik: aset yang sama ATAU supir yang sama
     const specificCriteria = [{ assetCode: assetCode }];
     if (bookingType === 'kendaraan' && driverName && driverName !== 'Tanpa Supir') {
         specificCriteria.push({ driverName: driverName });
@@ -41,7 +37,7 @@ const checkConflict = async (bookingData, id = null) => {
             return `Supir "${driverName}" sudah bertugas pada rentang waktu tersebut.`;
         }
     }
-    return null; // Tidak ada konflik
+    return null;
 };
 
 
@@ -66,7 +62,7 @@ const updateBooking = async (req, res) => {
 
         const conflictMessage = await checkConflict(req.body, id);
         if (conflictMessage) {
-            return res.status(409).json({ message: conflictMessage }); // 409 Conflict
+            return res.status(409).json({ message: conflictMessage });
         }
 
         const updatedBooking = await Booking.findByIdAndUpdate(id, req.body, { new: true, runValidators: true });
