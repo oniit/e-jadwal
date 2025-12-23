@@ -6,10 +6,10 @@ services:
     container_name: e-jadwal_app_dev
     command: npm run dev
     ports:
-      - "3000:3000"
+      - "${PORT}:${PORT}"
     environment:
       - MONGO_URI=mongodb://db:27017/e-jadwal
-      - PORT=3000
+      - PORT=${PORT}
     volumes:
       - .:/app
       - /app/node_modules
