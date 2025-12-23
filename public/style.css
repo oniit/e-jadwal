@@ -17,6 +17,137 @@ body {
     justify-content: center;
 }
 
+.filter-menu {
+    padding: 0.5rem;
+    font-size: 0.85rem;
+    border-radius: 0.5rem;
+    border: 1px solid #d1d5db;
+    background-color: white;
+    min-width: 0;
+}
+
+#calendar-tab-gedung.active {
+    background-color: #fffbee;
+    color: #b8932f;
+}
+#calendar-tab-kendaraan.active {
+    background-color: #f0fff5;
+    color: #059669;
+}
+
+.fc-event {
+    cursor: pointer;
+    font-weight: 500;
+    border: none !important;
+    border-radius: 0.5rem;
+    margin: 3px 0;
+    padding: 4px 8px !important;
+    min-height: 24px;
+    width: calc(100% - 4px) !important;
+}
+.fc-toolbar-title {
+    font-weight: bold;
+    color: #b8932f;
+}
+.fc-button {
+    background: #166a4c !important;
+    color: #fff;
+    border: none !important;
+}
+.fc-button:hover {
+    background: #145d3f !important;
+}
+.fc-daygrid-event {
+    color: #166a4c;
+    white-space: normal !important; /* Allow text wrapping */
+}
+.fc-event-title {
+    font-weight: 600;
+    overflow: visible !important;
+    white-space: normal !important;
+    display: block !important;
+    line-height: 1.3;
+}
+
+.fc-header-toolbar {
+    flex-wrap: wrap !important;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem !important;
+}
+
+.fc-prev-button, .fc-next-button, .fc-today-button {
+    margin: 0 !important;
+    padding: 0.3rem 0.6rem !important;
+}
+
+.fc-button-group {
+    display: flex !important;
+}
+
+.tab-btn-cal {
+    font-size: 0.9rem;
+    font-weight: 500;
+    padding: 0.4rem 0.8rem;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    background: none;
+    border: none;
+    color: #6b7280;
+}
+
+.tab-btn-cal.active {
+    font-weight: 600;
+}
+
+.modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background-color: rgba(17, 24, 39, 0.75);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    z-index: 50;
+    transition: opacity 0.3s ease-in-out;
+}
+.modal-backdrop.hidden {
+    opacity: 0 !important;
+    pointer-events: none !important;
+}
+.modal-content {
+    background: #fff;
+    border-radius: 1.5rem;
+    padding: 2.5rem;
+    min-width: 350px;
+    width: 900px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+    position: relative;
+    z-index: 51;
+    transition: transform 0.3s ease-in-out;
+}
+.modal-content h3 {
+    color: #b8932f;
+    font-weight: bold;
+}
+.modal-close-btn {
+    position: absolute;
+    top: 1.2rem;
+    right: 2.5rem;
+    font-size: 2.9rem;
+    color: #166a4c;
+    cursor: pointer;
+    z-index: 52;
+}
+.modal-reset-btn {
+    position: absolute;
+    top: 2.5rem;
+    right: 5rem;
+    font-size: 1.5rem;
+    color: #166a4c;
+    cursor: pointer;
+    z-index: 52;
+}
+
 .tab-btn {
     font-size: 1rem;
     font-weight: 500;
@@ -33,11 +164,11 @@ body {
 .tab-btn:hover {
     background: #ffffff;
 }
-#tab-admin.active, #calendar-tab-gedung.active, #admin-tab-gedung.active {
+#tab-admin.active, #admin-tab-gedung.active {
     background-color: #fffbee;
     color: #b8932f;
 }
-#tab-kalender.active, #calendar-tab-kendaraan.active, #admin-tab-kendaraan.active {
+#tab-master.active, #admin-tab-kendaraan.active {
     background-color: #f0fff5;
     color: #059669;
 }
@@ -97,14 +228,6 @@ body {
     box-shadow: 0 0 0 3px rgba(22, 106, 76, 0.1);
     outline: none;
 }
-.filter-menu {
-    padding: 0.5rem;
-    font-size: 0.85rem;
-    border-radius: 0.5rem;
-    border: 1px solid #d1d5db;
-    background-color: white;
-    min-width: 0;
-}
 
 input[type="date"].filter-menu {
     padding-right: 0.25rem;
@@ -145,89 +268,12 @@ input[type="date"].filter-menu {
     background-color: #f3f4f6;
 }
 
-.modal-backdrop {
-    position: fixed;
-    inset: 0;
-    background-color: rgba(17, 24, 39, 0.75);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 1rem;
-    z-index: 50;
-    transition: opacity 0.3s ease-in-out;
-}
-.modal-backdrop.hidden {
-    opacity: 0 !important;
-    pointer-events: none !important;
-}
-.modal-content {
-    background: #fff;
-    border-radius: 1.5rem;
-    padding: 2.5rem;
-    min-width: 350px;
-    width: 900px;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.2);
-    position: relative;
-    z-index: 51;
-    transition: transform 0.3s ease-in-out;
-}
-.modal-reset-btn {
-    position: absolute;
-    top: 2.5rem;
-    right: 5rem;
-    font-size: 1.5rem;
-    color: #166a4c;
-    cursor: pointer;
-    z-index: 52;
-}
-.modal-close-btn {
-    position: absolute;
-    top: 1.2rem;
-    right: 2.5rem;
-    font-size: 2.9rem;
-    color: #166a4c;
-    cursor: pointer;
-    z-index: 52;
-}
-.modal-content h3 {
-    color: #b8932f;
-    font-weight: bold;
-}
-
-.fc-event {
-    cursor: pointer;
-    font-weight: 500;
-    border: none !important;
-    border-radius: 0.5rem;
-    margin: 3px 0;
-    padding: 4px 8px !important;
-    min-height: 24px;
-    width: calc(100% - 4px) !important;
-}
-.fc-toolbar-title {
-    font-weight: bold;
-    color: #b8932f;
-}
-.fc-button {
-    background: #166a4c !important;
-    color: #fff;
-    border: none !important;
-}
-.fc-button:hover {
-    background: #145d3f !important;
-}
-.fc-daygrid-event {
-    color: #166a4c;
-    white-space: normal !important; /* Allow text wrapping */
-}
-
-/* Make sortable headers fit content */
 .sortable {
     cursor: pointer !important;
     transition: background-color 0.2s ease;
     position: relative;
-    width: 1%; /* Set to minimum */
-    white-space: nowrap; /* Prevent text wrapping */
+    width: 1%;
+    white-space: nowrap;
 }
 
 .sortable:hover {
@@ -271,39 +317,28 @@ input[type="date"].filter-menu {
     min-width: 100px; /* Notes column */
 }
 
-/* Last column (actions) */
 .table-header:last-child {
     min-width: 80px;
     width: 1%;
     text-align: right;
 }
 
-/* Make table use fixed layout for more control */
 #admin-content-gedung table,
 #admin-content-kendaraan table {
     table-layout: fixed;
 }
 
-/* Make table cells match column widths */
 #gedung-list-table td,
 #kendaraan-list-table td {
-    white-space: normal; /* Allow wrapping inside cells */
+    white-space: normal;
     overflow-wrap: break-word;
     word-wrap: break-word;
 }
 
-/* Action buttons layout */
 #gedung-list-table td:last-child,
 #kendaraan-list-table td:last-child {
     white-space: nowrap;
     width: 80px;
-}
-
-/* Buttons for actions (edit/delete) */
-.btn {
-    padding: 0.5rem;
-    font-size: 17px;
-    display: inline-block;
 }
 
 .sort-asc {
@@ -316,193 +351,114 @@ input[type="date"].filter-menu {
     display: none;
 }
 
-/* Mobile optimizations for calendar */
 @media (max-width: 767px) {
-    .fc .fc-toolbar {
-        flex-direction: column;
-        gap: 0.5rem;
+    .logo-img {
+        margin-right: 0.35rem;
+        height: 24px !important;
+    }
+
+    .logo-title {
+        margin-top: 0.525rem !important;
+    }
+
+    .logo-tagline {
+        font-size: 0.65rem !important;
+        padding-top: 0.1rem !important;
+    }
+
+    #calendar-asset-filter, 
+    .fc-event, .fc-daygrid-day-number, 
+    .fc-col-header-cell-cushion,
+    .fc-list-day-cushion, .tab-btn-cal {
+        font-size: 0.7rem;
     }
     
-    .fc .fc-toolbar-title {
-        font-size: 1.1rem !important;
-        margin-bottom: 0.5rem;
-    }
-    
-    .fc .fc-button {
-        padding: 0.3rem 0.6rem !important;
-        font-size: 0.8rem !important;
-    }
-    
-    .fc .fc-daygrid-day-frame {
-        min-height: 60px; /* Ensure days have enough height */
-    }
-    
-    .fc-view-harness {
-        min-height: 400px; /* Ensure calendar has enough height */
-    }
-    
-    /* Improve day cell display */
-    .fc-daygrid-day-top {
-        justify-content: center;
-        margin-bottom: 3px;
-    }
-    
-    .fc-daygrid-day-number {
-        font-size: 0.9rem;
-        font-weight: 500;
-    }
-    
-    /* Make list view more compact and readable */
-    .fc-list-day-cushion {
-        padding: 6px 8px !important;
-    }
-    
-    .fc-list-event {
-        padding: 6px 0 !important;
-    }
-    
-    .fc-list-event-title {
-        font-weight: 500;
-    }
-    
-    /* Adjust event display specifically for mobile */
     .fc-event {
         padding: 2px 6px !important;
         margin: 1px 0 !important;
-        max-width: none !important;
     }
-}
 
-/* Calendar specific styles */
-.fc-header-toolbar {
-    flex-wrap: wrap !important;
-    gap: 0.5rem;
-    margin-bottom: 0.5rem !important;
-}
-
-/* Calendar navigation buttons */
-.fc-prev-button, .fc-next-button, .fc-today-button {
-    margin: 0 !important;
-    padding: 0.3rem 0.6rem !important;
-}
-
-/* Calendar view buttons */
-.fc-button-group {
-    display: flex !important;
-}
-
-/* Make smaller calendar tabs for mobile */
-.tab-btn-cal {
-    font-size: 0.9rem;
-    font-weight: 500;
-    padding: 0.4rem 0.8rem;
-    border-radius: 0.5rem;
-    cursor: pointer;
-    background: none;
-    border: none;
-    color: #6b7280;
-}
-
-.tab-btn-cal.active {
-    font-weight: 600;
-}
-
-#calendar-tab-gedung.active {
-    background-color: #fffbee;
-    color: #b8932f;
-}
-
-#calendar-tab-kendaraan.active {
-    background-color: #f0fff5;
-    color: #059669;
-}
-
-/* Calendar event styling */
-.fc-event {
-    cursor: pointer;
-    font-weight: 500;
-    border: none !important;
-    border-radius: 0.5rem;
-    margin: 3px 0;
-    padding: 4px 8px !important;
-    min-height: 24px;
-    width: calc(100% - 4px) !important;
-}
-
-.fc-daygrid-event {
-    color: #166a4c;
-    white-space: normal !important; /* Allow text wrapping */
-}
-
-.fc-event-title {
-    font-weight: 600;
-    overflow: visible !important;
-    white-space: normal !important;
-    display: block !important;
-    line-height: 1.3;
-}
-
-/* Make buttons appear in a single row on mobile */
-@media (max-width: 767px) {
-    .fc .fc-toolbar {
-        display: flex;
-        flex-direction: row !important;
-        justify-content: space-between !important;
-        align-items: center !important;
-        flex-wrap: wrap !important;
-        gap: 0.25rem;
+    .mb-6 {
+        margin-bottom: 0.7rem !important;
     }
-    
-    .fc .fc-toolbar-title {
-        font-size: 1rem !important;
-        margin: 0 !important;
+
+    .mb-4 {
+        margin-bottom: 0.5rem !important;
     }
-    
-    /* Calendar navigation and view controls */
-    .fc-header-toolbar .fc-toolbar-chunk {
-        display: flex !important;
-        align-items: center !important;
-        margin: 0 !important;
+
+    /* Admin Panel */
+    .tab-btn {
+        font-size: 0.85rem;
+        padding: 0.5rem 0.75rem;
     }
-    
-    .fc-header-toolbar .fc-toolbar-chunk:nth-child(1) {
-        order: 1;
-    }
-    
-    .fc-header-toolbar .fc-toolbar-chunk:nth-child(2) {
-        order: 3;
-        width: 100%;
-        justify-content: center;
-        margin-top: 0.5rem !important;
-    }
-    
-    .fc-header-toolbar .fc-toolbar-chunk:nth-child(3) {
-        order: 2;
-    }
-    
-    /* Optimize button sizes */
-    .fc-button {
-        font-size: 0.8rem !important;
-        padding: 0.3rem 0.5rem !important;
-    }
-    
-    /* Calendar asset filter */
-    #calendar-asset-filter {
-        max-width: 150px;
+
+    #gedung-list-table td,
+    #kendaraan-list-table td {
+        padding: 0.5rem 0.75rem;
         font-size: 0.8rem;
     }
-    
-    /* Calendar event display */
-    .fc-list-event td {
-        padding: 4px 6px !important;
+
+    .form-input {
+        font-size: 0.5rem;
     }
-    
-    .fc-event-dot {
-        margin-right: 4px !important;
+
+    .modal-content {
+        padding: 2rem;
+        font-size: 0.9rem;
+    }
+
+    .modal-content h3 {
+        font-size: 1.1rem;
+    }
+
+    .modal-close-btn {
+        top: 1.3rem;
+        right: 1.9rem;
+        font-size: 2rem;
+    }
+
+    .modal-reset-btn {
+        top: 2.13rem;
+        right: 3.7rem;
+        font-size: 1.1rem;
+    }
+
+    .filter-menu {
+        font-size: 0.75rem;
+        padding: 0.4rem;
+    }
+
+    .add-btn {
+        font-size: 0.8rem !important;
+        padding: 0.4rem 0.6rem;
+        width: 100%;
+    }
+
+    .table-header {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.7rem;
+    }
+
+    .fc-header-toolbar {
+        display: flex !important;
+        flex-wrap: wrap !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+    }
+
+    .fc-toolbar-chunk:first-child,
+    .fc-toolbar-chunk:last-child {
+        flex: 0 0 auto !important;
+        order: 2 !important;
+    }
+
+    .fc-toolbar-chunk:nth-child(2) {
+        flex: 1 1 100% !important;
+        order: 1 !important;
+        text-align: center !important;
     }
 }
 
-/* Extra styles for very small screens */
 @media (max-width: 480px) {
     .fc-header-toolbar {
         padding-left: 0.2rem;
@@ -510,35 +466,23 @@ input[type="date"].filter-menu {
     }
     
     .fc-button {
-        font-size: 0.75rem !important;
+        font-size: 0.7rem !important;
         padding: 0.2rem 0.4rem !important;
     }
     
-    .fc-toolbar-title {
-        font-size: 0.9rem !important;
-        text-align: center;
+    .fc .fc-toolbar-title {
+        font-size: 0.8rem;
     }
-    
-    /* Ensure full width for mobile */
-    .fc-view-harness {
-        width: 100% !important;
+
+    /* Admin Panel */
+    .tab-btn {
+        font-size: 0.75rem;
+        padding: 0.4rem 0.6rem;
     }
-    
-    /* Even more compact on very small screens */
-    .btn {
-        padding: 0.25rem;
-        font-size: 14px;
-    }
-    
+
     #gedung-list-table td,
     #kendaraan-list-table td {
-        padding: 0.4rem 0.5rem !important;
-    }
-    
-    /* Ensure action buttons don't wrap */
-    #gedung-list-table td:last-child button,
-    #kendaraan-list-table td:last-child button {
-        margin: 0 !important;
-        padding: 0.2rem !important;
+        padding: 0.4rem 0.5rem;
+        font-size: 0.75rem;
     }
 }

@@ -13,7 +13,14 @@ const bookingSchema = new Schema({
     picPhoneNumber: { type: String, required: true },
     notes: String,
     activityName: String,
-    borrowedItems: String,
+    // borrowedItems kini berupa array opsional berisi item barang yang dipinjam
+    borrowedItems: [
+        {
+            assetCode: { type: String, required: true },
+            assetName: { type: String, required: true },
+            quantity: { type: Number, required: true, min: 1 }
+        }
+    ],
     driverName: String,
     destination: String,
 }, { timestamps: true });

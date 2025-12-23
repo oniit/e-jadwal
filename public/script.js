@@ -1,4 +1,3 @@
-// Function to initialize the app
 function initializeApp() {
     // --- STATE APLIKASI ---
     const state = {
@@ -7,6 +6,10 @@ function initializeApp() {
         allBookingsCache: [],
         selectedAssetFilter: 'all',
     };
+
+    // --- KONSTANTA JAM GEDUNG ---
+    const GEDUNG_START = '07:00';
+    const GEDUNG_END = '16:00';
 
     // --- ELEMEN UI ---
     const elements = {
@@ -116,7 +119,7 @@ function initializeApp() {
                             <td class="${cellClass} font-medium text-gray-900">${b.assetName}</td>
                             <td class="${cellClass}">${b.userName}</td>
                             <td class="${cellClass}">${tanggal}</td>
-                            <td class="${cellClass}">${b.borrowedItems || '-'}</td>
+                            <td class="${cellClass}">${ui.formatBorrowedItemsForDisplay(b.borrowedItems)}</td>
                             <td class="${cellClass}">${b.notes || '-'}</td>
                             <td class="${cellClass} text-right">
                                 <button><i class="fas fa-edit btn btn-edit" data-id="${b._id}"></i></button>
@@ -171,11 +174,16 @@ function initializeApp() {
             const gedungExtraFields = `
                 <div><label for="gedung-kegiatan" class="form-label text-sm">Nama Kegiatan (Opsional)</label>
                 <input type="text" id="gedung-kegiatan" class="form-input"></div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div><label for="gedung-barang" class="form-label text-sm">Barang Dipinjam (Opsional)</label>
-                    <textarea id="gedung-barang" rows="2" class="form-input" placeholder="Contoh: Proyektor, 20 kursi"></textarea></div>
-                    <div><label for="gedung-keterangan" class="form-label text-sm">Keterangan (Opsional)</label>
-                    <textarea id="gedung-keterangan" rows="2" class="form-input"></textarea></div>
+                <div><label for="gedung-keterangan" class="form-label text-sm">Keterangan (Opsional)</label>
+                <textarea id="gedung-keterangan" rows="2" class="form-input"></textarea></div>
+                <div>
+                    <label class="form-label text-sm">Barang Dipinjam (Opsional)</label>
+                    <div class="grid grid-cols-5 gap-2 mb-2">
+                        <select id="gedung-barang-select" class="form-input col-span-3"></select>
+                        <input id="gedung-barang-qty" type="number" min="1" step="1" class="form-input col-span-1" placeholder="Qty">
+                        <button type="button" id="gedung-barang-add" class="add-btn col-span-1">Tambah</button>
+                    </div>
+                    <div id="gedung-barang-chips" class="flex flex-wrap gap-2 p-2 border rounded-md bg-gray-50 min-h-10 text-sm"></div>
                 </div>
                 <button type="submit" class="w-full add-btn">Simpan Peminjaman</button>
             `;
@@ -192,6 +200,14 @@ function initializeApp() {
             `;
             elements.formGedung.innerHTML = commonFormHtml('gedung') + gedungExtraFields;
             elements.formKendaraan.innerHTML = commonFormHtml('kendaraan') + kendaraanExtraFields;
+        },
+        formatBorrowedItemsForDisplay: function(borrowedItems) {
+            if (!borrowedItems) return '-';
+            if (Array.isArray(borrowedItems) && borrowedItems.length) {
+                return borrowedItems.map(it => `${it.assetName}: ${it.quantity}`).join(', ');
+            }
+            if (typeof borrowedItems === 'string' && borrowedItems.trim()) return borrowedItems;
+            return '-';
         },
         populateDropdowns: function(assets, unavailable = {}) {
             const populate = (select, items, unavailableItems) => {
@@ -222,6 +238,19 @@ function initializeApp() {
             });
             supirSelect.value = currentSupir;
         },
+        populateBarangSelector: function(assetsBarang, availabilityMap = null) {
+            const select = elements.formGedung.querySelector('#gedung-barang-select');
+            if (!select) return;
+            const current = select.value;
+            select.innerHTML = '';
+            assetsBarang.forEach(b => {
+                const available = availabilityMap ? (availabilityMap.get(b.kode) ?? b.num ?? 0) : (b.num ?? 0);
+                const option = new Option(`${b.nama} (stok: ${available})`, b.kode);
+                option.disabled = available <= 0;
+                select.add(option);
+            });
+            if (current) select.value = current;
+        },
         populateCalendarFilter: function(type, assets) {
             const select = elements.calendarAssetFilter;
             select.innerHTML = `<option value="all">Semua ${type.charAt(0).toUpperCase() + type.slice(1)}</option>`;
@@ -245,38 +274,25 @@ function initializeApp() {
         showDetailModal: function(props, context = 'admin') {
             let assetDisplay = props.assetName;
             if (props.bookingType === 'kendaraan') {
-                // const kendaraan = state.assets.kendaraan.find(k => k.nama === props.assetName);
-                // const detail = kendaraan && kendaraan.detail ? kendaraan.detail : '';
-                // assetDisplay = detail ? `${props.assetName} (${detail})` : props.assetName;
-                assetDisplay = props.assetName;
+                const kendaraan = state.assets.kendaraan.find(k => k.nama === props.assetName);
+                const kode = kendaraan && kendaraan.kode ? kendaraan.kode : '';
+                assetDisplay = kode ? `${props.assetName} (${kode})` : props.assetName;
             }
             elements.modalTitle.innerText = `${assetDisplay}`;
             const start = new Date(props.startDate);
             const end = new Date(props.endDate);
             const isFullDay = start.getHours() === 0 && start.getMinutes() === 0 && end.getHours() === 23 && end.getMinutes() === 59;
-            let waktuText;
-            if (isFullDay) {
-                if (start.toDateString() === end.toDateString()) {
-                    waktuText = `${start.toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}`;
-                } else {
-                    waktuText = `${start.toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })} - ${end.toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}`;
-                }
-            } else {
-                waktuText = `${start.toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })} pukul ${start.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })} - ${end.toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })} pukul ${end.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}`;
-            }
+            const waktuText = formatRangeForModal(start, end);
             let detailsHtml = `<p><strong>Peminjam:</strong> ${props.userName}</p><p><strong>Waktu:</strong> ${waktuText}</p>`;
             if (context === 'admin') {
                 detailsHtml += `<p><strong>Penanggung Jawab:</strong> ${props.personInCharge} (${props.picPhoneNumber})</p>`;
                 if (props.bookingType === 'gedung') {
-                    detailsHtml += `${props.activityName ? `<p><strong>Kegiatan:</strong> ${props.activityName}</p>` : ''}${props.borrowedItems ? `<p><strong>Barang Pinjam:</strong> ${props.borrowedItems}</p>` : ''}`;
+                    const barangText = ui.formatBorrowedItemsForDisplay(props.borrowedItems);
+                    detailsHtml += `${props.activityName ? `<p><strong>Kegiatan:</strong> ${props.activityName}</p>` : ''}${barangText !== '-' ? `<p><strong>Barang Pinjam:</strong> ${barangText}</p>` : ''}`;
                 } else {
-                    detailsHtml += `${props.destination ? `<p><strong>Tujuan:</strong> ${props.destination}</p>` : ''}${props.driverName ? `<p><strong>Supir:</strong> ${props.driverName}</p>` : ''}`;
+                    detailsHtml += `${props.driverName ? `<p><strong>Supir:</strong> ${props.driverName}</p>` : ''}${props.destination ? `<p><strong>Tujuan:</strong> ${props.destination}</p>` : ''}`;
                 }
                 detailsHtml += `${props.notes ? `<p><strong>Keterangan:</strong> ${props.notes}</p>` : ''}`;
-            } else {
-                if (props.bookingType === 'kendaraan' && props.driverName && props.driverName !== 'Tanpa Supir') {
-                    detailsHtml += `<p><strong>Supir:</strong> ${props.driverName}</p>`;
-                }
             }
             elements.modalBody.innerHTML = detailsHtml;
             elements.modalDetailEvent.classList.remove('hidden');
@@ -289,8 +305,34 @@ function initializeApp() {
             extendedProps: booking,
             textColor: '#047857',
             backgroundColor: 'rgba(184, 147, 47, 0.3)',
-        })
+        }),
+        // Format tanggal + jam untuk modal (tanpa nama hari)
+        // Contoh: "22 Des 2025, 07.00-16.00 WIB" atau "22 Des 2025, 07.00 WIB - 23 Des 2025, 16.00 WIB"
+        formatDateShort: (d) => {
+            const months = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Ags','Sep','Okt','Nov','Des'];
+            const day = String(d.getDate()).padStart(2, '0');
+            const mon = months[d.getMonth()];
+            const year = d.getFullYear();
+            return `${day} ${mon} ${year}`;
+        },
+        formatTimeDot: (d) => {
+            const hh = String(d.getHours()).padStart(2, '0');
+            const mm = String(d.getMinutes()).padStart(2, '0');
+            return `${hh}.${mm}`;
+        }
     };
+
+    function formatRangeForModal(start, end) {
+        const sameDay = start.toDateString() === end.toDateString();
+        const dateStart = ui.formatDateShort(start);
+        const timeStart = ui.formatTimeDot(start);
+        const dateEnd = ui.formatDateShort(end);
+        const timeEnd = ui.formatTimeDot(end);
+        if (sameDay) {
+            return `${dateStart}, ${timeStart}-${timeEnd} WIB`;
+        }
+        return `${dateStart}, ${timeStart} WIB - ${dateEnd}, ${timeEnd} WIB`;
+    }
 
     const flattenAssets = () => {
         if (!state.assets) return [];
@@ -477,20 +519,25 @@ function initializeApp() {
         
         let start, end;
         if (useTime) {
-            if (!startDateInput.value || !endDateInput.value || !startTimeInput.value || !endTimeInput.value) {
-                ui.populateDropdowns(state.assets, {});
-                return;
+            // Jika gedung dan jam tidak diisi, gunakan default 07:00-16:00 tanpa peringatan
+            if (type === 'gedung' && startDateInput.value && endDateInput.value && (!startTimeInput.value || !endTimeInput.value)) {
+                start = new Date(`${startDateInput.value}T${GEDUNG_START}`);
+                end = new Date(`${endDateInput.value}T${GEDUNG_END}`);
+            } else {
+                if (!startDateInput.value || !endDateInput.value || !startTimeInput.value || !endTimeInput.value) {
+                    ui.populateDropdowns(state.assets, {});
+                    return;
+                }
+                start = new Date(`${startDateInput.value}T${startTimeInput.value}`);
+                end = new Date(`${endDateInput.value}T${endTimeInput.value}`);
             }
-            start = new Date(`${startDateInput.value}T${startTimeInput.value}`);
-            end = new Date(`${endDateInput.value}T${endTimeInput.value}`);
         } else {
             if (!startDateInput.value || !endDateInput.value) {
                 ui.populateDropdowns(state.assets, {});
                 return;
             }
-            start = new Date(startDateInput.value);
-            end = new Date(endDateInput.value);
-            end.setHours(23, 59, 59, 999);
+            start = new Date(`${startDateInput.value}T${GEDUNG_START}`);
+            end = new Date(`${endDateInput.value}T${GEDUNG_END}`);
         }
 
         if (isNaN(start.getTime()) || isNaN(end.getTime()) || start >= end) {
@@ -511,6 +558,101 @@ function initializeApp() {
             }
         });
         ui.populateDropdowns(state.assets, unavailable);
+        if (type === 'gedung') {
+            updateBarangAvailability();
+        }
+    }
+
+    function computeBarangAvailability(start, end, excludeBookingId = null) {
+        const used = new Map();
+        state.allBookingsCache.forEach(b => {
+            if (excludeBookingId && b._id === excludeBookingId) return;
+            const bs = new Date(b.startDate);
+            const be = new Date(b.endDate);
+            if (!(start < be && end > bs)) return;
+            if (!Array.isArray(b.borrowedItems)) return;
+            b.borrowedItems.forEach(it => {
+                const c = it.assetCode;
+                const q = Number(it.quantity || 0);
+                if (!c || !Number.isFinite(q) || q <= 0) return;
+                used.set(c, (used.get(c) || 0) + q);
+            });
+        });
+        const availability = new Map();
+        (state.assets.barang || []).forEach(b => {
+            const max = Number(b.num || 0);
+            const u = used.get(b.kode) || 0;
+            availability.set(b.kode, Math.max(0, max - u));
+        });
+        return availability;
+    }
+
+    function updateBarangAvailability() {
+        const form = elements.formGedung;
+        if (!form) return;
+        const useTime = form.querySelector('#gedung-use-time').checked;
+        const startDateInput = form.querySelector('#gedung-mulai-tanggal');
+        const endDateInput = form.querySelector('#gedung-selesai-tanggal');
+        const startTimeInput = form.querySelector('#gedung-mulai-jam');
+        const endTimeInput = form.querySelector('#gedung-selesai-jam');
+        const bookingId = form.elements['gedung-booking-id']?.value || null;
+
+        let start, end;
+        if (useTime) {
+            if (!startDateInput.value || !endDateInput.value || !startTimeInput.value || !endTimeInput.value) {
+                ui.populateBarangSelector(state.assets.barang || []);
+                form.__barangAvailability = null;
+                setBarangQtyMax(form, null);
+                return;
+            }
+            start = new Date(`${startDateInput.value}T${startTimeInput.value}`);
+            end = new Date(`${endDateInput.value}T${endTimeInput.value}`);
+        } else {
+            if (!startDateInput.value || !endDateInput.value) {
+                ui.populateBarangSelector(state.assets.barang || []);
+                form.__barangAvailability = null;
+                setBarangQtyMax(form, null);
+                return;
+            }
+            start = new Date(startDateInput.value);
+            end = new Date(endDateInput.value);
+            end.setHours(23,59,59,999);
+        }
+        if (isNaN(start) || isNaN(end) || start >= end) {
+            ui.populateBarangSelector(state.assets.barang || []);
+            form.__barangAvailability = null;
+            setBarangQtyMax(form, null);
+            return;
+        }
+        const availability = computeBarangAvailability(start, end, bookingId);
+        // kurangi dengan pilihan saat ini agar tampilan stok mencerminkan sisa yang belum ditambahkan
+        const items = form.__barangItems ? [...form.__barangItems.values()] : [];
+        items.forEach(it => {
+            const cur = availability.get(it.assetCode) ?? 0;
+            availability.set(it.assetCode, Math.max(0, cur - Number(it.quantity || 0)));
+        });
+        form.__barangAvailability = availability;
+        ui.populateBarangSelector(state.assets.barang || [], availability);
+        setBarangQtyMax(form, availability);
+    }
+
+    function setBarangQtyMax(form, availabilityMap) {
+        const select = form.querySelector('#gedung-barang-select');
+        const qtyInput = form.querySelector('#gedung-barang-qty');
+        if (!select || !qtyInput) return;
+        const code = select.value || null;
+        let max = 0;
+        if (availabilityMap && code) {
+            max = availabilityMap.get(code) ?? 0;
+        }
+        if (max < 0) max = 0;
+        qtyInput.max = String(max);
+        qtyInput.placeholder = max > 0 ? `Qty (maks: ${max})` : 'Qty';
+        if (qtyInput.value) {
+            const v = Number(qtyInput.value);
+            if (Number.isFinite(v) && v > max) qtyInput.value = max || '';
+        }
+        qtyInput.disabled = max === 0;
     }
 
     async function refreshDataAndUI(force = false) {
@@ -525,7 +667,6 @@ function initializeApp() {
             applyAdminFilters('kendaraan');
         }
         
-        // Initialize sorting after data is refreshed (only if tables exist)
         if (elements.gedungListTable || elements.kendaraanListTable) {
             initTableSorting();
         }
@@ -555,7 +696,6 @@ function initializeApp() {
         return bookings.filter(b => {
             if (b.bookingType !== filters.type) return false;
             
-            // Date range filters
             if (filters.start && new Date(b.startDate) < new Date(filters.start)) return false;
             if (filters.end) {
                 const endDate = new Date(filters.end);
@@ -563,25 +703,24 @@ function initializeApp() {
                 if (new Date(b.startDate) > endDate) return false;
             }
             
-            // Asset dropdown filter
             if (filters.asset && filters.asset !== 'all' && b.assetCode !== filters.asset) return false;
             
-            // Driver dropdown filter (only for kendaraan)
             if (filters.driver && filters.driver !== 'all' && b.driverName !== filters.driver) return false;
             
-            // Text-based search - check if any relevant field contains the search query
             if (filters.searchQuery) {
                 const searchLower = filters.searchQuery.toLowerCase();
                 const assetNameMatch = b.assetName.toLowerCase().includes(searchLower);
                 const userNameMatch = b.userName.toLowerCase().includes(searchLower);
                 const notesMatch = b.notes ? b.notes.toLowerCase().includes(searchLower) : false;
                 
-                // Additional fields based on booking type
                 let additionalFieldsMatch = false;
                 if (b.bookingType === 'gedung') {
+                    const barangText = Array.isArray(b.borrowedItems)
+                        ? b.borrowedItems.map(it => `${it.assetName}: ${it.quantity}`).join(', ').toLowerCase()
+                        : (typeof b.borrowedItems === 'string' ? b.borrowedItems.toLowerCase() : '');
                     additionalFieldsMatch = 
                         (b.activityName ? b.activityName.toLowerCase().includes(searchLower) : false) ||
-                        (b.borrowedItems ? b.borrowedItems.toLowerCase().includes(searchLower) : false);
+                        (barangText ? barangText.includes(searchLower) : false);
                 } else if (b.bookingType === 'kendaraan') {
                     additionalFieldsMatch = 
                         (b.driverName ? b.driverName.toLowerCase().includes(searchLower) : false) ||
@@ -609,13 +748,29 @@ function initializeApp() {
         let startDate, endDate;
 
         if (useTime) {
-            startDate = new Date(`${startDateInput.value}T${startTimeInput.value}`);
-            endDate = new Date(`${endDateInput.value}T${endTimeInput.value}`);
+            // Jika gedung dan jam tidak diisi, fallback ke default tanpa peringatan
+            const minT = GEDUNG_START;
+            const maxT = GEDUNG_END;
+            if (type === 'gedung' && (!startTimeInput.value || !endTimeInput.value)) {
+                const sDateStr = `${startDateInput.value}T${GEDUNG_START}`;
+                const eDateStr = `${endDateInput.value}T${GEDUNG_END}`;
+                startDate = new Date(sDateStr);
+                endDate = new Date(eDateStr);
+            } else {
+                if (type === 'gedung') {
+                    if (startTimeInput.value < minT || startTimeInput.value > maxT || endTimeInput.value < minT || endTimeInput.value > maxT) {
+                        return alert('Peminjaman gedung hanya antara 07.00-16.00 WIB.');
+                    }
+                }
+                startDate = new Date(`${startDateInput.value}T${startTimeInput.value}`);
+                endDate = new Date(`${endDateInput.value}T${endTimeInput.value}`);
+            }
         } else {
-            startDate = new Date(startDateInput.value);
-            startDate.setHours(0, 0, 0, 0);
-            endDate = new Date(endDateInput.value);
-            endDate.setHours(23, 59, 59, 999);
+            // Non spesifik jam: gedung otomatis 07:00 - 16:00
+            const sDateStr = `${startDateInput.value}T${type === 'gedung' ? GEDUNG_START : '00:00'}`;
+            const eDateStr = `${endDateInput.value}T${type === 'gedung' ? GEDUNG_END : '23:59'}`;
+            startDate = new Date(sDateStr);
+            endDate = new Date(eDateStr);
         }
 
         if (endDate < startDate) {
@@ -635,9 +790,13 @@ function initializeApp() {
                 activityName: form.elements['gedung-kegiatan'].value,
                 personInCharge: form.elements['gedung-penanggung-jawab'].value,
                 picPhoneNumber: form.elements['gedung-nomor-penanggung-jawab'].value,
-                borrowedItems: form.elements['gedung-barang'].value,
                 notes: form.elements['gedung-keterangan'].value
             });
+            // Ambil barang dari chips
+            const itemsMap = form.__barangItems || new Map();
+            if (itemsMap.size) {
+                bookingData.borrowedItems = [...itemsMap.values()].map(it => ({ assetCode: it.assetCode, assetName: it.assetName, quantity: it.quantity }));
+            }
         } else {
             const selectedKendaraan = state.assets.kendaraan.find(k => k.kode === form.elements['kendaraan-nama'].value);
             const supirNama = form.elements['kendaraan-supir'].selectedIndex > 0 ? form.elements['kendaraan-supir'].options[form.elements['kendaraan-supir'].selectedIndex].text : '';
@@ -718,11 +877,13 @@ function initializeApp() {
         }
         if (formType === 'gedung') {
             form.elements['gedung-kegiatan'].value = booking.activityName || '';
-            form.elements['gedung-barang'].value = booking.borrowedItems || '';
+            resetBarangChips(form);
+            if (Array.isArray(booking.borrowedItems)) {
+                booking.borrowedItems.forEach(it => addBarangItemToForm(form, it.assetCode, it.assetName, it.quantity));
+            }
             form.elements['gedung-keterangan'].value = booking.notes || '';
             elements.modalFormGedung.classList.remove('hidden');
         } else {
-            // Supir value harus di-set ke nama
             const supirSelect = form.elements['kendaraan-supir'];
             for (let i = 0; i < supirSelect.options.length; i++) {
                 if (supirSelect.options[i].text === booking.driverName) {
@@ -817,6 +978,8 @@ function initializeApp() {
         const timeInputsDiv = form.querySelector(`#${type}-time-inputs`);
         const startDateInput = form.querySelector(`#${type}-mulai-tanggal`);
         const endDateInput = form.querySelector(`#${type}-selesai-tanggal`);
+        const startTimeInput = form.querySelector(`#${type}-mulai-jam`);
+        const endTimeInput = form.querySelector(`#${type}-selesai-jam`);
 
         useTimeCheckbox.addEventListener('change', () => {
             timeInputsDiv.classList.toggle('hidden', !useTimeCheckbox.checked);
@@ -835,14 +998,87 @@ function initializeApp() {
         });
         const timeInputs = timeInputsDiv.querySelectorAll('input');
         timeInputs.forEach(input => input.addEventListener('change', () => updateAvailableAssets(type)));
+
+        // Batasi jam input untuk gedung
+        if (type === 'gedung') {
+            if (startTimeInput) {
+                startTimeInput.min = GEDUNG_START;
+                startTimeInput.max = GEDUNG_END;
+                startTimeInput.addEventListener('input', () => {
+                    if (startTimeInput.value < GEDUNG_START) startTimeInput.value = GEDUNG_START;
+                    if (startTimeInput.value > GEDUNG_END) startTimeInput.value = GEDUNG_END;
+                });
+            }
+            if (endTimeInput) {
+                endTimeInput.min = GEDUNG_START;
+                endTimeInput.max = GEDUNG_END;
+                endTimeInput.addEventListener('input', () => {
+                    if (endTimeInput.value < GEDUNG_START) endTimeInput.value = GEDUNG_START;
+                    if (endTimeInput.value > GEDUNG_END) endTimeInput.value = GEDUNG_END;
+                });
+            }
+        }
+
+        if (type === 'gedung') {
+            // init barang chips state
+            resetBarangChips(form);
+            const addBtn = form.querySelector('#gedung-barang-add');
+            const qtyInput = form.querySelector('#gedung-barang-qty');
+            const select = form.querySelector('#gedung-barang-select');
+            // update max on selection change
+            select.addEventListener('change', () => setBarangQtyMax(form, form.__barangAvailability || null));
+            // also adjust when typing beyond max
+            qtyInput.addEventListener('input', () => setBarangQtyMax(form, form.__barangAvailability || null));
+            addBtn.addEventListener('click', () => {
+                const code = select.value;
+                const asset = (state.assets.barang || []).find(b => b.kode === code);
+                const qty = Number(qtyInput.value);
+                if (!asset) return alert('Pilih barang.');
+                if (!Number.isFinite(qty) || qty <= 0) return alert('Masukkan qty valid.');
+                const availMap = form.__barangAvailability || new Map();
+                const available = availMap.get(code) ?? 0;
+                if (qty > available) return alert(`Qty melebihi stok tersedia (${available}).`);
+                addBarangItemToForm(form, asset.kode, asset.nama, qty);
+                qtyInput.value = '';
+                // refresh availability and max after adding
+                updateBarangAvailability();
+            });
+        }
+    }
+
+    function resetBarangChips(form) {
+        form.__barangItems = new Map();
+        const chips = form.querySelector('#gedung-barang-chips');
+        if (chips) chips.innerHTML = '';
+        ui.populateBarangSelector(state.assets.barang || []);
+    }
+
+    function addBarangItemToForm(form, assetCode, assetName, quantity) {
+        if (!form.__barangItems) form.__barangItems = new Map();
+        // replace existing
+        form.__barangItems.set(assetCode, { assetCode, assetName, quantity });
+        const chips = form.querySelector('#gedung-barang-chips');
+        const chip = document.createElement('span');
+        chip.className = 'inline-flex items-center bg-emerald-100 text-emerald-800 px-2 py-1 rounded-full';
+        chip.dataset.code = assetCode;
+        chip.innerHTML = `
+            <span class="mr-1 font-semibold">${assetName}: ${quantity}</span>
+            <button type="button" class="ml-1 text-emerald-800 hover:text-red-600" title="Hapus">&times;</button>
+        `;
+        // remove existing chip for same code
+        chips.querySelectorAll('span[data-code]')
+            .forEach(n => { if (n.dataset.code === assetCode) n.remove(); });
+        chips.appendChild(chip);
+        chip.querySelector('button').addEventListener('click', () => {
+            form.__barangItems.delete(assetCode);
+            chip.remove();
+        });
     }
 
 
     async function initialize() {
-        // Start loading assets immediately (non-blocking)
         const assetsPromise = api.fetchAssets();
         
-        // Initialize calendar if element exists (can run in parallel)
         if (elements.calendarEl) {
             calendar = initCalendar();
             if (calendar) {
@@ -850,22 +1086,17 @@ function initializeApp() {
             }
         }
         
-        // Only render forms if we're on admin page
         if (elements.formGedung && elements.formKendaraan) {
             ui.renderForms();
         }
-        // Wait for assets then render dependent UI
         const initialAssets = await assetsPromise;
         await refreshAssets(initialAssets);
 
-        // Load data - await to ensure UI is populated
         await refreshDataAndUI(true);
         
-        // Only switch tabs if we're on admin page
         if (elements.tabAdmin && elements.tabKalender) {
             switchMainTab('admin');
         } else {
-            // On index page, show calendar directly
             if (elements.contentKalender) {
                 elements.contentKalender.classList.remove('hidden');
             }
@@ -909,6 +1140,8 @@ function initializeApp() {
                 const bookingIdInput = elements.formGedung.querySelector('#gedung-booking-id');
                 if(bookingIdInput) bookingIdInput.value = '';
                 ui.populateDropdowns(state.assets, {});
+                resetBarangChips(elements.formGedung);
+                updateBarangAvailability();
                 elements.modalFormGedung.classList.remove('hidden');
             });
         }
@@ -1017,21 +1250,16 @@ function initializeApp() {
         });
     });
 
-    // Table sorting functionality
     function initTableSorting() {
-        // Get all sortable headers
         const sortableHeaders = document.querySelectorAll('th.sortable');
         if (!sortableHeaders.length) return;
         
-        // Current sorting state
         const sortState = {
             column: null,
             direction: 'asc'
         };
         
-        // Add click event listeners to all sortable headers
         sortableHeaders.forEach(header => {
-            // Remove any existing event listeners to prevent duplicates
             const newHeader = header.cloneNode(true);
             header.parentNode.replaceChild(newHeader, header);
             
@@ -1039,7 +1267,6 @@ function initializeApp() {
                 const sortKey = this.getAttribute('data-sort');
                 const tableId = this.closest('table').querySelector('tbody').id;
                 
-                // Remove sort classes from all headers
                 document.querySelectorAll('th.sortable').forEach(h => {
                     const icon = h.querySelector('.sort-icon');
                     if (icon) {
@@ -1048,7 +1275,6 @@ function initializeApp() {
                     h.classList.remove('sort-asc', 'sort-desc');
                 });
                 
-                // Determine sort direction
                 if (sortState.column === sortKey) {
                     sortState.direction = sortState.direction === 'asc' ? 'desc' : 'asc';
                 } else {
@@ -1056,7 +1282,6 @@ function initializeApp() {
                     sortState.direction = 'asc';
                 }
                 
-                // Add sort indicator
                 if (sortState.direction === 'asc') {
                     this.classList.add('sort-asc');
                     const icon = this.querySelector('.sort-icon');
@@ -1071,7 +1296,6 @@ function initializeApp() {
                     }
                 }
                 
-                // Sort the table
                 sortTable(tableId, sortKey, sortState.direction);
             });
         });
@@ -1084,11 +1308,9 @@ function initializeApp() {
         const rows = Array.from(tbody.querySelectorAll('tr'));
         if (rows.length === 0) return;
         
-        // Sort rows
         const sortedRows = rows.sort((rowA, rowB) => {
             let valueA, valueB;
             
-            // Determine which cell contains the data based on the sortKey
             switch(sortKey) {
                 case 'gedung':
                 case 'kendaraan':
@@ -1101,11 +1323,9 @@ function initializeApp() {
                     valueB = rowB.cells[1].textContent.trim().toLowerCase();
                     break;
                 case 'tanggal':
-                    // Special handling for Indonesian date format
                     const textA = rowA.cells[2].textContent.trim();
                     const textB = rowB.cells[2].textContent.trim();
                     
-                    // Parse Indonesian date format (e.g., "20/5/2023" or range "20/5/2023 - 21/5/2023")
                     valueA = parseIndonesianDate(textA);
                     valueB = parseIndonesianDate(textB);
                     break;
@@ -1122,7 +1342,6 @@ function initializeApp() {
                     valueB = rowB.cells[4].textContent.trim().toLowerCase();
                     break;
                 case 'created':
-                    // For gedung table, created is at index 4; for kendaraan, it's at index 5
                     const createdIndex = tableId === 'gedung-list-table' ? 4 : 5;
                     const dateA = rowA.cells[createdIndex].textContent.trim();
                     const dateB = rowB.cells[createdIndex].textContent.trim();
@@ -1142,7 +1361,6 @@ function initializeApp() {
                     valueB = rowB.cells[2].textContent.trim().toLowerCase();
                     break;
                 case 'qty':
-                    // Parse numeric value for proper sorting
                     valueA = parseInt(rowA.cells[3].textContent.trim()) || 0;
                     valueB = parseInt(rowB.cells[3].textContent.trim()) || 0;
                     break;
@@ -1155,25 +1373,22 @@ function initializeApp() {
                     valueB = '';
             }
             
-            // Compare values based on direction
             let comparison = 0;
             if (valueA instanceof Date && valueB instanceof Date) {
-                comparison = valueA - valueB; // Date comparison
+                comparison = valueA - valueB;
             } else if (typeof valueA === 'number' && typeof valueB === 'number') {
-                comparison = valueA - valueB; // Numeric comparison
+                comparison = valueA - valueB;
             } else {
-                comparison = valueA.localeCompare(valueB, 'id'); // String comparison using Indonesian locale
+                comparison = valueA.localeCompare(valueB, 'id');
             }
             
             return direction === 'asc' ? comparison : -comparison;
         });
         
-        // Remove all current rows
         while (tbody.firstChild) {
             tbody.removeChild(tbody.firstChild);
         }
         
-        // Add sorted rows back
         sortedRows.forEach(row => tbody.appendChild(row));
     }
 
@@ -1185,24 +1400,20 @@ function initializeApp() {
      */
     function parseIndonesianDate(dateStr) {
         try {
-            // If it's a date range, take only the first date
             if (dateStr.includes('-')) {
                 dateStr = dateStr.split('-')[0].trim();
             }
             
-            // Try to parse as DD/MM/YYYY format (Indonesian format)
             if (/\d{1,2}\/\d{1,2}\/\d{4}/.test(dateStr)) {
                 const [day, month, year] = dateStr.split('/').map(Number);
-                return new Date(year, month - 1, day); // month is 0-indexed in JS Date
+                return new Date(year, month - 1, day);
             }
             
-            // Try to parse as DD-MM-YYYY format
             if (/\d{1,2}-\d{1,2}-\d{4}/.test(dateStr)) {
                 const [day, month, year] = dateStr.split('-').map(Number);
                 return new Date(year, month - 1, day);
             }
             
-            // Try standard Indonesian locale date format
             const parts = dateStr.split(' ');
             const months = {
                 'Januari': 0, 'Februari': 1, 'Maret': 2, 'April': 3, 
@@ -1220,13 +1431,11 @@ function initializeApp() {
                 }
             }
             
-            // Fallback to standard JS Date parsing
             const date = new Date(dateStr);
             if (!isNaN(date.getTime())) {
                 return date;
             }
             
-            // If all parsing attempts fail, return the original string
             return dateStr;
         } catch (e) {
             console.error('Error parsing date:', e);
@@ -1235,20 +1444,15 @@ function initializeApp() {
     }
 }
 
-// Run initialization when ready
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initializeApp);
 } else {
-    // DOM already loaded - check if we're on admin page (has content-admin) or index page (with partials)
     const isAdminPage = document.getElementById('content-admin') !== null;
     
     if (isAdminPage) {
-        // Admin page - all elements already in DOM, initialize immediately
         setTimeout(initializeApp, 10);
     } else {
-        // Index page - wait for partials to load
         window.addEventListener('partialsLoaded', initializeApp, { once: true });
-        // Fallback: run after delay if event doesn't fire
         setTimeout(initializeApp, 500);
     }
 }
