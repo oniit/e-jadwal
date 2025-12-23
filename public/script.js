@@ -258,17 +258,28 @@ function initializeApp() {
             items.forEach(item => select.add(new Option(item.nama, item.kode)));
         },
         populateAdminFilters: function(type, assets) {
-            const assetSelect = elements.filtersGedung.querySelector(`#filter-gedung-asset`);
-            const vehicleSelect = elements.filtersKendaraan.querySelector(`#filter-kendaraan-asset`);
-            const driverSelect = elements.filtersKendaraan.querySelector(`#filter-kendaraan-driver`);
+            const assetSelect = elements.filtersGedung?.querySelector('#filter-gedung-asset');
+            const barangSelect = elements.filtersGedung?.querySelector('#filter-gedung-barang');
+            const vehicleSelect = elements.filtersKendaraan?.querySelector('#filter-kendaraan-asset');
+            const driverSelect = elements.filtersKendaraan?.querySelector('#filter-kendaraan-driver');
             if (type === 'gedung') {
-                assetSelect.innerHTML = '<option value="all">Semua Gedung</option>';
-                assets.gedung.forEach(g => assetSelect.add(new Option(g.nama, g.kode)));
+                if (assetSelect) {
+                    assetSelect.innerHTML = '<option value="all">Semua Gedung</option>';
+                    assets.gedung.forEach(g => assetSelect.add(new Option(g.nama, g.kode)));
+                }
+                if (barangSelect) {
+                    barangSelect.innerHTML = '<option value="all">Semua Barang</option>';
+                    (assets.barang || []).forEach(b => barangSelect.add(new Option(b.nama, b.kode)));
+                }
             } else {
-                vehicleSelect.innerHTML = '<option value="all">Semua Kendaraan</option>';
-                assets.kendaraan.forEach(k => vehicleSelect.add(new Option(k.nama, k.kode)));
-                driverSelect.innerHTML = '<option value="all">Semua Supir</option>';
-                assets.supir.forEach(s => driverSelect.add(new Option(s.nama, s.kode)));
+                if (vehicleSelect) {
+                    vehicleSelect.innerHTML = '<option value="all">Semua Kendaraan</option>';
+                    assets.kendaraan.forEach(k => vehicleSelect.add(new Option(k.nama, k.kode)));
+                }
+                if (driverSelect) {
+                    driverSelect.innerHTML = '<option value="all">Semua Supir</option>';
+                    assets.supir.forEach(s => driverSelect.add(new Option(s.nama, s.kode)));
+                }
             }
         },
         showDetailModal: function(props, context = 'admin') {
@@ -672,23 +683,40 @@ function initializeApp() {
         }
     }
 
+    function setDefaultMonthFilters() {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const defaultMonth = `${year}-${month}`;
+        
+        const monthInputGedung = document.getElementById('filter-gedung-month');
+        const monthInputKendaraan = document.getElementById('filter-kendaraan-month');
+        
+        if (monthInputGedung) {
+            monthInputGedung.value = defaultMonth;
+        }
+        if (monthInputKendaraan) {
+            monthInputKendaraan.value = defaultMonth;
+        }
+    }
+
     function applyAdminFilters(type) {
         const filterPanel = elements[type === 'gedung' ? 'filtersGedung' : 'filtersKendaraan'];
         if (!filterPanel) return;
         
-        const startInput = filterPanel.querySelector(`#filter-${type}-start`);
-        const endInput = filterPanel.querySelector(`#filter-${type}-end`);
+        const monthInput = filterPanel.querySelector(`#filter-${type}-month`);
         const assetInput = filterPanel.querySelector(`#filter-${type}-asset`);
+        const barangInput = type === 'gedung' ? filterPanel.querySelector('#filter-gedung-barang') : null;
         const searchInput = filterPanel.querySelector(`#filter-${type}-search`);
         const driverInput = (type === 'kendaraan') ? filterPanel.querySelector(`#filter-${type}-driver`) : null;
         
-        const start = startInput ? startInput.value : '';
-        const end = endInput ? endInput.value : '';
+        const month = monthInput ? monthInput.value : '';
         const asset = assetInput ? assetInput.value : 'all';
+        const barang = barangInput ? barangInput.value : 'all';
         const searchQuery = searchInput ? searchInput.value.trim().toLowerCase() : '';
         const driver = driverInput ? driverInput.value : null;
         
-        const bookingsToFilter = filterData(state.allBookingsCache, { type, start, end, asset, driver, searchQuery });
+        const bookingsToFilter = filterData(state.allBookingsCache, { type, month, asset, barang, driver, searchQuery });
         ui.renderBookingList(type, bookingsToFilter);
     }
 
@@ -696,14 +724,21 @@ function initializeApp() {
         return bookings.filter(b => {
             if (b.bookingType !== filters.type) return false;
             
-            if (filters.start && new Date(b.startDate) < new Date(filters.start)) return false;
-            if (filters.end) {
-                const endDate = new Date(filters.end);
-                endDate.setHours(23, 59, 59, 999);
-                if (new Date(b.startDate) > endDate) return false;
+            // Filter by month (format: YYYY-MM)
+            if (filters.month) {
+                const bookingDate = new Date(b.startDate);
+                const bookingYear = bookingDate.getFullYear();
+                const bookingMonth = String(bookingDate.getMonth() + 1).padStart(2, '0');
+                const bookingYearMonth = `${bookingYear}-${bookingMonth}`;
+                if (bookingYearMonth !== filters.month) return false;
             }
             
             if (filters.asset && filters.asset !== 'all' && b.assetCode !== filters.asset) return false;
+
+            if (filters.barang && filters.barang !== 'all') {
+                const hasBarang = Array.isArray(b.borrowedItems) && b.borrowedItems.some(it => it.assetCode === filters.barang);
+                if (!hasBarang) return false;
+            }
             
             if (filters.driver && filters.driver !== 'all' && b.driverName !== filters.driver) return false;
             
@@ -1092,6 +1127,7 @@ function initializeApp() {
         const initialAssets = await assetsPromise;
         await refreshAssets(initialAssets);
 
+        setDefaultMonthFilters();
         await refreshDataAndUI(true);
         
         if (elements.tabAdmin && elements.tabKalender) {
@@ -1225,6 +1261,7 @@ function initializeApp() {
 
         if (elements.filtersGedung) {
             elements.filtersGedung.addEventListener('input', () => applyAdminFilters('gedung'));
+            elements.filtersGedung.addEventListener('change', () => applyAdminFilters('gedung'));
             const searchInput = document.getElementById('filter-gedung-search');
             if (searchInput) {
                 searchInput.addEventListener('keyup', () => applyAdminFilters('gedung'));
@@ -1232,6 +1269,7 @@ function initializeApp() {
         }
         if (elements.filtersKendaraan) {
             elements.filtersKendaraan.addEventListener('input', () => applyAdminFilters('kendaraan'));
+            elements.filtersKendaraan.addEventListener('change', () => applyAdminFilters('kendaraan'));
             const searchInput = document.getElementById('filter-kendaraan-search');
             if (searchInput) {
                 searchInput.addEventListener('keyup', () => applyAdminFilters('kendaraan'));

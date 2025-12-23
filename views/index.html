@@ -48,17 +48,17 @@
                     </div>
 
                     <div id="admin-content-gedung">
-                        <div id="filters-gedung" class="filter-panel grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 items-center mb-4">
+                        <div id="filters-gedung" class="filter-panel grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-2 items-center mb-4">
                             <div class="col-span-1">
-                                <input type="date" id="filter-gedung-start" class="filter-menu w-full" placeholder="Mulai">
-                            </div>
-                            <div class="col-span-1">
-                                <input type="date" id="filter-gedung-end" class="filter-menu w-full" placeholder="Selesai">
+                                <input type="month" id="filter-gedung-month" class="filter-menu w-full">
                             </div>
                             <div class="col-span-2 sm:col-span-1">
                                 <select id="filter-gedung-asset" class="filter-menu w-full"></select>
                             </div>
-                            <div class="col-span-1 sm:col-span-2 lg:col-span-2 flex">
+                            <div class="col-span-2 sm:col-span-1">
+                                <select id="filter-gedung-barang" class="filter-menu w-full"></select>
+                            </div>
+                            <div class="col-span-2 sm:col-span-2 lg:col-span-2 flex">
                                 <input type="text" id="filter-gedung-search" placeholder="Cari..." class="filter-menu flex-grow">
                             </div>
                             <div class="col-span-1 lg:col-span-1 flex justify-end">
@@ -98,10 +98,7 @@
                     <div id="admin-content-kendaraan" class="hidden">
                         <div id="filters-kendaraan" class="filter-panel grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 items-center mb-4">
                             <div class="col-span-1">
-                                <input type="date" id="filter-kendaraan-start" class="filter-menu w-full" placeholder="Mulai">
-                            </div>
-                            <div class="col-span-1">
-                                <input type="date" id="filter-kendaraan-end" class="filter-menu w-full" placeholder="Selesai">
+                                <input type="month" id="filter-kendaraan-month" class="filter-menu w-full">
                             </div>
                             <div class="col-span-1">
                                 <select id="filter-kendaraan-asset" class="filter-menu w-full"></select>
@@ -109,7 +106,7 @@
                             <div class="col-span-1">
                                 <select id="filter-kendaraan-driver" class="filter-menu w-full"></select>
                             </div>
-                            <div class="col-span-1 lg:col-span-1 flex">
+                            <div class="col-span-1 sm:col-span-2 lg:col-span-2 flex">
                                 <input type="text" id="filter-kendaraan-search" placeholder="Cari..." class="filter-menu w-full">
                             </div>
                             <div class="col-span-1 flex justify-end">
