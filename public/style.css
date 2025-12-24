@@ -160,17 +160,6 @@ input[type="date"].filter-menu {
     padding-right: 0.25rem;
 }
 
-.add-btn {
-    color: white;
-    font-weight: 550;
-    padding: 0.5rem 0.75rem;
-    border-radius: 0.5rem;
-    transition: background-color 0.2s;
-    background-color: #166a4c;
-    white-space: nowrap;
-    min-width: fit-content;
-}
-
 .filter-panel {
     display: grid;
     gap: 0.5rem;

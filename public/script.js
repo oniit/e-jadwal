@@ -3,6 +3,7 @@ function initializeApp() {
     const state = {
         assets: {},
         allBookingsCache: [],
+        allRequestsCache: [],
         selectedAssetFilter: 'all',
     };
 
@@ -13,9 +14,11 @@ function initializeApp() {
     // --- ELEMEN UI ---
     const elements = {
         contentAdmin: document.getElementById('content-admin'),
+        adminTabRequest: document.getElementById('admin-tab-request'),
         adminTabGedung: document.getElementById('admin-tab-gedung'),
         adminTabKendaraan: document.getElementById('admin-tab-kendaraan'),
         adminTabMaster: document.getElementById('admin-tab-master'),
+        adminContentRequest: document.getElementById('admin-content-request'),
         adminContentGedung: document.getElementById('admin-content-gedung'),
         adminContentKendaraan: document.getElementById('admin-content-kendaraan'),
         adminContentMaster: document.getElementById('admin-content-master'),
@@ -27,18 +30,23 @@ function initializeApp() {
         modalFormKendaraan: document.getElementById('modal-form-kendaraan'),
         modalDetailEvent: document.getElementById('modal-detail-event'),
         modalAsset: document.getElementById('modal-asset'),
+        modalRequestAction: document.getElementById('modal-request-action'),
         formGedung: document.getElementById('form-gedung'),
         formKendaraan: document.getElementById('form-kendaraan'),
         formAsset: document.getElementById('form-asset'),
         gedungListTable: document.getElementById('gedung-list-table'),
         kendaraanListTable: document.getElementById('kendaraan-list-table'),
+        requestListTable: document.getElementById('request-list-table'),
         masterTable: document.getElementById('master-asset-table'),
         masterFilterType: document.getElementById('master-filter-type'),
         masterSearch: document.getElementById('master-search'),
         filtersGedung: document.getElementById('filters-gedung'),
         filtersKendaraan: document.getElementById('filters-kendaraan'),
+        filtersRequest: document.getElementById('filters-request'),
         modalTitle: document.getElementById('modal-title'),
         modalBody: document.getElementById('modal-body'),
+        modalRequestTitle: document.getElementById('modal-request-title'),
+        modalRequestBody: document.getElementById('modal-request-body'),
         gedungFormTitle: document.getElementById('gedung-form-title'),
         kendaraanFormTitle: document.getElementById('kendaraan-form-title'),
         assetFormTitle: document.getElementById('asset-form-title'),
@@ -50,7 +58,7 @@ function initializeApp() {
         assetNumInput: document.getElementById('asset-num'),
         assetNumWrapper: document.getElementById('asset-num-wrapper'),
     };
-    elements.allModals = [elements.modalFormGedung, elements.modalFormKendaraan, elements.modalDetailEvent, elements.modalAsset];
+    elements.allModals = [elements.modalFormGedung, elements.modalFormKendaraan, elements.modalDetailEvent, elements.modalAsset, elements.modalRequestAction];
 
     // --- API HELPER ---
     const api = {
@@ -84,6 +92,12 @@ function initializeApp() {
             return api.fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
         },
         deleteAsset: (id) => api.fetch(`/api/assets/${id}`, { method: 'DELETE' }),
+        fetchAllRequests: () => api.fetch('/api/requests'),
+        fetchRequestByCode: (code) => api.fetch(`/api/requests/by-code/${code}`),
+        createRequest: (data) => api.fetch('/api/requests', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }),
+        approveRequest: (id, approvedBy, driverName) => api.fetch(`/api/requests/${id}/approve`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ approvedBy, driverName }) }),
+        rejectRequest: (id, rejectionReason) => api.fetch(`/api/requests/${id}/reject`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ rejectionReason }) }),
+        deleteRequest: (id) => api.fetch(`/api/requests/${id}`, { method: 'DELETE' }),
     };
 
     // --- UI HELPER ---
@@ -137,6 +151,45 @@ function initializeApp() {
                         </tr>
                     `;
                 }
+            }).join('');
+        },
+        renderRequestList: function(requests) {
+            const tableBody = elements.requestListTable;
+            if (!tableBody) return;
+            tableBody.innerHTML = '';
+            const sortedRequests = [...requests].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+            if (sortedRequests.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="7" class="text-center py-4 text-gray-500">Tidak ada data untuk filter ini.</td></tr>`;
+                return;
+            }
+            tableBody.innerHTML = sortedRequests.map(r => {
+                const cellClass = "px-6 py-3 whitespace-nowrap text-sm text-gray-500";
+                const createdDate = r.createdAt ? new Date(r.createdAt).toLocaleDateString('id-ID') : '-';
+                const startDate = new Date(r.startDate);
+                const endDate = new Date(r.endDate);
+                let tanggal = startDate.toLocaleDateString('id-ID');
+                if (startDate.toDateString() !== endDate.toDateString()) {
+                    tanggal += ` - ${endDate.toLocaleDateString('id-ID')}`;
+                }
+                const statusColor = r.status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 
+                                   r.status === 'approved' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800';
+                const statusLabel = r.status === 'pending' ? 'Pending' : 
+                                   r.status === 'approved' ? 'Diterima' : 'Ditolak';
+                return `
+                    <tr class="table-row" data-request-id="${r._id}">
+                        <td class="${cellClass}">${createdDate}</td>
+                        <td class="${cellClass}">${r.bookingType === 'gedung' ? 'Gedung' : 'Kendaraan'}</td>
+                        <td class="${cellClass} font-medium text-gray-900">${r.assetName}</td>
+                        <td class="${cellClass}">${r.userName}</td>
+                        <td class="${cellClass}">${tanggal}</td>
+                        <td class="${cellClass}"><span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold ${statusColor}">${statusLabel}</span></td>
+                        <td class="${cellClass} text-right">
+                            ${r.status === 'pending' ? `<button><i class="fas fa-check btn btn-approve" data-id="${r._id}"></i></button>
+                            <button><i class="fas fa-times btn btn-reject" data-id="${r._id}"></i></button>` : ''}
+                            <button><i class="fas fa-eye btn btn-view" data-id="${r._id}"></i></button>
+                        </td>
+                    </tr>
+                `;
             }).join('');
         },
         renderForms: function() {
@@ -361,6 +414,10 @@ function initializeApp() {
                 }
                 if (props.notes) {
                     detailsHtml += `<p><strong>Keterangan:</strong> ${props.notes}</p>`;
+                }
+                
+                if (props.letterFile) {
+                    detailsHtml += `<p><strong>Surat:</strong> <a href="/api/requests/download-surat/${props.letterFile}" target="_blank" class="text-blue-500 underline">Download Surat</a></p>`;
                 }
             }
             
@@ -667,11 +724,15 @@ function initializeApp() {
 
     async function refreshDataAndUI(force = false) {
         state.allBookingsCache = await api.fetchAllBookings();
+        state.allRequestsCache = await api.fetchAllRequests();
         if (elements.filtersGedung) {
             applyAdminFilters('gedung');
         }
         if (elements.filtersKendaraan) {
             applyAdminFilters('kendaraan');
+        }
+        if (elements.filtersRequest) {
+            applyRequestFilters();
         }
         
         if (elements.gedungListTable || elements.kendaraanListTable) {
@@ -687,12 +748,16 @@ function initializeApp() {
         
         const monthInputGedung = document.getElementById('filter-gedung-month');
         const monthInputKendaraan = document.getElementById('filter-kendaraan-month');
+        const monthInputRequest = document.getElementById('filter-request-month');
         
         if (monthInputGedung) {
             monthInputGedung.value = defaultMonth;
         }
         if (monthInputKendaraan) {
             monthInputKendaraan.value = defaultMonth;
+        }
+        if (monthInputRequest) {
+            monthInputRequest.value = defaultMonth;
         }
     }
 
@@ -936,9 +1001,171 @@ function initializeApp() {
         }
     }
 
+    function applyRequestFilters() {
+        const filterPanel = elements.filtersRequest;
+        if (!filterPanel) return;
+        
+        const typeInput = filterPanel.querySelector('#filter-request-type');
+        const statusInput = filterPanel.querySelector('#filter-request-status');
+        const monthInput = filterPanel.querySelector('#filter-request-month');
+        const searchInput = filterPanel.querySelector('#filter-request-search');
+        
+        const type = typeInput ? typeInput.value : 'all';
+        const status = statusInput ? statusInput.value : 'all';
+        const month = monthInput ? monthInput.value : '';
+        const searchQuery = searchInput ? searchInput.value.trim().toLowerCase() : '';
+        
+        const filtered = state.allRequestsCache.filter(r => {
+            if (type !== 'all' && r.bookingType !== type) return false;
+            if (status !== 'all' && r.status !== status) return false;
+            
+            if (month) {
+                const reqDate = new Date(r.startDate);
+                const reqYear = reqDate.getFullYear();
+                const reqMonth = String(reqDate.getMonth() + 1).padStart(2, '0');
+                const reqYearMonth = `${reqYear}-${reqMonth}`;
+                if (reqYearMonth !== month) return false;
+            }
+            
+            if (searchQuery) {
+                const assetMatch = r.assetName.toLowerCase().includes(searchQuery);
+                const userMatch = r.userName.toLowerCase().includes(searchQuery);
+                const noteMatch = r.notes ? r.notes.toLowerCase().includes(searchQuery) : false;
+                const requestIdMatch = r.requestId.toLowerCase().includes(searchQuery);
+                if (!(assetMatch || userMatch || noteMatch || requestIdMatch)) return false;
+            }
+            
+            return true;
+        });
+        
+        ui.renderRequestList(filtered);
+    }
+
+    async function handleApproveRequest(id, driverName = 'Tanpa Supir') {
+        if (!confirm('Setujui request ini?')) return;
+        try {
+            await api.approveRequest(id, 'admin', driverName || 'Tanpa Supir');
+            alert('Request disetujui dan booking dibuat.');
+            elements.modalRequestAction.classList.add('hidden');
+            await refreshDataAndUI(true);
+            applyRequestFilters();
+        } catch (error) {
+            alert(`Gagal: ${error.message}`);
+        }
+    }
+
+    async function handleRejectRequest(id) {
+        const reason = prompt('Masukkan alasan penolakan:');
+        if (reason === null) return;
+        try {
+            await api.rejectRequest(id, reason);
+            alert('Request ditolak.');
+            elements.modalRequestAction.classList.add('hidden');
+            await refreshDataAndUI(true);
+            applyRequestFilters();
+        } catch (error) {
+            alert(`Gagal: ${error.message}`);
+        }
+    }
+
+    function showRequestDetail(request) {
+        const start = new Date(request.startDate);
+        const end = new Date(request.endDate);
+        
+        const statusMap = {
+            pending: { label: 'Pending', color: 'bg-yellow-100 text-yellow-800' },
+            approved: { label: 'Disetujui', color: 'bg-green-100 text-green-800' },
+            rejected: { label: 'Ditolak', color: 'bg-red-100 text-red-800' }
+        };
+        const statusInfo = statusMap[request.status] || { label: request.status, color: 'bg-gray-100 text-gray-800' };
+        
+        let detailHtml = `
+            <p><strong>ID Request:</strong> ${request.requestId}</p>
+            <p><strong>Status:</strong> <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold ${statusInfo.color}">${statusInfo.label}</span></p>
+        `;
+        
+        if (request.status === 'approved' && request.bookingId) {
+            detailHtml += `<p><strong>Booking ID:</strong> <code class="bg-gray-100 px-2 py-1 rounded text-sm">${request.bookingId}</code></p>`;
+        }
+        
+        detailHtml += `
+            <p><strong>Tipe:</strong> ${request.bookingType === 'gedung' ? 'Gedung' : 'Kendaraan'}</p>
+            <p><strong>Aset:</strong> ${request.assetName}</p>
+            <p><strong>Peminjam:</strong> ${request.userName}</p>
+            <p><strong>Penanggung Jawab:</strong> ${request.personInCharge}</p>
+            <p><strong>HP PJ:</strong> ${request.picPhoneNumber}</p>
+            <p><strong>Tanggal Mulai:</strong> ${start.toLocaleDateString('id-ID')}</p>
+            <p><strong>Tanggal Selesai:</strong> ${end.toLocaleDateString('id-ID')}</p>
+        `;
+        
+        if (request.bookingType === 'gedung') {
+            if (request.activityName) detailHtml += `<p><strong>Kegiatan:</strong> ${request.activityName}</p>`;
+            if (request.borrowedItems && request.borrowedItems.length > 0) {
+                detailHtml += `<p><strong>Barang Dipinjam:</strong><ul class="ml-4 list-disc">`;
+                request.borrowedItems.forEach(it => {
+                    detailHtml += `<li>${it.assetName} (${it.assetCode}) - ${it.quantity} unit</li>`;
+                });
+                detailHtml += `</ul></p>`;
+            }
+        } else if (request.bookingType === 'kendaraan') {
+            if (request.driverName) detailHtml += `<p><strong>Supir:</strong> ${request.driverName}</p>`;
+            if (request.destination) detailHtml += `<p><strong>Tujuan:</strong> ${request.destination}</p>`;
+        }
+        
+        if (request.notes) detailHtml += `<p><strong>Keterangan:</strong> ${request.notes}</p>`;
+        if (request.status === 'rejected' && request.rejectionReason) {
+            detailHtml += `<p><strong>Alasan Penolakan:</strong> <span class="text-red-600">${request.rejectionReason}</span></p>`;
+        }
+        
+        if (request.status === 'pending') {
+            const driverSelectHtml = request.bookingType === 'kendaraan' ? `
+                <div class="mt-3">
+                    <label for="req-approve-supir" class="form-label text-sm font-semibold">Pilih Supir</label>
+                    <select id="req-approve-supir" class="form-input">
+                        <option value="Tanpa Supir">Tanpa Supir</option>
+                        ${(state.assets.supir || []).map(s => `<option value="${s.nama}">${s.nama}</option>`).join('')}
+                    </select>
+                </div>
+            ` : '';
+
+            detailHtml += `
+                ${driverSelectHtml}
+                <div class="flex gap-2 mt-4">
+                    <button id="btn-approve-req" class="flex-1 bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded">
+                        <i class="fas fa-check"></i> Setujui
+                    </button>
+                    <button id="btn-reject-req" class="flex-1 bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded">
+                        <i class="fas fa-times"></i> Tolak
+                    </button>
+                </div>
+            `;
+        }
+        
+        elements.modalRequestTitle.innerText = 'Detail Request';
+        elements.modalRequestBody.innerHTML = detailHtml;
+        
+        if (request.status === 'pending') {
+            setTimeout(() => {
+                const approveBtn = document.getElementById('btn-approve-req');
+                const rejectBtn = document.getElementById('btn-reject-req');
+                if (approveBtn) approveBtn.addEventListener('click', () => {
+                    const driverSelect = document.getElementById('req-approve-supir');
+                    const selectedDriver = driverSelect ? (driverSelect.value || 'Tanpa Supir') : 'Tanpa Supir';
+                    handleApproveRequest(request._id, selectedDriver);
+                });
+                if (rejectBtn) rejectBtn.addEventListener('click', () => handleRejectRequest(request._id));
+            }, 0);
+        }
+        
+        elements.modalRequestAction.classList.remove('hidden');
+    }
+
     function switchMainTab(tabName) {
         if (elements.contentAdmin) {
             elements.contentAdmin.classList.toggle('hidden', tabName !== 'admin');
+        }
+        if (elements.adminTabRequest) {
+            elements.adminTabRequest.classList.toggle('active', tabName === 'request');
         }
         if (elements.adminTabGedung) {
             elements.adminTabGedung.classList.toggle('active', tabName === 'gedung');
@@ -949,17 +1176,26 @@ function initializeApp() {
         if (elements.adminTabMaster) {
             elements.adminTabMaster.classList.toggle('active', tabName === 'master');
         }
-        if (tabName === 'gedung') {
+        if (tabName === 'request') {
+            if (elements.adminContentRequest) elements.adminContentRequest.classList.remove('hidden');
+            if (elements.adminContentGedung) elements.adminContentGedung.classList.add('hidden');
+            if (elements.adminContentKendaraan) elements.adminContentKendaraan.classList.add('hidden');
+            if (elements.adminContentMaster) elements.adminContentMaster.classList.add('hidden');
+            applyRequestFilters();
+        } else if (tabName === 'gedung') {
+            if (elements.adminContentRequest) elements.adminContentRequest.classList.add('hidden');
             if (elements.adminContentGedung) elements.adminContentGedung.classList.remove('hidden');
             if (elements.adminContentKendaraan) elements.adminContentKendaraan.classList.add('hidden');
             if (elements.adminContentMaster) elements.adminContentMaster.classList.add('hidden');
             if (elements.filtersGedung) applyAdminFilters('gedung');
         } else if (tabName === 'kendaraan') {
+            if (elements.adminContentRequest) elements.adminContentRequest.classList.add('hidden');
             if (elements.adminContentGedung) elements.adminContentGedung.classList.add('hidden');
             if (elements.adminContentKendaraan) elements.adminContentKendaraan.classList.remove('hidden');
             if (elements.adminContentMaster) elements.adminContentMaster.classList.add('hidden');
             if (elements.filtersKendaraan) applyAdminFilters('kendaraan');
         } else if (tabName === 'master') {
+            if (elements.adminContentRequest) elements.adminContentRequest.classList.add('hidden');
             if (elements.adminContentGedung) elements.adminContentGedung.classList.add('hidden');
             if (elements.adminContentKendaraan) elements.adminContentKendaraan.classList.add('hidden');
             if (elements.adminContentMaster) elements.adminContentMaster.classList.remove('hidden');
@@ -1077,10 +1313,13 @@ function initializeApp() {
         await refreshDataAndUI(true);
         
         if (elements.contentAdmin) {
-            switchMainTab('gedung');
+            switchMainTab('request');
         }
 
         // --- EVENT LISTENERS ---
+        if (elements.adminTabRequest) {
+            elements.adminTabRequest.addEventListener('click', () => switchMainTab('request'));
+        }
         if (elements.formGedung) {
             elements.formGedung.addEventListener('submit', (e) => handleFormSubmit(e, 'gedung'));
             setupFormLogic('gedung');
@@ -1110,6 +1349,30 @@ function initializeApp() {
         }
         if (elements.adminTabMaster) {
             elements.adminTabMaster.addEventListener('click', () => switchMainTab('master'));
+        }
+        if (elements.requestListTable) {
+            elements.requestListTable.addEventListener('click', (e) => {
+                const approveBtn = e.target.closest('.btn-approve');
+                const rejectBtn = e.target.closest('.btn-reject');
+                const viewBtn = e.target.closest('.btn-view');
+                const row = e.target.closest('tr[data-request-id]');
+                if (approveBtn && row) {
+                    handleApproveRequest(approveBtn.dataset.id);
+                } else if (rejectBtn && row) {
+                    handleRejectRequest(rejectBtn.dataset.id);
+                } else if (viewBtn && row) {
+                    const request = state.allRequestsCache.find(r => r._id === row.dataset.requestId);
+                    if (request) showRequestDetail(request);
+                }
+            });
+        }
+        if (elements.filtersRequest) {
+            elements.filtersRequest.addEventListener('input', () => applyRequestFilters());
+            elements.filtersRequest.addEventListener('change', () => applyRequestFilters());
+            const searchInput = document.getElementById('filter-request-search');
+            if (searchInput) {
+                searchInput.addEventListener('keyup', () => applyRequestFilters());
+            }
         }
         if (elements.btnAddGedung) {
             elements.btnAddGedung.addEventListener('click', () => {
@@ -1178,14 +1441,15 @@ function initializeApp() {
 
         if (elements.contentAdmin) {
             elements.contentAdmin.addEventListener('click', (e) => {
+                const editBtn = e.target.closest('.btn-edit');
+                const deleteBtn = e.target.closest('.btn-delete');
                 const row = e.target.closest('tr[data-booking-id]');
-                if (e.target.classList.contains('btn-edit')) {
-                    e.stopPropagation();
-                    handleEditClick(e.target.dataset.id);
-                } else if (e.target.classList.contains('btn-delete')) {
-                    e.stopPropagation();
-                    handleDeleteClick(e.target.dataset.id);
-                } else if (row) {
+                
+                if (editBtn && row) {
+                    handleEditClick(editBtn.dataset.id || row.dataset.bookingId);
+                } else if (deleteBtn && row) {
+                    handleDeleteClick(deleteBtn.dataset.id || row.dataset.bookingId);
+                } else if (row && !editBtn && !deleteBtn) {
                     const bookingData = state.allBookingsCache.find(b => b._id === row.dataset.bookingId);
                     if (bookingData) ui.showDetailModal(bookingData, 'admin');
                 }
@@ -1207,6 +1471,43 @@ function initializeApp() {
             if (searchInput) {
                 searchInput.addEventListener('keyup', () => applyAdminFilters('kendaraan'));
             }
+        }
+
+        // Click handlers untuk gedung & kendaraan tables
+        if (elements.gedungListTable) {
+            elements.gedungListTable.addEventListener('click', (e) => {
+                const editBtn = e.target.closest('.btn-edit');
+                const deleteBtn = e.target.closest('.btn-delete');
+                const row = e.target.closest('tr[data-booking-id]');
+                
+                if (!row) return;
+                if (editBtn) {
+                    handleEditClick(editBtn.dataset.id || row.dataset.bookingId);
+                } else if (deleteBtn) {
+                    handleDeleteClick(deleteBtn.dataset.id || row.dataset.bookingId);
+                } else if (!editBtn && !deleteBtn) {
+                    const bookingData = state.allBookingsCache.find(b => b._id === row.dataset.bookingId);
+                    if (bookingData) ui.showDetailModal(bookingData, 'admin');
+                }
+            });
+        }
+
+        if (elements.kendaraanListTable) {
+            elements.kendaraanListTable.addEventListener('click', (e) => {
+                const editBtn = e.target.closest('.btn-edit');
+                const deleteBtn = e.target.closest('.btn-delete');
+                const row = e.target.closest('tr[data-booking-id]');
+                
+                if (!row) return;
+                if (editBtn) {
+                    handleEditClick(editBtn.dataset.id || row.dataset.bookingId);
+                } else if (deleteBtn) {
+                    handleDeleteClick(deleteBtn.dataset.id || row.dataset.bookingId);
+                } else if (!editBtn && !deleteBtn) {
+                    const bookingData = state.allBookingsCache.find(b => b._id === row.dataset.bookingId);
+                    if (bookingData) ui.showDetailModal(bookingData, 'admin');
+                }
+            });
         }
     }
 
