@@ -101,6 +101,9 @@ function initializeApp() {
     };
 
     // --- UI HELPER ---
+    const esc = (v) => String(v ?? '').replace(/[&<>"'`=\/]/g, s => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;', '/': '&#x2F;', '`': '&#x60;', '=': '&#x3D;'
+    })[s]);
     const ui = {
         renderBookingList: function(type, bookings) {
             const tableBody = elements[`${type}ListTable`];
@@ -122,31 +125,31 @@ function initializeApp() {
                 const createdDate = b.createdAt ? new Date(b.createdAt).toLocaleDateString('id-ID') : '-';
                 if (type === 'gedung') {
                     return `
-                        <tr class="table-row" data-booking-id="${b._id}">
-                            <td class="${cellClass}">${createdDate}</td>
-                            <td class="${cellClass} font-medium text-gray-900">${b.assetName}</td>
-                            <td class="${cellClass}">${b.userName}</td>
-                            <td class="${cellClass}">${tanggal}</td>
-                            <td class="${cellClass}">${ui.formatBorrowedItemsForDisplay(b.borrowedItems)}</td>
-                            <td class="${cellClass}">${b.notes || '-'}</td>
+                        <tr class="table-row" data-booking-id="${esc(b._id)}">
+                            <td class="${cellClass}">${esc(createdDate)}</td>
+                            <td class="${cellClass} font-medium text-gray-900">${esc(b.assetName)}</td>
+                            <td class="${cellClass}">${esc(b.userName)}</td>
+                            <td class="${cellClass}">${esc(tanggal)}</td>
+                            <td class="${cellClass}">${esc(ui.formatBorrowedItemsForDisplay(b.borrowedItems))}</td>
+                            <td class="${cellClass}">${esc(b.notes || '-')}</td>
                             <td class="${cellClass} text-right">
-                                <button><i class="fas fa-edit btn btn-edit" data-id="${b._id}"></i></button>
-                                <button><i class="fas fa-trash btn btn-delete" data-id="${b._id}"></i></button>
+                                <button><i class="fas fa-edit btn btn-edit" data-id="${esc(b._id)}"></i></button>
+                                <button><i class="fas fa-trash btn btn-delete" data-id="${esc(b._id)}"></i></button>
                             </td>
                         </tr>
                     `;
                 } else {
                     return `
-                        <tr class="table-row" data-booking-id="${b._id}">
-                            <td class="${cellClass}">${createdDate}</td>
-                            <td class="${cellClass} font-medium text-gray-900">${b.assetName}</td>
-                            <td class="${cellClass}">${b.userName}</td>
-                            <td class="${cellClass}">${tanggal}</td>
-                            <td class="${cellClass}">${b.driverName || '-'}</td>
-                            <td class="${cellClass}">${b.notes || '-'}</td>
+                        <tr class="table-row" data-booking-id="${esc(b._id)}">
+                            <td class="${cellClass}">${esc(createdDate)}</td>
+                            <td class="${cellClass} font-medium text-gray-900">${esc(b.assetName)}</td>
+                            <td class="${cellClass}">${esc(b.userName)}</td>
+                            <td class="${cellClass}">${esc(tanggal)}</td>
+                            <td class="${cellClass}">${esc(b.driverName || '-')}</td>
+                            <td class="${cellClass}">${esc(b.notes || '-')}</td>
                             <td class="${cellClass} text-right">
-                                <button><i class="fas fa-edit btn btn-edit" data-id="${b._id}"></i></button>
-                                <button><i class="fas fa-trash btn btn-delete" data-id="${b._id}"></i></button>
+                                <button><i class="fas fa-edit btn btn-edit" data-id="${esc(b._id)}"></i></button>
+                                <button><i class="fas fa-trash btn btn-delete" data-id="${esc(b._id)}"></i></button>
                             </td>
                         </tr>
                     `;
@@ -176,17 +179,17 @@ function initializeApp() {
                 const statusLabel = r.status === 'pending' ? 'Pending' : 
                                    r.status === 'approved' ? 'Diterima' : 'Ditolak';
                 return `
-                    <tr class="table-row" data-request-id="${r._id}">
-                        <td class="${cellClass}">${createdDate}</td>
-                        <td class="${cellClass}">${r.bookingType === 'gedung' ? 'Gedung' : 'Kendaraan'}</td>
-                        <td class="${cellClass} font-medium text-gray-900">${r.assetName}</td>
-                        <td class="${cellClass}">${r.userName}</td>
-                        <td class="${cellClass}">${tanggal}</td>
-                        <td class="${cellClass}"><span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold ${statusColor}">${statusLabel}</span></td>
+                    <tr class="table-row" data-request-id="${esc(r._id)}">
+                        <td class="${cellClass}">${esc(createdDate)}</td>
+                        <td class="${cellClass}">${esc(r.bookingType === 'gedung' ? 'Gedung' : 'Kendaraan')}</td>
+                        <td class="${cellClass} font-medium text-gray-900">${esc(r.assetName)}</td>
+                        <td class="${cellClass}">${esc(r.userName)}</td>
+                        <td class="${cellClass}">${esc(tanggal)}</td>
+                        <td class="${cellClass}"><span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold ${statusColor}">${esc(statusLabel)}</span></td>
                         <td class="${cellClass} text-right">
-                            ${r.status === 'pending' ? `<button><i class="fas fa-check btn btn-approve" data-id="${r._id}"></i></button>
-                            <button><i class="fas fa-times btn btn-reject" data-id="${r._id}"></i></button>` : ''}
-                            <button><i class="fas fa-eye btn btn-view" data-id="${r._id}"></i></button>
+                            ${r.status === 'pending' ? `<button><i class="fas fa-check btn btn-approve" data-id="${esc(r._id)}"></i></button>
+                            <button><i class="fas fa-times btn btn-reject" data-id="${esc(r._id)}"></i></button>` : ''}
+                            <button><i class="fas fa-eye btn btn-view" data-id="${esc(r._id)}"></i></button>
                         </td>
                     </tr>
                 `;
@@ -294,7 +297,7 @@ function initializeApp() {
         formatBorrowedItemsForDisplay: function(borrowedItems) {
             if (!borrowedItems) return '-';
             if (Array.isArray(borrowedItems) && borrowedItems.length) {
-                return borrowedItems.map(it => `${it.assetName}: ${it.quantity}`).join(', ');
+                return borrowedItems.map(it => `${esc(it.assetName)}: ${Number(it.quantity)}`).join(', ');
             }
             if (typeof borrowedItems === 'string' && borrowedItems.trim()) return borrowedItems;
             return '-';
@@ -378,13 +381,13 @@ function initializeApp() {
             const end = new Date(props.endDate);
             const waktuText = formatRangeForModal(start, end);
             
-            let detailsHtml = `<p>${waktuText}</p>`;
+            let detailsHtml = `<p>${esc(waktuText)}</p>`;
             
             if (props.bookingId) {
-                detailsHtml += `<p><strong>Booking ID:</strong> <code class="bg-gray-100 px-2 py-1 rounded text-sm">${props.bookingId}</code></p>`;
+                detailsHtml += `<p><strong>Booking ID:</strong> <code class="bg-gray-100 px-2 py-1 rounded text-sm">${esc(props.bookingId)}</code></p>`;
             }
             
-            detailsHtml += `<p><strong>Peminjam:</strong> ${props.userName}</p>`;
+            detailsHtml += `<p><strong>Peminjam:</strong> ${esc(props.userName)}</p>`;
             
             if (context === 'admin') {
                 if (props.personInCharge) {
@@ -395,29 +398,29 @@ function initializeApp() {
                 }
                 if (props.bookingType === 'gedung') {
                     if (props.activityName) {
-                        detailsHtml += `<p><strong>Kegiatan:</strong> ${props.activityName}</p>`;
+                        detailsHtml += `<p><strong>Kegiatan:</strong> ${esc(props.activityName)}</p>`;
                     }
                     if (props.borrowedItems && props.borrowedItems.length > 0) {
                         detailsHtml += `<p><strong>Barang Dipinjam:</strong></p><ul class="ml-4 list-disc">`;
                         props.borrowedItems.forEach(item => {
-                            detailsHtml += `<li>${item.assetName} (${item.assetCode}) - ${item.quantity} unit</li>`;
+                            detailsHtml += `<li>${esc(item.assetName)} (${esc(item.assetCode)}) - ${Number(item.quantity)} unit</li>`;
                         });
                         detailsHtml += `</ul>`;
                     }
                 } else if (props.bookingType === 'kendaraan') {
                     if (props.destination) {
-                        detailsHtml += `<p><strong>Tujuan:</strong> ${props.destination}</p>`;
+                        detailsHtml += `<p><strong>Tujuan:</strong> ${esc(props.destination)}</p>`;
                     }
                     if (props.driverName && props.driverName !== 'Tanpa Supir') {
-                        detailsHtml += `<p><strong>Supir:</strong> ${props.driverName}</p>`;
+                        detailsHtml += `<p><strong>Supir:</strong> ${esc(props.driverName)}</p>`;
                     }
                 }
                 if (props.notes) {
-                    detailsHtml += `<p><strong>Keterangan:</strong> ${props.notes}</p>`;
+                    detailsHtml += `<p><strong>Keterangan:</strong> ${esc(props.notes)}</p>`;
                 }
                 
                 if (props.letterFile) {
-                    detailsHtml += `<p><strong>Surat:</strong> <a href="/api/requests/download-surat/${props.letterFile}" target="_blank" class="text-blue-500 underline">Download Surat</a></p>`;
+                    detailsHtml += `<p><strong>Surat:</strong> <a href="/api/requests/download-surat/${esc(props.letterFile)}" target="_blank" class="text-blue-500 underline">Download Surat</a></p>`;
                 }
             }
             
