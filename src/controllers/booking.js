@@ -3,7 +3,7 @@ const Asset = require('../models/asset');
 
 const getAllBookings = async (req, res) => {
     try {
-        const bookings = await Booking.find({});
+        const bookings = await Booking.find({}).populate('driver');
         res.json(bookings);
     } catch (err) {
         res.status(500).json({ message: err.message });
@@ -13,7 +13,7 @@ const getAllBookings = async (req, res) => {
 const getBookingByCode = async (req, res) => {
     try {
         const { code } = req.params;
-        const booking = await Booking.findOne({ bookingId: code });
+        const booking = await Booking.findOne({ bookingId: code }).populate('driver');
         if (!booking) return res.status(404).json({ message: 'Booking tidak ditemukan.' });
         res.json(booking);
     } catch (err) {
@@ -22,7 +22,7 @@ const getBookingByCode = async (req, res) => {
 };
 
 const checkConflict = async (bookingData, id = null) => {
-    const { startDate, endDate, assetCode, driverName, bookingType } = bookingData;
+    const { startDate, endDate, assetCode, driver, bookingType } = bookingData;
 
     const conflictQuery = {
         startDate: { $lt: new Date(endDate) },
@@ -34,19 +34,19 @@ const checkConflict = async (bookingData, id = null) => {
     }
 
     const specificCriteria = [{ assetCode: assetCode }];
-    if (bookingType === 'kendaraan' && driverName && driverName !== 'Tanpa Supir') {
-        specificCriteria.push({ driverName: driverName });
+    if (bookingType === 'kendaraan' && driver) {
+        specificCriteria.push({ driver: driver });
     }
     conflictQuery.$or = specificCriteria;
 
-    const conflictingBooking = await Booking.findOne(conflictQuery);
+    const conflictingBooking = await Booking.findOne(conflictQuery).populate('driver');
 
     if (conflictingBooking) {
         if (conflictingBooking.assetCode === assetCode) {
             return `Aset "${conflictingBooking.assetName}" sudah dipesan pada rentang waktu tersebut.`;
         }
-        if (conflictingBooking.driverName === driverName) {
-            return `Supir "${driverName}" sudah bertugas pada rentang waktu tersebut.`;
+        if (conflictingBooking.driver && String(conflictingBooking.driver._id) === String(driver)) {
+            return `Supir "${conflictingBooking.driver.nama}" sudah bertugas pada rentang waktu tersebut.`;
         }
     }
     return null;

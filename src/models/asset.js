@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
-const ALLOWED_TYPES = ['gedung', 'kendaraan', 'supir', 'barang'];
+const ALLOWED_TYPES = ['gedung', 'kendaraan', 'barang'];
 
 const assetSchema = new Schema({
     kode: { type: String, required: true, trim: true },

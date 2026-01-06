@@ -4,7 +4,7 @@ const Asset = require('../models/asset');
 
 const getAllRequests = async (req, res) => {
     try {
-        const requests = await Request.find({}).sort({ createdAt: -1 });
+        const requests = await Request.find({}).populate('driver').sort({ createdAt: -1 });
         res.json(requests);
     } catch (err) {
         res.status(500).json({ message: err.message });
@@ -14,7 +14,7 @@ const getAllRequests = async (req, res) => {
 const getRequestById = async (req, res) => {
     try {
         const { id } = req.params;
-        const request = await Request.findById(id);
+        const request = await Request.findById(id).populate('driver');
         if (!request) return res.status(404).json({ message: 'Request tidak ditemukan.' });
         res.json(request);
     } catch (err) {
@@ -25,7 +25,7 @@ const getRequestById = async (req, res) => {
 const getRequestByCode = async (req, res) => {
     try {
         const { code } = req.params;
-        const request = await Request.findOne({ requestId: code });
+        const request = await Request.findOne({ requestId: code }).populate('driver');
         if (!request) return res.status(404).json({ message: 'Request tidak ditemukan.' });
         res.json(request);
     } catch (err) {
@@ -59,9 +59,9 @@ const createRequest = async (req, res) => {
 const approveRequest = async (req, res) => {
     try {
         const { id } = req.params;
-        const { approvedBy, driverName } = req.body;
+        const { approvedBy, driver } = req.body;
 
-        const request = await Request.findById(id);
+        const request = await Request.findById(id).populate('driver');
         if (!request) return res.status(404).json({ message: 'Request tidak ditemukan.' });
 
         if (request.status !== 'pending') {
@@ -69,8 +69,8 @@ const approveRequest = async (req, res) => {
         }
 
         // Jika kendaraan, admin dapat memilih supir saat approve
-        if (request.bookingType === 'kendaraan' && driverName) {
-            request.driverName = driverName;
+        if (request.bookingType === 'kendaraan' && driver) {
+            request.driver = driver;
         }
 
         // Validasi conflict dengan booking yang sudah ada
@@ -78,7 +78,7 @@ const approveRequest = async (req, res) => {
             startDate: request.startDate,
             endDate: request.endDate,
             assetCode: request.assetCode,
-            driverName: request.driverName,
+            driver: request.driver,
             bookingType: request.bookingType
         });
 
@@ -111,7 +111,7 @@ const approveRequest = async (req, res) => {
             notes: request.notes,
             activityName: request.activityName,
             borrowedItems: request.borrowedItems,
-            driverName: request.driverName,
+            driver: request.driver,
             destination: request.destination
         };
 
@@ -192,7 +192,7 @@ function getJakartaMinutesOfDay(date) {
 }
 
 async function checkConflict(bookingData) {
-    const { startDate, endDate, assetCode, driverName, bookingType } = bookingData;
+    const { startDate, endDate, assetCode, driver, bookingType } = bookingData;
 
     const conflictQuery = {
         startDate: { $lt: new Date(endDate) },
@@ -200,19 +200,19 @@ async function checkConflict(bookingData) {
     };
 
     const specificCriteria = [{ assetCode: assetCode }];
-    if (bookingType === 'kendaraan' && driverName && driverName !== 'Tanpa Supir') {
-        specificCriteria.push({ driverName: driverName });
+    if (bookingType === 'kendaraan' && driver) {
+        specificCriteria.push({ driver: driver });
     }
     conflictQuery.$or = specificCriteria;
 
-    const conflictingBooking = await Booking.findOne(conflictQuery);
+    const conflictingBooking = await Booking.findOne(conflictQuery).populate('driver');
 
     if (conflictingBooking) {
         if (conflictingBooking.assetCode === assetCode) {
             return `Aset "${conflictingBooking.assetName}" sudah dipesan pada rentang waktu tersebut.`;
         }
-        if (conflictingBooking.driverName === driverName) {
-            return `Supir "${driverName}" sudah bertugas pada rentang waktu tersebut.`;
+        if (conflictingBooking.driver && String(conflictingBooking.driver._id) === String(driver)) {
+            return `Supir "${conflictingBooking.driver.nama}" sudah bertugas pada rentang waktu tersebut.`;
         }
     }
     return null;

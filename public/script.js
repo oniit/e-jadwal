@@ -17,25 +17,32 @@ function initializeApp() {
         adminTabRequest: document.getElementById('admin-tab-request'),
         adminTabGedung: document.getElementById('admin-tab-gedung'),
         adminTabKendaraan: document.getElementById('admin-tab-kendaraan'),
+        adminTabDriver: document.getElementById('admin-tab-driver'),
         adminTabMaster: document.getElementById('admin-tab-master'),
         adminContentRequest: document.getElementById('admin-content-request'),
         adminContentGedung: document.getElementById('admin-content-gedung'),
         adminContentKendaraan: document.getElementById('admin-content-kendaraan'),
+        adminContentDriver: document.getElementById('admin-content-driver'),
         adminContentMaster: document.getElementById('admin-content-master'),
         btnSearchBooking: document.getElementById('btn-search-booking'),
         btnAddGedung: document.getElementById('btn-add-gedung'),
         btnAddKendaraan: document.getElementById('btn-add-kendaraan'),
+        btnAddDriver: document.getElementById('btn-add-driver'),
         btnAddAsset: document.getElementById('btn-add-asset'),
         modalFormGedung: document.getElementById('modal-form-gedung'),
         modalFormKendaraan: document.getElementById('modal-form-kendaraan'),
+        modalFormDriver: document.getElementById('modal-form-driver'),
         modalDetailEvent: document.getElementById('modal-detail-event'),
         modalAsset: document.getElementById('modal-asset'),
         modalRequestAction: document.getElementById('modal-request-action'),
         formGedung: document.getElementById('form-gedung'),
         formKendaraan: document.getElementById('form-kendaraan'),
         formAsset: document.getElementById('form-asset'),
+        formDriver: document.getElementById('form-driver'),
         gedungListTable: document.getElementById('gedung-list-table'),
         kendaraanListTable: document.getElementById('kendaraan-list-table'),
+        driverListTable: document.getElementById('driver-list-table'),
+        driverSearch: document.getElementById('filter-driver-search'),
         requestListTable: document.getElementById('request-list-table'),
         masterTable: document.getElementById('master-asset-table'),
         masterFilterType: document.getElementById('master-filter-type'),
@@ -49,6 +56,7 @@ function initializeApp() {
         modalRequestBody: document.getElementById('modal-request-body'),
         gedungFormTitle: document.getElementById('gedung-form-title'),
         kendaraanFormTitle: document.getElementById('kendaraan-form-title'),
+        driverFormTitle: document.getElementById('driver-form-title'),
         assetFormTitle: document.getElementById('asset-form-title'),
         assetIdInput: document.getElementById('asset-id'),
         assetKodeInput: document.getElementById('asset-kode'),
@@ -78,6 +86,7 @@ function initializeApp() {
             }
         },
         fetchAssets: () => api.fetch('/api/assets', { cache: 'no-store' }),
+        fetchDrivers: () => api.fetch('/api/drivers', { cache: 'no-store' }),
         fetchAllBookings: () => api.fetch('/api/bookings'),
         fetchBookingByCode: (code) => api.fetch(`/api/bookings/by-code/${code}`),
         saveBooking: (data, id) => {
@@ -92,10 +101,16 @@ function initializeApp() {
             return api.fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
         },
         deleteAsset: (id) => api.fetch(`/api/assets/${id}`, { method: 'DELETE' }),
+        saveDriver: (data, id) => {
+            const url = id ? `/api/drivers/${id}` : '/api/drivers';
+            const method = id ? 'PUT' : 'POST';
+            return api.fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+        },
+        deleteDriver: (id) => api.fetch(`/api/drivers/${id}`, { method: 'DELETE' }),
         fetchAllRequests: () => api.fetch('/api/requests'),
         fetchRequestByCode: (code) => api.fetch(`/api/requests/by-code/${code}`),
         createRequest: (data) => api.fetch('/api/requests', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }),
-        approveRequest: (id, approvedBy, driverName) => api.fetch(`/api/requests/${id}/approve`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ approvedBy, driverName }) }),
+        approveRequest: (id, approvedBy, driver) => api.fetch(`/api/requests/${id}/approve`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ approvedBy, driver }) }),
         rejectRequest: (id, rejectionReason) => api.fetch(`/api/requests/${id}/reject`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ rejectionReason }) }),
         deleteRequest: (id) => api.fetch(`/api/requests/${id}`, { method: 'DELETE' }),
     };
@@ -104,6 +119,11 @@ function initializeApp() {
     const ui = {
         renderBookingList: function(type, bookings) {
             const tableBody = elements[`${type}ListTable`];
+            if (!tableBody) {
+                console.warn(`❌ Table element not found for type: ${type}, key: ${type}ListTable`);
+                return;
+            }
+            console.log(`📊 Rendering ${type} table with ${bookings.length} bookings`);
             tableBody.innerHTML = '';
             const sortedBookings = [...bookings].sort((a, b) => new Date(b.startDate) - new Date(a.startDate));
             if (sortedBookings.length === 0) {
@@ -142,7 +162,7 @@ function initializeApp() {
                             <td class="${cellClass} font-medium text-gray-900">${b.assetName}</td>
                             <td class="${cellClass}">${b.userName}</td>
                             <td class="${cellClass}">${tanggal}</td>
-                            <td class="${cellClass}">${b.driverName || '-'}</td>
+                            <td class="${cellClass}">${typeof b.driver === 'object' && b.driver ? b.driver.nama : (b.driver || '-')}</td>
                             <td class="${cellClass}">${b.notes || '-'}</td>
                             <td class="${cellClass} text-right">
                                 <button><i class="fas fa-edit btn btn-edit" data-id="${b._id}"></i></button>
@@ -155,7 +175,11 @@ function initializeApp() {
         },
         renderRequestList: function(requests) {
             const tableBody = elements.requestListTable;
-            if (!tableBody) return;
+            if (!tableBody) {
+                console.warn('❌ Request table element not found');
+                return;
+            }
+            console.log(`📊 Rendering request table with ${requests.length} requests`);
             tableBody.innerHTML = '';
             const sortedRequests = [...requests].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
             if (sortedRequests.length === 0) {
@@ -187,6 +211,35 @@ function initializeApp() {
                             ${r.status === 'pending' ? `<button><i class="fas fa-check btn btn-approve" data-id="${r._id}"></i></button>
                             <button><i class="fas fa-times btn btn-reject" data-id="${r._id}"></i></button>` : ''}
                             <button><i class="fas fa-eye btn btn-view" data-id="${r._id}"></i></button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        },
+        renderDriverList: function(drivers) {
+            const tableBody = elements.driverListTable;
+            if (!tableBody) {
+                console.warn('❌ Driver table element not found');
+                return;
+            }
+            console.log(`📊 Rendering driver table with ${drivers.length} drivers`);
+            tableBody.innerHTML = '';
+            const sortedDrivers = [...drivers].sort((a, b) => a.kode.localeCompare(b.kode));
+            if (sortedDrivers.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-gray-500">Tidak ada supir.</td></tr>`;
+                return;
+            }
+            tableBody.innerHTML = sortedDrivers.map(d => {
+                const cellClass = "px-6 py-3 whitespace-nowrap text-sm text-gray-500";
+                return `
+                    <tr class="table-row" data-driver-id="${d._id}">
+                        <td class="${cellClass} font-medium text-gray-900">${d.kode}</td>
+                        <td class="${cellClass}">${d.nama}</td>
+                        <td class="${cellClass}">${d.noTelp || '-'}</td>
+                        <td class="${cellClass}">${d.detail || '-'}</td>
+                        <td class="${cellClass} text-right">
+                            <button><i class="fas fa-edit btn btn-edit" data-id="${d._id}"></i></button>
+                            <button><i class="fas fa-trash btn btn-delete" data-id="${d._id}"></i></button>
                         </td>
                     </tr>
                 `;
@@ -267,7 +320,6 @@ function initializeApp() {
                         <select id="asset-tipe" required class="form-input">
                             <option value="gedung">Gedung</option>
                             <option value="kendaraan">Kendaraan</option>
-                            <option value="supir">Supir</option>
                             <option value="barang">Barang</option>
                         </select>
                     </div>
@@ -318,9 +370,9 @@ function initializeApp() {
             const supirSelect = elements.formKendaraan.querySelector('#kendaraan-supir');
             const currentSupir = supirSelect.value;
             supirSelect.innerHTML = '<option value="">Tanpa Supir</option>';
-            assets.supir.forEach(s => {
-                const option = new Option(s.nama, s.kode);
-                if (unavailable.drivers?.has(s.kode)) {
+            (state.drivers || []).forEach(s => {
+                const option = new Option(s.nama, s._id);
+                if (unavailable.drivers?.has(s._id)) {
                     option.disabled = true;
                     option.textContent += ' (Tidak Tersedia)';
                 }
@@ -362,7 +414,7 @@ function initializeApp() {
                 }
                 if (driverSelect) {
                     driverSelect.innerHTML = '<option value="all">Semua Supir</option>';
-                    assets.supir.forEach(s => driverSelect.add(new Option(s.nama, s.kode)));
+                    (state.drivers || []).forEach(s => driverSelect.add(new Option(s.nama, s._id)));
                 }
             }
         },
@@ -408,8 +460,9 @@ function initializeApp() {
                     if (props.destination) {
                         detailsHtml += `<p><strong>Tujuan:</strong> ${props.destination}</p>`;
                     }
-                    if (props.driverName && props.driverName !== 'Tanpa Supir') {
-                        detailsHtml += `<p><strong>Supir:</strong> ${props.driverName}</p>`;
+                    if (props.driver && (typeof props.driver === 'object' ? props.driver.nama : props.driver)) {
+                        const driverName = typeof props.driver === 'object' ? props.driver.nama : props.driver;
+                        detailsHtml += `<p><strong>Supir:</strong> ${driverName}</p>`;
                     }
                 }
                 if (props.notes) {
@@ -452,8 +505,8 @@ function initializeApp() {
 
     const flattenAssets = () => {
         if (!state.assets) return [];
-        const { gedung = [], kendaraan = [], supir = [], barang = [] } = state.assets;
-        return [...gedung, ...kendaraan, ...supir, ...barang];
+        const { gedung = [], kendaraan = [], barang = [] } = state.assets;
+        return [...gedung, ...kendaraan, ...barang];
     };
 
     function renderMasterTable() {
@@ -473,15 +526,16 @@ function initializeApp() {
         }
 
         elements.masterTable.innerHTML = filtered.map((asset) => {
-            const cellClass = "px-4 py-3 whitespace-nowrap text-sm text-gray-700";
+            const cellClass = "px-6 py-3 whitespace-nowrap text-sm text-gray-700";
             const badgeClass = "inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700";
+            const detailDisplay = asset.detail || '-';
             return `
                 <tr class="table-row" data-asset-id="${asset._id}">
                     <td class="${cellClass}">${asset.kode}</td>
                     <td class="${cellClass} font-medium text-gray-900">${asset.nama}</td>
                     <td class="${cellClass}"><span class="${badgeClass}">${asset.tipe}</span></td>
                     <td class="${cellClass}">${asset.num ?? '-'}</td>
-                    <td class="${cellClass}">${asset.detail || '-'}</td>
+                    <td class="${cellClass}">${detailDisplay}</td>
                     <td class="${cellClass} text-right">
                         <button title="Edit"><i class="fas fa-edit btn btn-edit" data-id="${asset._id}"></i></button>
                         <button title="Hapus"><i class="fas fa-trash btn btn-delete" data-id="${asset._id}"></i></button>
@@ -560,9 +614,90 @@ function initializeApp() {
         }
     }
 
+    function openDriverModal(driver = null) {
+        const modalHtml = `
+            <div class="modal-content p-6 rounded-lg shadow-xl max-w-md mx-auto">
+                <h3 class="text-xl font-bold mb-4">${driver ? 'Edit Supir' : 'Tambah Supir'}</h3>
+                <form id="form-driver">
+                    <input type="hidden" id="driver-id" value="${driver?._id || ''}">
+                    <div class="mb-3">
+                        <label for="driver-kode" class="form-label">Kode</label>
+                        <input type="text" id="driver-kode" class="form-input" required value="${driver?.kode || ''}">
+                    </div>
+                    <div class="mb-3">
+                        <label for="driver-nama" class="form-label">Nama</label>
+                        <input type="text" id="driver-nama" class="form-input" required value="${driver?.nama || ''}">
+                    </div>
+                    <div class="mb-3">
+                        <label for="driver-notelp" class="form-label">No. Telepon</label>
+                        <input type="text" id="driver-notelp" class="form-input" value="${driver?.noTelp || ''}">
+                    </div>
+                    <div class="mb-3">
+                        <label for="driver-detail" class="form-label">Detail</label>
+                        <textarea id="driver-detail" class="form-input" rows="2">${driver?.detail || ''}</textarea>
+                    </div>
+                    <div class="flex gap-2">
+                        <button type="submit" class="flex-1 add-btn">Simpan</button>
+                        <button type="button" class="flex-1 cancel-btn" onclick="this.closest('.modal-content').parentElement.remove()">Batal</button>
+                    </div>
+                </form>
+            </div>
+        `;
+        
+        const modalOverlay = document.createElement('div');
+        modalOverlay.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+        modalOverlay.innerHTML = modalHtml;
+        document.body.appendChild(modalOverlay);
+        
+        modalOverlay.querySelector('#form-driver').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('driver-id').value || null;
+            const payload = {
+                kode: document.getElementById('driver-kode').value.trim(),
+                nama: document.getElementById('driver-nama').value.trim(),
+                noTelp: document.getElementById('driver-notelp').value.trim(),
+                detail: document.getElementById('driver-detail').value.trim()
+            };
+            
+            if (!payload.kode || !payload.nama) {
+                alert('Kode dan Nama wajib diisi.');
+                return;
+            }
+            
+            try {
+                await api.saveDriver(payload, id);
+                alert(`Supir berhasil ${id ? 'diperbarui' : 'ditambahkan'}.`);
+                modalOverlay.remove();
+                await refreshAssets();
+            } catch (error) {
+                alert(`Gagal menyimpan supir: ${error.message}`);
+            }
+        });
+        
+        modalOverlay.addEventListener('click', (e) => {
+            if (e.target === modalOverlay) modalOverlay.remove();
+        });
+    }
+
+    async function handleDriverDelete(id) {
+        if (!id) return;
+        if (!confirm('Hapus supir ini? Data yang berkaitan tidak akan otomatis diperbarui.')) return;
+        try {
+            await api.deleteDriver(id);
+            alert('Supir berhasil dihapus.');
+            await refreshAssets();
+        } catch (error) {
+            alert(`Gagal menghapus supir: ${error.message}`);
+        }
+    }
+
     async function refreshAssets(prefetched = null) {
         const assets = prefetched || await api.fetchAssets();
-        state.assets = assets || { gedung: [], kendaraan: [], supir: [], barang: [] };
+        state.assets = assets || { gedung: [], kendaraan: [], barang: [] };
+        
+        // Fetch drivers separately
+        const drivers = await api.fetchDrivers();
+        state.drivers = drivers || [];
 
         if (elements.formGedung && elements.formKendaraan) {
             ui.populateDropdowns(state.assets, {});
@@ -620,8 +755,9 @@ function initializeApp() {
             const bookingEnd = new Date(booking.endDate);
             if (start < bookingEnd && end > bookingStart) {
                 if (booking.bookingType === type) unavailable.assets.add(booking.assetCode);
-                if (booking.bookingType === 'kendaraan' && booking.driverName && booking.driverName !== 'Tanpa Supir') {
-                    unavailable.drivers.add(booking.driverName);
+                if (booking.bookingType === 'kendaraan' && booking.driver) {
+                    const driverId = typeof booking.driver === 'object' ? booking.driver._id : booking.driver;
+                    if (driverId) unavailable.drivers.add(driverId);
                 }
             }
         });
@@ -723,15 +859,20 @@ function initializeApp() {
     }
 
     async function refreshDataAndUI(force = false) {
+        console.log('🔄 refreshDataAndUI called');
         state.allBookingsCache = await api.fetchAllBookings();
         state.allRequestsCache = await api.fetchAllRequests();
+        console.log(`📦 Loaded ${state.allBookingsCache.length} bookings and ${state.allRequestsCache.length} requests`);
         if (elements.filtersGedung) {
+            console.log('✅ Applying gedung filters');
             applyAdminFilters('gedung');
         }
         if (elements.filtersKendaraan) {
+            console.log('✅ Applying kendaraan filters');
             applyAdminFilters('kendaraan');
         }
         if (elements.filtersRequest) {
+            console.log('✅ Applying request filters');
             applyRequestFilters();
         }
         
@@ -750,6 +891,10 @@ function initializeApp() {
         const monthInputKendaraan = document.getElementById('filter-kendaraan-month');
         const monthInputRequest = document.getElementById('filter-request-month');
         
+        // Don't set default month - leave empty to show all data
+        // User previously reported no data showing, this was because month filter
+        // was set to current month but all data is from previous months
+        /*
         if (monthInputGedung) {
             monthInputGedung.value = defaultMonth;
         }
@@ -759,11 +904,16 @@ function initializeApp() {
         if (monthInputRequest) {
             monthInputRequest.value = defaultMonth;
         }
+        */
     }
 
     function applyAdminFilters(type) {
+        console.log(`🔍 applyAdminFilters called for type: ${type}`);
         const filterPanel = elements[type === 'gedung' ? 'filtersGedung' : 'filtersKendaraan'];
-        if (!filterPanel) return;
+        if (!filterPanel) {
+            console.warn(`⚠️  Filter panel not found for type: ${type}`);
+            return;
+        }
         
         const monthInput = filterPanel.querySelector(`#filter-${type}-month`);
         const assetInput = filterPanel.querySelector(`#filter-${type}-asset`);
@@ -777,7 +927,10 @@ function initializeApp() {
         const searchQuery = searchInput ? searchInput.value.trim().toLowerCase() : '';
         const driver = driverInput ? driverInput.value : null;
         
+        console.log(`📋 Filter values - month: ${month}, asset: ${asset}, barang: ${barang}, driver: ${driver}`);
+        console.log(`📦 state.allBookingsCache has ${state.allBookingsCache.length} items`);
         const bookingsToFilter = filterData(state.allBookingsCache, { type, month, asset, barang, driver, searchQuery });
+        console.log(`🎯 Filtered to ${bookingsToFilter.length} bookings, rendering...`);
         ui.renderBookingList(type, bookingsToFilter);
     }
 
@@ -800,7 +953,10 @@ function initializeApp() {
                 if (!hasBarang) return false;
             }
             
-            if (filters.driver && filters.driver !== 'all' && b.driverName !== filters.driver) return false;
+            if (filters.driver && filters.driver !== 'all') {
+                const driverId = typeof b.driver === 'object' ? b.driver._id : b.driver;
+                if (driverId !== filters.driver) return false;
+            }
             
             if (filters.searchQuery) {
                 const searchLower = filters.searchQuery.toLowerCase();
@@ -817,8 +973,9 @@ function initializeApp() {
                         (b.activityName ? b.activityName.toLowerCase().includes(searchLower) : false) ||
                         (barangText ? barangText.includes(searchLower) : false);
                 } else if (b.bookingType === 'kendaraan') {
+                    const driverName = typeof b.driver === 'object' && b.driver ? b.driver.nama : (b.driver || '');
                     additionalFieldsMatch = 
-                        (b.driverName ? b.driverName.toLowerCase().includes(searchLower) : false) ||
+                        (driverName ? driverName.toLowerCase().includes(searchLower) : false) ||
                         (b.destination ? b.destination.toLowerCase().includes(searchLower) : false);
                 }
                 
@@ -892,14 +1049,14 @@ function initializeApp() {
             }
         } else {
             const selectedKendaraan = state.assets.kendaraan.find(k => k.kode === form.elements['kendaraan-nama'].value);
-            const supirNama = form.elements['kendaraan-supir'].selectedIndex > 0 ? form.elements['kendaraan-supir'].options[form.elements['kendaraan-supir'].selectedIndex].text : '';
+            const supirId = form.elements['kendaraan-supir'].value;
             Object.assign(bookingData, {
                 userName: form.elements['kendaraan-peminjam'].value,
                 assetCode: selectedKendaraan.kode,
                 assetName: selectedKendaraan.nama,
                 startDate: startDate,
                 endDate: endDate,
-                driverName: supirNama || 'Tanpa Supir',
+                driver: supirId || null,
                 destination: form.elements['kendaraan-tujuan'].value,
                 personInCharge: form.elements['kendaraan-penanggung-jawab'].value,
                 picPhoneNumber: form.elements['kendaraan-nomor-penanggung-jawab'].value,
@@ -976,10 +1133,13 @@ function initializeApp() {
             elements.modalFormGedung.classList.remove('hidden');
         } else {
             const supirSelect = form.elements['kendaraan-supir'];
-            for (let i = 0; i < supirSelect.options.length; i++) {
-                if (supirSelect.options[i].text === booking.driverName) {
-                    supirSelect.selectedIndex = i;
-                    break;
+            const driverId = typeof booking.driver === 'object' ? booking.driver._id : booking.driver;
+            if (driverId) {
+                for (let i = 0; i < supirSelect.options.length; i++) {
+                    if (supirSelect.options[i].value === driverId) {
+                        supirSelect.selectedIndex = i;
+                        break;
+                    }
                 }
             }
             form.elements['kendaraan-tujuan'].value = booking.destination || '';
@@ -1002,8 +1162,12 @@ function initializeApp() {
     }
 
     function applyRequestFilters() {
+        console.log('🔍 applyRequestFilters called');
         const filterPanel = elements.filtersRequest;
-        if (!filterPanel) return;
+        if (!filterPanel) {
+            console.warn('⚠️  Request filter panel not found');
+            return;
+        }
         
         const typeInput = filterPanel.querySelector('#filter-request-type');
         const statusInput = filterPanel.querySelector('#filter-request-status');
@@ -1015,6 +1179,8 @@ function initializeApp() {
         const month = monthInput ? monthInput.value : '';
         const searchQuery = searchInput ? searchInput.value.trim().toLowerCase() : '';
         
+        console.log(`📋 Filter values - type: ${type}, status: ${status}, month: ${month}`);
+        console.log(`📦 state.allRequestsCache has ${state.allRequestsCache.length} items`);
         const filtered = state.allRequestsCache.filter(r => {
             if (type !== 'all' && r.bookingType !== type) return false;
             if (status !== 'all' && r.status !== status) return false;
@@ -1038,13 +1204,14 @@ function initializeApp() {
             return true;
         });
         
+        console.log(`🎯 Filtered to ${filtered.length} requests, rendering...`);
         ui.renderRequestList(filtered);
     }
 
-    async function handleApproveRequest(id, driverName = 'Tanpa Supir') {
+    async function handleApproveRequest(id, driver = null) {
         if (!confirm('Setujui request ini?')) return;
         try {
-            await api.approveRequest(id, 'admin', driverName || 'Tanpa Supir');
+            await api.approveRequest(id, 'admin', driver || null);
             alert('Request disetujui dan booking dibuat.');
             elements.modalRequestAction.classList.add('hidden');
             await refreshDataAndUI(true);
@@ -1108,7 +1275,10 @@ function initializeApp() {
                 detailHtml += `</ul></p>`;
             }
         } else if (request.bookingType === 'kendaraan') {
-            if (request.driverName) detailHtml += `<p><strong>Supir:</strong> ${request.driverName}</p>`;
+            if (request.driver) {
+                const driverName = typeof request.driver === 'object' ? request.driver.nama : request.driver;
+                detailHtml += `<p><strong>Supir:</strong> ${driverName}</p>`;
+            }
             if (request.destination) detailHtml += `<p><strong>Tujuan:</strong> ${request.destination}</p>`;
         }
         
@@ -1122,8 +1292,8 @@ function initializeApp() {
                 <div class="mt-3">
                     <label for="req-approve-supir" class="form-label text-sm font-semibold">Pilih Supir</label>
                     <select id="req-approve-supir" class="form-input">
-                        <option value="Tanpa Supir">Tanpa Supir</option>
-                        ${(state.assets.supir || []).map(s => `<option value="${s.nama}">${s.nama}</option>`).join('')}
+                        <option value="">Tanpa Supir</option>
+                        ${(state.drivers || []).map(s => `<option value="${s._id}">${s.nama}</option>`).join('')}
                     </select>
                 </div>
             ` : '';
@@ -1160,6 +1330,85 @@ function initializeApp() {
         elements.modalRequestAction.classList.remove('hidden');
     }
 
+    async function renderDriverTable() {
+        try {
+            const drivers = await api.fetchDrivers();
+            const query = (elements.driverSearch?.value || '').trim().toLowerCase();
+            const filtered = query
+                ? drivers.filter(d => (d.kode || '').toLowerCase().includes(query) || (d.nama || '').toLowerCase().includes(query))
+                : drivers;
+            ui.renderDriverList(filtered);
+        } catch (err) {
+            console.error('Error loading drivers:', err);
+            if (elements.driverListTable) {
+                elements.driverListTable.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-red-500">Error: ${err.message}</td></tr>`;
+            }
+        }
+    }
+
+    async function handleDriverSubmit(event) {
+        event.preventDefault();
+        const id = document.getElementById('driver-id').value;
+        const kode = document.getElementById('driver-kode').value;
+        const nama = document.getElementById('driver-nama').value;
+        const noTelp = document.getElementById('driver-no-telp').value;
+        const detail = document.getElementById('driver-detail').value;
+
+        if (!kode || !nama) {
+            alert('Kode dan nama supir wajib diisi');
+            return;
+        }
+
+        try {
+            const data = { kode, nama, noTelp, detail };
+            if (id) {
+                await api.saveDriver(data, id);
+                alert('Supir berhasil diperbarui');
+            } else {
+                await api.saveDriver(data);
+                alert('Supir berhasil ditambahkan');
+            }
+            elements.modalFormDriver.classList.add('hidden');
+            elements.formDriver.reset();
+            await renderDriverTable();
+        } catch (err) {
+            alert(`Error: ${err.message}`);
+        }
+    }
+
+    async function handleDeleteDriver(id) {
+        if (!confirm('Yakin ingin menghapus supir ini?')) return;
+        try {
+            await api.deleteDriver(id);
+            alert('Supir berhasil dihapus');
+            await renderDriverTable();
+        } catch (err) {
+            alert(`Error: ${err.message}`);
+        }
+    }
+
+    function openDriverModal(id = null) {
+        elements.driverFormTitle.textContent = id ? 'Edit Supir' : 'Tambah Supir';
+        elements.formDriver.reset();
+        document.getElementById('driver-id').value = '';
+
+        if (id) {
+            // Find driver in list and populate form
+            api.fetchDrivers().then(drivers => {
+                const driver = drivers.find(d => d._id === id);
+                if (driver) {
+                    document.getElementById('driver-id').value = driver._id;
+                    document.getElementById('driver-kode').value = driver.kode;
+                    document.getElementById('driver-nama').value = driver.nama;
+                    document.getElementById('driver-no-telp').value = driver.noTelp || '';
+                    document.getElementById('driver-detail').value = driver.detail || '';
+                }
+            });
+        }
+
+        elements.modalFormDriver.classList.remove('hidden');
+    }
+
     function switchMainTab(tabName) {
         if (elements.contentAdmin) {
             elements.contentAdmin.classList.toggle('hidden', tabName !== 'admin');
@@ -1173,6 +1422,9 @@ function initializeApp() {
         if (elements.adminTabKendaraan) {
             elements.adminTabKendaraan.classList.toggle('active', tabName === 'kendaraan');
         }
+        if (elements.adminTabDriver) {
+            elements.adminTabDriver.classList.toggle('active', tabName === 'driver');
+        }
         if (elements.adminTabMaster) {
             elements.adminTabMaster.classList.toggle('active', tabName === 'master');
         }
@@ -1180,24 +1432,35 @@ function initializeApp() {
             if (elements.adminContentRequest) elements.adminContentRequest.classList.remove('hidden');
             if (elements.adminContentGedung) elements.adminContentGedung.classList.add('hidden');
             if (elements.adminContentKendaraan) elements.adminContentKendaraan.classList.add('hidden');
+            if (elements.adminContentDriver) elements.adminContentDriver.classList.add('hidden');
             if (elements.adminContentMaster) elements.adminContentMaster.classList.add('hidden');
             applyRequestFilters();
         } else if (tabName === 'gedung') {
             if (elements.adminContentRequest) elements.adminContentRequest.classList.add('hidden');
             if (elements.adminContentGedung) elements.adminContentGedung.classList.remove('hidden');
             if (elements.adminContentKendaraan) elements.adminContentKendaraan.classList.add('hidden');
+            if (elements.adminContentDriver) elements.adminContentDriver.classList.add('hidden');
             if (elements.adminContentMaster) elements.adminContentMaster.classList.add('hidden');
             if (elements.filtersGedung) applyAdminFilters('gedung');
         } else if (tabName === 'kendaraan') {
             if (elements.adminContentRequest) elements.adminContentRequest.classList.add('hidden');
             if (elements.adminContentGedung) elements.adminContentGedung.classList.add('hidden');
             if (elements.adminContentKendaraan) elements.adminContentKendaraan.classList.remove('hidden');
+            if (elements.adminContentDriver) elements.adminContentDriver.classList.add('hidden');
             if (elements.adminContentMaster) elements.adminContentMaster.classList.add('hidden');
             if (elements.filtersKendaraan) applyAdminFilters('kendaraan');
+        } else if (tabName === 'driver') {
+            if (elements.adminContentRequest) elements.adminContentRequest.classList.add('hidden');
+            if (elements.adminContentGedung) elements.adminContentGedung.classList.add('hidden');
+            if (elements.adminContentKendaraan) elements.adminContentKendaraan.classList.add('hidden');
+            if (elements.adminContentDriver) elements.adminContentDriver.classList.remove('hidden');
+            if (elements.adminContentMaster) elements.adminContentMaster.classList.add('hidden');
+            renderDriverTable();
         } else if (tabName === 'master') {
             if (elements.adminContentRequest) elements.adminContentRequest.classList.add('hidden');
             if (elements.adminContentGedung) elements.adminContentGedung.classList.add('hidden');
             if (elements.adminContentKendaraan) elements.adminContentKendaraan.classList.add('hidden');
+            if (elements.adminContentDriver) elements.adminContentDriver.classList.add('hidden');
             if (elements.adminContentMaster) elements.adminContentMaster.classList.remove('hidden');
             renderMasterTable();
         }
@@ -1301,18 +1564,23 @@ function initializeApp() {
 
 
     async function initialize() {
+        console.log('⚙️  Starting admin page initialization...');
         const assetsPromise = api.fetchAssets();
         
         if (elements.formGedung || elements.formKendaraan || elements.formAsset) {
             ui.renderForms();
         }
         const initialAssets = await assetsPromise;
+        console.log('✅ Assets loaded');
         await refreshAssets(initialAssets);
 
         setDefaultMonthFilters();
+        console.log('🔄 Calling refreshDataAndUI...');
         await refreshDataAndUI(true);
+        console.log('✅ refreshDataAndUI completed');
         
         if (elements.contentAdmin) {
+            console.log('📍 Switching to request tab');
             switchMainTab('request');
         }
 
@@ -1331,13 +1599,24 @@ function initializeApp() {
 
         if (elements.btnSearchBooking) {
             elements.btnSearchBooking.addEventListener('click', async () => {
-                const code = prompt('Masukkan Booking ID');
+                const code = prompt('Masukkan Request ID atau Booking ID');
                 if (!code) return;
                 try {
-                    const data = await api.fetchBookingByCode(code.trim());
-                    ui.showDetailModal(data, 'admin');
+                    const trimmedCode = code.trim();
+                    let data;
+                    try {
+                        data = await api.fetchRequestByCode(trimmedCode);
+                        showRequestDetail(data);
+                    } catch (reqErr) {
+                        try {
+                            data = await api.fetchBookingByCode(trimmedCode);
+                            ui.showDetailModal(data, 'admin');
+                        } catch (bookErr) {
+                            throw new Error('Request atau Booking tidak ditemukan');
+                        }
+                    }
                 } catch (err) {
-                    alert(err.message || 'Booking tidak ditemukan');
+                    alert(err.message || 'Data tidak ditemukan');
                 }
             });
         }
@@ -1347,8 +1626,36 @@ function initializeApp() {
         if (elements.adminTabKendaraan) {
             elements.adminTabKendaraan.addEventListener('click', () => switchMainTab('kendaraan'));
         }
+        if (elements.adminTabDriver) {
+            elements.adminTabDriver.addEventListener('click', () => switchMainTab('driver'));
+        }
+        if (elements.adminTabDriver) {
+            elements.adminTabDriver.addEventListener('click', () => switchMainTab('driver'));
+        }
         if (elements.adminTabMaster) {
             elements.adminTabMaster.addEventListener('click', () => switchMainTab('master'));
+        }
+        if (elements.driverSearch) {
+            elements.driverSearch.addEventListener('input', () => renderDriverTable());
+            elements.driverSearch.addEventListener('keyup', () => renderDriverTable());
+        }
+        if (elements.btnAddDriver) {
+            elements.btnAddDriver.addEventListener('click', () => openDriverModal());
+        }
+        if (elements.formDriver) {
+            elements.formDriver.addEventListener('submit', handleDriverSubmit);
+        }
+        if (elements.driverListTable) {
+            elements.driverListTable.addEventListener('click', (e) => {
+                const editBtn = e.target.closest('.btn-edit');
+                const deleteBtn = e.target.closest('.btn-delete');
+                const row = e.target.closest('tr[data-driver-id]');
+                if (editBtn && row) {
+                    openDriverModal(editBtn.dataset.id);
+                } else if (deleteBtn && row) {
+                    handleDeleteDriver(deleteBtn.dataset.id);
+                }
+            });
         }
         if (elements.requestListTable) {
             elements.requestListTable.addEventListener('click', (e) => {
@@ -1413,10 +1720,20 @@ function initializeApp() {
                 const deleteBtn = e.target.closest('.btn-delete');
                 const row = e.target.closest('tr[data-asset-id]');
                 if (editBtn && row) {
+                    const isDriver = editBtn.dataset.isDriver === 'true';
                     const asset = flattenAssets().find((a) => a._id === editBtn.dataset.id || a._id === row.dataset.assetId);
-                    openAssetModal(asset);
+                    if (isDriver) {
+                        openDriverModal(asset);
+                    } else {
+                        openAssetModal(asset);
+                    }
                 } else if (deleteBtn && row) {
-                    handleAssetDelete(deleteBtn.dataset.id || row.dataset.assetId);
+                    const isDriver = deleteBtn.dataset.isDriver === 'true';
+                    if (isDriver) {
+                        handleDriverDelete(deleteBtn.dataset.id || row.dataset.assetId);
+                    } else {
+                        handleAssetDelete(deleteBtn.dataset.id || row.dataset.assetId);
+                    }
                 }
             });
         }
@@ -1511,7 +1828,17 @@ function initializeApp() {
         }
     }
 
-    initialize();
+    // Make sure initialize completes before proceeding
+    initialize().catch(err => console.error('Failed to initialize:', err));
+
+    // Setup driver modal close handlers
+    if (elements.modalFormDriver) {
+        elements.modalFormDriver.addEventListener('click', (e) => {
+            if (e.target === elements.modalFormDriver || e.target.classList.contains('modal-close-btn')) {
+                elements.modalFormDriver.classList.add('hidden');
+            }
+        });
+    }
 
     document.querySelectorAll('.modal-reset-btn').forEach(btn => {
         btn.addEventListener('click', function(e) {

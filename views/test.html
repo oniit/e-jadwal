@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin Data Test</title>
+    <style>
+        body { font-family: Arial; margin: 20px; }
+        .test { margin: 20px 0; padding: 10px; border: 1px solid #ccc; }
+        .pass { background: #d4edda; }
+        .fail { background: #f8d7da; }
+        code { background: #f4f4f4; padding: 2px 4px; }
+    </style>
+</head>
+<body>
+    <h1>Admin Page Data Loading Test</h1>
+    <div id="tests"></div>
+    <script>
+        async function runTests() {
+            const tests = document.getElementById('tests');
+            const testResults = [];
+
+            async function test(name, fn) {
+                try {
+                    await fn();
+                    const div = document.createElement('div');
+                    div.className = 'test pass';
+                    div.innerHTML = `✅ ${name}`;
+                    tests.appendChild(div);
+                    testResults.push({ name, status: 'pass' });
+                } catch (err) {
+                    const div = document.createElement('div');
+                    div.className = 'test fail';
+                    div.innerHTML = `❌ ${name}<br><small>${err.message}</small>`;
+                    tests.appendChild(div);
+                    testResults.push({ name, status: 'fail', error: err.message });
+                }
+            }
+
+            await test('API is accessible', async () => {
+                const res = await fetch('/api/assets');
+                if (!res.ok) throw new Error(`Status ${res.status}`);
+            });
+
+            await test('Assets endpoint returns data', async () => {
+                const res = await fetch('/api/assets');
+                const data = await res.json();
+                if (!data || !data.gedung || !data.kendaraan) throw new Error('Missing asset types');
+            });
+
+            await test('Bookings endpoint returns array', async () => {
+                const res = await fetch('/api/bookings');
+                const data = await res.json();
+                if (!Array.isArray(data)) throw new Error('Bookings not an array');
+                if (data.length === 0) throw new Error('No bookings found');
+            });
+
+            await test('Requests endpoint returns array', async () => {
+                const res = await fetch('/api/requests');
+                const data = await res.json();
+                if (!Array.isArray(data)) throw new Error('Requests not an array');
+            });
+
+            await test('Booking has required fields', async () => {
+                const res = await fetch('/api/bookings');
+                const data = await res.json();
+                const b = data[0];
+                if (!b._id || !b.bookingType || !b.userName) throw new Error('Missing booking fields');
+            });
+
+            await test('Drivers endpoint returns array', async () => {
+                const res = await fetch('/api/drivers');
+                const data = await res.json();
+                if (!Array.isArray(data)) throw new Error('Drivers not an array');
+            });
+
+            // Summary
+            const summary = document.createElement('div');
+            summary.style.marginTop = '30px';
+            const passed = testResults.filter(t => t.status === 'pass').length;
+            const total = testResults.length;
+            summary.innerHTML = `<h2>Summary: ${passed}/${total} tests passed</h2>`;
+            tests.appendChild(summary);
+
+            if (passed === total) {
+                const div = document.createElement('div');
+                div.className = 'test pass';
+                div.innerHTML = `✅ All tests passed! Admin page should work.`;
+                tests.appendChild(div);
+            } else {
+                const div = document.createElement('div');
+                div.className = 'test fail';
+                div.innerHTML = `❌ ${total - passed} tests failed. Check server logs.`;
+                tests.appendChild(div);
+            }
+        }
+
+        runTests();
+    </script>
+</body>
+</html>

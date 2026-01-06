@@ -4,7 +4,7 @@ const Asset = require('../models/asset');
 const { ALLOWED_TYPES } = require('../models/asset');
 
 const groupAssets = (assets = []) => {
-    const grouped = { gedung: [], kendaraan: [], supir: [], barang: [] };
+    const grouped = { gedung: [], kendaraan: [], barang: [] };
     assets.forEach((asset) => {
         const key = asset.tipe;
         if (!grouped[key]) grouped[key] = [];
