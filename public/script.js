@@ -767,6 +767,23 @@ function initializeApp() {
         }
     }
 
+    // Mendapatkan supir yang tidak tersedia pada rentang waktu tertentu
+    function getUnavailableDriversForRange(start, end) {
+        const unavailable = new Set();
+        state.allBookingsCache.forEach(booking => {
+            const bookingStart = new Date(booking.startDate);
+            const bookingEnd = new Date(booking.endDate);
+            // Cek overlap
+            if (start < bookingEnd && end > bookingStart) {
+                if (booking.bookingType === 'kendaraan' && booking.driver) {
+                    const driverId = typeof booking.driver === 'object' ? booking.driver._id : booking.driver;
+                    if (driverId) unavailable.add(driverId);
+                }
+            }
+        });
+        return unavailable;
+    }
+
     function computeBarangAvailability(start, end, excludeBookingId = null) {
         const used = new Map();
         state.allBookingsCache.forEach(b => {
@@ -1288,15 +1305,27 @@ function initializeApp() {
         }
         
         if (request.status === 'pending') {
-            const driverSelectHtml = request.bookingType === 'kendaraan' ? `
-                <div class="mt-3">
-                    <label for="req-approve-supir" class="form-label text-sm font-semibold">Pilih Supir</label>
-                    <select id="req-approve-supir" class="form-input">
-                        <option value="">Tanpa Supir</option>
-                        ${(state.drivers || []).map(s => `<option value="${s._id}">${s.nama}</option>`).join('')}
-                    </select>
-                </div>
-            ` : '';
+            let driverSelectHtml = '';
+            if (request.bookingType === 'kendaraan') {
+                const startDate = new Date(request.startDate);
+                const endDate = new Date(request.endDate);
+                const unavailableDrivers = getUnavailableDriversForRange(startDate, endDate);
+                const optionsHtml = (state.drivers || []).map(s => {
+                    const disabled = unavailableDrivers.has(s._id) ? 'disabled' : '';
+                    const suffix = unavailableDrivers.has(s._id) ? ' (Tidak Tersedia)' : '';
+                    return `<option value="${s._id}" ${disabled}>${s.nama}${suffix}</option>`;
+                }).join('');
+                driverSelectHtml = `
+                    <div class="mt-3">
+                        <label for="req-approve-supir" class="form-label text-sm font-semibold">Pilih Supir</label>
+                        <select id="req-approve-supir" class="form-input">
+                            <option value="">Tanpa Supir</option>
+                            ${optionsHtml}
+                        </select>
+                        <p class="text-xs text-gray-500 mt-1">Supir yang bertabrakan jadwal akan dinonaktifkan.</p>
+                    </div>
+                `;
+            }
 
             detailHtml += `
                 ${driverSelectHtml}
@@ -1320,7 +1349,7 @@ function initializeApp() {
                 const rejectBtn = document.getElementById('btn-reject-req');
                 if (approveBtn) approveBtn.addEventListener('click', () => {
                     const driverSelect = document.getElementById('req-approve-supir');
-                    const selectedDriver = driverSelect ? (driverSelect.value || 'Tanpa Supir') : 'Tanpa Supir';
+                    const selectedDriver = driverSelect ? (driverSelect.value || null) : null;
                     handleApproveRequest(request._id, selectedDriver);
                 });
                 if (rejectBtn) rejectBtn.addEventListener('click', () => handleRejectRequest(request._id));
@@ -1664,7 +1693,11 @@ function initializeApp() {
                 const viewBtn = e.target.closest('.btn-view');
                 const row = e.target.closest('tr[data-request-id]');
                 if (approveBtn && row) {
-                    handleApproveRequest(approveBtn.dataset.id);
+                    const request = state.allRequestsCache.find(r => r._id === row.dataset.requestId);
+                    if (request) {
+                        // Tampilkan detail dengan selector supir sebelum menyetujui
+                        showRequestDetail(request);
+                    }
                 } else if (rejectBtn && row) {
                     handleRejectRequest(rejectBtn.dataset.id);
                 } else if (viewBtn && row) {
