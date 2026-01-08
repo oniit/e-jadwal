@@ -1,14 +1,25 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
-const mainRouter = require('./routes');
+const cookieParser = require('cookie-parser');
+const publicRoutes = require('./routes/public');
+const apiRoutes = require('./routes/api');
+const authRoutes = require('./routes/auth');
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
+app.use(cookieParser());
 
-app.use('/api', mainRouter);
+// Public API routes (for calendar view)
+app.use('/api/public', publicRoutes);
+
+// Auth routes
+app.use('/auth', authRoutes);
+
+// Protected API routes (requires authentication)
+app.use('/api', apiRoutes);
 
 app.get('/partials/*', (req, res, next) => {
     const requestedPath = req.path.replace('/partials/', '');
@@ -29,12 +40,19 @@ app.get('/partials/*', (req, res, next) => {
 
 app.use(express.static(path.join(__dirname, '..', 'public')));
 
+// Public landing page (calendar view)
 app.get('/', (req, res) => {
     res.sendFile(path.resolve(__dirname, '..', 'views', 'index.html'));
 });
 
+// Login page
+app.get('/login', (req, res) => {
+    res.sendFile(path.resolve(__dirname, '..', 'views', 'login.html'));
+});
+
+// Admin page (requires authentication - handled by client-side)
 app.get('/admin', (req, res) => {
-    res.sendFile(path.resolve(__dirname, '..', 'views', 'partials', 'admin.html'));
+    res.sendFile(path.resolve(__dirname, '..', 'views', 'admin.html'));
 });
 
 app.use((err, req, res, next) => {

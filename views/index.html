@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>E-Jadwal | Aset Rektorat UINSSC</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js'></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.css">
     <link rel="icon" href="/logo.png" type="image/png">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/style.css">
@@ -21,244 +23,26 @@
                 <p class="logo-tagline font-semibold color-gedung text-xs sm:text-sm" style="padding-top: 0.3rem;">JADWAL PEMINJAMAN GEDUNG DAN KENDARAAN UINSSC</p>
             </div>
         </header>
-        <div id="header-container"></div>
-
         <main>
-            <div class="bg-white p-2 sm:p-4 md:p-6 rounded-xl shadow-lg w-full">
-                <div class="flex space-x-1 p-1 rounded-xl bg-gray-100 mb-6">
-                    <button id="admin-tab-request" class="tab-btn active"><i class="fas fa-check-to-slot"></i></button>
-                    <button id="admin-tab-gedung" class="tab-btn"><i class="fas fa-building"></i></button>
-                    <button id="admin-tab-kendaraan" class="tab-btn"><i class="fas fa-car"></i></button>
-                    <button id="admin-tab-driver" class="tab-btn"><i class="fas fa-id-card"></i></button>
-                    <button id="admin-tab-master" class="tab-btn"><i class="fas fa-server"></i></button>
-                </div>
-                    
-                    <div id="admin-content-request">
-                        <div id="filters-request" class="filter-panel grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-2 items-center mb-4">
-                            <div class="col-span-2 sm:col-span-1">
-                                <select id="filter-request-type" class="filter-menu w-full">
-                                    <option value="all">Semua Tipe</option>
-                                    <option value="gedung">Gedung</option>
-                                    <option value="kendaraan">Kendaraan</option>
-                                </select>
+            <div id="content-kalender">
+                <div class="bg-white p-2 sm:p-4 md:p-6 rounded-xl shadow-lg w-full">
+                    <div class="flex flex-wrap items-center justify-between mb-4 gap-2">
+                        <div class="flex items-center space-x-2">
+                            <div class="flex space-x-1 p-1 rounded-xl bg-gray-100">
+                                <button id="calendar-tab-gedung" class="tab-btn-cal active">Gedung</button>
+                                <button id="calendar-tab-kendaraan" class="tab-btn-cal">Kendaraan</button>
+                                <button id="btn-search-booking" class="px-3 py-2 opacity-60 text-sm"><i class="fas fa-search"></i></button>
                             </div>
-                            <div class="col-span-2 sm:col-span-1">
-                                <select id="filter-request-status" class="filter-menu w-full">
-                                    <option value="all">Semua Status</option>
-                                    <option value="pending">Pending</option>
-                                    <option value="approved">Diterima</option>
-                                    <option value="rejected">Ditolak</option>
-                                </select>
-                            </div>
-                            <div class="col-span-1">
-                                <input type="month" id="filter-request-month" class="filter-menu w-full">
-                            </div>
-                            <div class="col-span-2 sm:col-span-2 lg:col-span-2 flex">
-                                <input type="text" id="filter-request-search" placeholder="Cari..." class="filter-menu flex-grow">
-                            </div>
-                            <div class="col-span-1 lg:col-span-1 flex justify-end">
-                                <button id="btn-search-booking" class="add-btn px-2 sm:px-3 py-2 text-sm whitespace-nowrap"><i class="fas fa-search"></i> Cari kode ID</button>
-                            </div>
+                            <div><button id="btn-form" class="add-btn px-2 sm:px-3 py-2 text-sm whitespace-nowrap">+ Request Pinjam</button></div>
                         </div>
-                        <div class="overflow-x-auto">
-                            <table class="min-w-full divide-y divide-gray-200 rounded-lg overflow-hidden text-xs">
-                                <thead class="bg-gray-50">
-                                    <tr>
-                                        <th class="table-header sortable" data-sort="created">Diajukan</th>
-                                        <th class="table-header sortable" data-sort="tipe">Tipe</th>
-                                        <th class="table-header sortable" data-sort="aset">Aset</th>
-                                        <th class="table-header sortable" data-sort="peminjam">Peminjam</th>
-                                        <th class="table-header sortable" data-sort="tanggal">Tanggal</th>
-                                        <th class="table-header sortable" data-sort="status">Status</th>
-                                        <th class="table-header text-right"></th>
-                                    </tr>
-                                </thead>
-                                <tbody id="request-list-table" class="bg-white divide-y divide-gray-200"></tbody>
-                            </table>
+                        <div class="flex items-center gap-2">
+                            <select id="calendar-driver-filter" class="filter-menu hidden"></select>
+                            <select id="calendar-asset-filter" class="filter-menu"></select>
                         </div>
                     </div>
-                    
-                    <div id="admin-content-gedung" class="hidden">
-                        <div id="filters-gedung" class="filter-panel grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-2 items-center mb-4">
-                            <div class="col-span-2 sm:col-span-1">
-                                <select id="filter-gedung-asset" class="filter-menu w-full"></select>
-                            </div>
-                            <div class="col-span-2 sm:col-span-1">
-                                <select id="filter-gedung-barang" class="filter-menu w-full"></select>
-                            </div>
-                            <div class="col-span-1">
-                                <input type="month" id="filter-gedung-month" class="filter-menu w-full">
-                            </div>
-                            <div class="col-span-2 sm:col-span-2 lg:col-span-2 flex">
-                                <input type="text" id="filter-gedung-search" placeholder="Cari..." class="filter-menu flex-grow">
-                            </div>
-                            <div class="col-span-1 lg:col-span-1 flex justify-end">
-                                <button id="btn-add-gedung" class="add-btn px-2 sm:px-3 py-2 text-sm whitespace-nowrap">+ Tambah</button>
-                            </div>
-                        </div>
-                        <div class="overflow-x-auto">
-                            <table class="min-w-full divide-y divide-gray-200 rounded-lg overflow-hidden text-xs">
-                                <thead class="bg-gray-50">
-                                    <tr>
-                                        <th class="table-header sortable" data-sort="created">
-                                            Diajukan <span class="sort-icon"><i class="fa fa-sort"></i></span>
-                                        </th>
-                                        <th class="table-header sortable" data-sort="gedung">
-                                            Nama Gedung <span class="sort-icon"><i class="fa fa-sort"></i></span>
-                                        </th>
-                                        <th class="table-header sortable" data-sort="peminjam">
-                                            Peminjam <span class="sort-icon"><i class="fa fa-sort"></i></span>
-                                        </th>
-                                        <th class="table-header sortable" data-sort="tanggal">
-                                            Tanggal Peminjaman <span class="sort-icon"><i class="fa fa-sort"></i></span>
-                                        </th>
-                                        <th class="table-header sortable" data-sort="barang">
-                                            Barang <span class="sort-icon"><i class="fa fa-sort"></i></span>
-                                        </th>
-                                        <th class="table-header sortable" data-sort="keterangan">
-                                            Keterangan <span class="sort-icon"><i class="fa fa-sort"></i></span>
-                                        </th>
-                                        <th class="table-header text-right"></th>
-                                    </tr>
-                                </thead>
-                                <tbody id="gedung-list-table" class="bg-white divide-y divide-gray-200"></tbody>
-                            </table>
-                        </div>
-                    </div>
-
-                    <div id="admin-content-kendaraan" class="hidden">
-                        <div id="filters-kendaraan" class="filter-panel grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 items-center mb-4">
-                            <div class="col-span-1">
-                                <select id="filter-kendaraan-asset" class="filter-menu w-full"></select>
-                            </div>
-                            <div class="col-span-1">
-                                <select id="filter-kendaraan-driver" class="filter-menu w-full"></select>
-                            </div>
-                            <div class="col-span-1">
-                                <input type="month" id="filter-kendaraan-month" class="filter-menu w-full">
-                            </div>
-                            <div class="col-span-1 sm:col-span-2 lg:col-span-2 flex">
-                                <input type="text" id="filter-kendaraan-search" placeholder="Cari..." class="filter-menu w-full">
-                            </div>
-                            <div class="col-span-1 flex justify-end">
-                                <button id="btn-add-kendaraan" class="add-btn px-2 sm:px-3 py-2 text-sm whitespace-nowrap">+ Tambah</button>
-                            </div>
-                        </div>
-                        <div class="overflow-x-auto">
-                            <table class="min-w-full divide-y divide-gray-200 rounded-lg overflow-hidden text-xs">
-                                <thead class="bg-gray-50">
-                                    <tr>
-                                        <th class="table-header sortable" data-sort="created">
-                                            Diajukan <span class="sort-icon"><i class="fa fa-sort"></i></span>
-                                        </th>
-                                        <th class="table-header sortable" data-sort="kendaraan">
-                                            Nama Kendaraan <span class="sort-icon"><i class="fa fa-sort"></i></span>
-                                        </th>
-                                        <th class="table-header sortable" data-sort="pemakai">
-                                            Pemakai <span class="sort-icon"><i class="fa fa-sort"></i></span>
-                                        </th>
-                                        <th class="table-header sortable" data-sort="tanggal">
-                                            Tanggal Peminjaman <span class="sort-icon"><i class="fa fa-sort"></i></span>
-                                        </th>
-                                        <th class="table-header sortable" data-sort="supir">
-                                            Supir <span class="sort-icon"><i class="fa fa-sort"></i></span>
-                                        </th>
-                                        <th class="table-header sortable" data-sort="keterangan">
-                                            Keterangan <span class="sort-icon"><i class="fa fa-sort"></i></span>
-                                        </th>
-                                        <th class="table-header text-right"></th>
-                                    </tr>
-                                </thead>
-                                <tbody id="kendaraan-list-table" class="bg-white divide-y divide-gray-200"></tbody>
-                            </table>
-                         </div>
-                    </div>
-
-                    <div id="admin-content-master" class="hidden">
-                        <div class="flex flex-col gap-3 mb-4 sm:flex-row sm:items-center sm:justify-between">
-                            <h3 class="text-xl font-bold color-gedung">Kelola Aset</h3>
-                            <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
-                                <select id="master-filter-type" class="filter-menu w-full sm:w-44">
-                                    <option value="all">Semua Tipe</option>
-                                    <option value="gedung">Gedung</option>
-                                    <option value="kendaraan">Kendaraan</option>
-                                    <option value="barang">Barang</option>
-                                </select>
-                                <input id="master-search" type="text" class="filter-menu w-full sm:w-64" placeholder="Cari kode/nama...">
-                                <button id="btn-add-asset" class="add-btn px-2 sm:px-3 py-2 text-sm whitespace-nowrap">+ Tambah</button>
-                            </div>
-                        </div>
-
-                        <div class="overflow-x-auto">
-                            <table class="min-w-full divide-y divide-gray-200 rounded-lg overflow-hidden text-xs">
-                                <thead class="bg-gray-50">
-                                    <tr>
-                                        <th class="table-header sortable" data-sort="kode">
-                                            Kode <span class="sort-icon"><i class="fa fa-sort"></i></span>
-                                        </th>
-                                        <th class="table-header sortable" data-sort="nama">
-                                            Nama <span class="sort-icon"><i class="fa fa-sort"></i></span>
-                                        </th>
-                                        <th class="table-header sortable" data-sort="tipe">
-                                            Tipe <span class="sort-icon"><i class="fa fa-sort"></i></span>
-                                        </th>
-                                        <th class="table-header sortable" data-sort="qty">
-                                            Qty <span class="sort-icon"><i class="fa fa-sort"></i></span>
-                                        </th>
-                                        <th class="table-header sortable" data-sort="detail">
-                                            Detail <span class="sort-icon"><i class="fa fa-sort"></i></span>
-                                        </th>
-                                        <th class="table-header text-right"></th>
-                                    </tr>
-                                </thead>
-                                <tbody id="master-asset-table" class="bg-white divide-y divide-gray-200"></tbody>
-                            </table>
-                        </div>
-                    </div>
-
-                    <div id="admin-content-driver" class="hidden">
-                        <div class="flex flex-col gap-3 mb-4 sm:flex-row sm:items-center sm:justify-between">
-                            <h3 class="text-xl font-bold color-gedung">Kelola Supir</h3>
-                            <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
-                                <input id="filter-driver-search" type="text" class="filter-menu w-full sm:w-64" placeholder="Cari kode/nama...">
-                                <button id="btn-add-driver" class="add-btn px-2 sm:px-3 py-2 text-sm">+ Tambah</button>
-                            </div>
-                        </div>
-                        <div class="overflow-x-auto">
-                            <table class="min-w-full divide-y divide-gray-200 rounded-lg overflow-hidden text-xs">
-                                <thead class="bg-gray-50">
-                                    <tr>
-                                        <th class="table-header sortable" data-sort="kode">
-                                            Kode <span class="sort-icon"><i class="fa fa-sort"></i></span>
-                                        </th>
-                                        <th class="table-header sortable" data-sort="nama">
-                                            Nama <span class="sort-icon"><i class="fa fa-sort"></i></span>
-                                        </th>
-                                        <th class="table-header sortable" data-sort="no-telp">
-                                            No. Telepon <span class="sort-icon"><i class="fa fa-sort"></i></span>
-                                        </th>
-                                        <th class="table-header sortable" data-sort="detail">
-                                            Detail <span class="sort-icon"><i class="fa fa-sort"></i></span>
-                                        </th>
-                                        <th class="table-header text-right"></th>
-                                    </tr>
-                                </thead>
-                                <tbody id="driver-list-table" class="bg-white divide-y divide-gray-200"></tbody>
-                            </table>
-                        </div>
-                    </div>
+                    <div id='calendar'></div>
                 </div>
             </div>
-
-            <div id="modal-asset" class="modal-backdrop hidden">
-                <div class="modal-content max-w-xs sm:max-w-lg mx-auto">
-                    <button class="modal-reset-btn"><i class="fas fa-rotate-left"></i></button>
-                    <button class="modal-close-btn">&times;</button>
-                    <h3 id="asset-form-title" class="text-2xl font-bold mb-4">Tambah Aset</h3>
-                    <form id="form-asset" class="space-y-4"></form>
-                </div>
-            </div>
-
             <div id="modal-detail-event" class="modal-backdrop hidden">
                 <div class="modal-content max-w-xs sm:max-w-lg mx-auto">
                     <button class="modal-close-btn" >&times;</button>
@@ -267,56 +51,12 @@
                 </div>
             </div>
 
-            <div id="modal-request-action" class="modal-backdrop hidden">
-                <div class="modal-content max-w-xs sm:max-w-lg mx-auto">
-                    <button class="modal-close-btn">&times;</button>
-                    <h3 id="modal-request-title" class="text-2xl font-bold mb-4">Aksi Request</h3>
-                    <div id="modal-request-body" class="space-y-4 text-gray-700"></div>
-                </div>
-            </div>
-
-            <div id="modal-form-gedung" class="modal-backdrop hidden">
+            <div id="modal-form-request" class="modal-backdrop hidden">
                 <div class="modal-content max-w-xs sm:max-w-lg mx-auto">
                     <button class="modal-reset-btn"><i class="fas fa-rotate-left"></i></button>
                     <button class="modal-close-btn">&times;</button>
-                    <h3 id="gedung-form-title" class="text-2xl font-bold mb-4">Form Peminjaman Gedung</h3>
-                    <form id="form-gedung" class="space-y-4"></form>
-                </div>
-            </div>
-            <div id="modal-form-kendaraan" class="modal-backdrop hidden">
-                <div class="modal-content max-w-xs sm:max-w-lg mx-auto">
-                    <button class="modal-reset-btn"><i class="fas fa-rotate-left"></i></button>
-                    <button class="modal-close-btn">&times;</button>
-                    <h3 id="kendaraan-form-title" class="text-2xl font-bold mb-4">Form Peminjaman Kendaraan</h3>
-                    <form id="form-kendaraan" class="space-y-4"></form>
-                </div>
-            </div>
-
-            <div id="modal-form-driver" class="modal-backdrop hidden">
-                <div class="modal-content max-w-xs sm:max-w-lg mx-auto">
-                    <button class="modal-reset-btn"><i class="fas fa-rotate-left"></i></button>
-                    <button class="modal-close-btn">&times;</button>
-                    <h3 id="driver-form-title" class="text-2xl font-bold mb-4">Tambah Supir</h3>
-                    <form id="form-driver" class="space-y-4">
-                        <input type="hidden" id="driver-id">
-                        <div>
-                            <label for="driver-kode" class="form-label">Kode Supir</label>
-                            <input type="text" id="driver-kode" required class="form-input" placeholder="e.g., DRV001">
-                        </div>
-                        <div>
-                            <label for="driver-nama" class="form-label">Nama Lengkap</label>
-                            <input type="text" id="driver-nama" required class="form-input" placeholder="Nama supir">
-                        </div>
-                        <div>
-                            <label for="driver-no-telp" class="form-label">No. Telepon</label>
-                            <input type="tel" id="driver-no-telp" class="form-input" placeholder="08xx xxxx xxxx">
-                        </div>
-                        <div>
-                            <label for="driver-detail" class="form-label">Detail / Catatan</label>
-                            <textarea id="driver-detail" rows="2" class="form-input" placeholder="Catatan tambahan..."></textarea>
-                        </div>
-                        <button type="submit" class="w-full add-btn save-btn">Simpan Supir</button>
-                    </form>
+                    <h3 class="text-2xl font-bold mb-4">Form Request Peminjaman</h3>
+                    <form id="form-request" class="space-y-4"></form>
                 </div>
             </div>
         </main>
