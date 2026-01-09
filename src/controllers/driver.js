@@ -58,7 +58,8 @@ const createDriver = async (req, res) => {
             kode: payload.kode,
             nama: payload.nama,
             noTelp: payload.noTelp || '',
-            detail: payload.detail || ''
+            detail: payload.detail || '',
+            status: payload.status || 'aktif'
         });
 
         const saved = await driver.save();
@@ -84,6 +85,7 @@ const updateDriver = async (req, res) => {
         if (payload.nama !== undefined) updateDoc.nama = payload.nama;
         if (payload.noTelp !== undefined) updateDoc.noTelp = payload.noTelp;
         if (payload.detail !== undefined) updateDoc.detail = payload.detail;
+        if (payload.status !== undefined) updateDoc.status = payload.status;
 
         const updated = await Driver.findByIdAndUpdate(id, updateDoc, { new: true, runValidators: true });
 

@@ -144,8 +144,9 @@
             }
             elements.driverFilter.classList.remove('hidden');
             const drivers = state.drivers || [];
+            const activeDrivers = drivers.filter(d => d.status === 'aktif');
             elements.driverFilter.innerHTML = `<option value="all">Semua Supir</option>`;
-            drivers.forEach(driver => {
+            activeDrivers.forEach(driver => {
                 const value = driver._id || driver.kode || driver.code || driver.nama;
                 const label = driver.nama || driver.kode || driver.code || 'Supir';
                 const option = new Option(label, value);

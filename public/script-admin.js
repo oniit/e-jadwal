@@ -429,17 +429,22 @@ function initializeApp() {
             const sorted = [...drivers].sort((a, b) => (a.kode || '').localeCompare(b.kode || ''));
             
             if (sorted.length === 0) {
-                tableBody.innerHTML = `<tr><td colspan="5" class="px-6 py-3 text-center text-gray-500">Tidak ada data</td></tr>`;
+                tableBody.innerHTML = `<tr><td colspan="6" class="px-6 py-3 text-center text-gray-500">Tidak ada data</td></tr>`;
                 return;
             }
             
             tableBody.innerHTML = sorted.map(d => {
                 const cellClass = "px-6 py-3 whitespace-nowrap text-sm text-gray-500";
+                const statusClass = d.status === 'aktif' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600';
+                const statusLabel = d.status === 'aktif' ? 'Aktif' : 'Tidak Aktif';
                 return `<tr class="cursor-pointer" data-driver-id="${d._id}">
                     <td class="${cellClass}">${d.kode || '-'}</td>
                     <td class="${cellClass}">${d.nama || '-'}</td>
                     <td class="${cellClass}">${d.noTelp || '-'}</td>
                     <td class="${cellClass}">${d.detail || '-'}</td>
+                    <td class="${cellClass}">
+                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold ${statusClass}">${statusLabel}</span>
+                    </td>
                     <td class="px-6 py-3 text-right text-sm">
                         <div class="flex justify-end gap-3">
                             <button class="btn-edit" data-id="${d._id}" title="Edit"><i class="fas fa-edit"></i></button>
@@ -671,11 +676,12 @@ function initializeApp() {
         
         const filterKendaraanDriver = document.getElementById('filter-kendaraan-driver');
         if (filterKendaraanDriver && state.allDrivers && state.allDrivers.length > 0) {
+            const activeDrivers = state.allDrivers.filter(d => d.status === 'aktif');
             filterKendaraanDriver.innerHTML = '<option value="all">Semua Supir</option>';
-            state.allDrivers.forEach(driver => {
+            activeDrivers.forEach(driver => {
                 filterKendaraanDriver.innerHTML += `<option value="${driver._id}">${driver.nama}</option>`;
             });
-            console.log('✅ Populated drivers:', state.allDrivers.length);
+            console.log('✅ Populated drivers:', activeDrivers.length);
         } else {
             console.log('❌ Could not populate drivers');
         }
@@ -702,8 +708,9 @@ function initializeApp() {
 
         const supirSelect = document.getElementById('kendaraan-supir');
         if (supirSelect) {
+            const activeDrivers = drivers.filter(d => d.status === 'aktif');
             supirSelect.innerHTML = '<option value="">Tanpa Supir</option>' +
-                drivers.map(d => `<option value="${d._id}">${d.nama}</option>`).join('');
+                activeDrivers.map(d => `<option value="${d._id}">${d.nama}</option>`).join('');
         }
 
         const barangSelect = document.getElementById('gedung-barang-select');
@@ -1039,12 +1046,13 @@ function initializeApp() {
         
         if (request.status === 'pending') {
             const drivers = Array.isArray(state.allDrivers) ? state.allDrivers : [];
+            const activeDrivers = drivers.filter(d => d.status === 'aktif');
             const driverSelectHtml = request.bookingType === 'kendaraan' ? `
                 <div class="mt-3">
                     <label for="req-approve-supir" class="form-label text-sm font-semibold">Pilih Supir</label>
                     <select id="req-approve-supir" class="form-input">
                         <option value="">Tanpa Supir</option>
-                        ${drivers.map(d => `<option value="${d._id}">${d.nama}</option>`).join('')}
+                        ${activeDrivers.map(d => `<option value="${d._id}">${d.nama}</option>`).join('')}
                     </select>
                 </div>
             ` : '';
@@ -1637,12 +1645,14 @@ function openDriverModal(driver = null) {
         const namaField = document.getElementById('driver-nama');
         const telpField = document.getElementById('driver-no-telp');
         const detailField = document.getElementById('driver-detail');
+        const statusField = document.getElementById('driver-status');
         
         if (idField) idField.value = driver._id || '';
         if (kodeField) kodeField.value = driver.kode || '';
         if (namaField) namaField.value = driver.nama || '';
         if (telpField) telpField.value = driver.noTelp || '';
         if (detailField) detailField.value = driver.detail || '';
+        if (statusField) statusField.value = driver.status || 'aktif';
     }
     
     modal.classList.remove('hidden');
@@ -1826,7 +1836,8 @@ function setupFormSubmitHandlers() {
                 kode: document.getElementById('driver-kode').value.trim(),
                 nama: document.getElementById('driver-nama').value.trim(),
                 noTelp: document.getElementById('driver-no-telp').value.trim(),
-                detail: document.getElementById('driver-detail').value.trim()
+                detail: document.getElementById('driver-detail').value.trim(),
+                status: document.getElementById('driver-status').value || 'aktif'
             };
             
             if (!payload.kode || !payload.nama) {

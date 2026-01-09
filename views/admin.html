@@ -252,6 +252,9 @@
                                         <th class="table-header sortable" data-sort="detail">
                                             Detail <span class="sort-icon"><i class="fa fa-sort"></i></span>
                                         </th>
+                                        <th class="table-header sortable" data-sort="status">
+                                            Status <span class="sort-icon"><i class="fa fa-sort"></i></span>
+                                        </th>
                                         <th class="table-header text-right"></th>
                                     </tr>
                                 </thead>
@@ -351,6 +354,13 @@
                         <div>
                             <label for="driver-detail" class="form-label">Detail / Catatan</label>
                             <textarea id="driver-detail" rows="2" class="form-input" placeholder="Catatan tambahan..."></textarea>
+                        </div>
+                        <div>
+                            <label for="driver-status" class="form-label">Status</label>
+                            <select id="driver-status" class="form-input">
+                                <option value="aktif">Aktif</option>
+                                <option value="tidak aktif">Tidak Aktif</option>
+                            </select>
                         </div>
                         <button type="submit" class="w-full add-btn save-btn">Simpan Supir</button>
                     </form>
