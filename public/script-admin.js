@@ -103,16 +103,24 @@ function setupModalHandlers() {
                 const response = await fetch(`${API_BASE}/auth/me`, {
                     credentials: 'include'
                 });
-                const user = await response.json();
                 
-                document.getElementById('profile-username').value = user.username;
-                document.getElementById('profile-name').value = user.name;
-                document.getElementById('profile-email').value = user.email;
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(errorData.message || `HTTP ${response.status}`);
+                }
+                
+                const data = await response.json();
+                const user = data.user || data; // Support both wrapped and unwrapped response
+                
+                document.getElementById('profile-username').value = user.username || '';
+                document.getElementById('profile-name').value = user.name || '';
+                document.getElementById('profile-email').value = user.email || '';
                 document.getElementById('profile-phone').value = user.phone || '';
                 
                 profileModal.classList.remove('hidden');
             } catch (error) {
                 console.error('Load profile failed:', error);
+                alert('Gagal memuat profil: ' + error.message);
             }
         });
     }
