@@ -193,9 +193,9 @@
             let detailHtml = `<p>${formatScheduleRange(start, end)}</p>`;
 
             // Show Booking ID when available (calendar events are bookings)
-            if (booking.bookingId) {
-                detailHtml += `<p><strong>Booking ID:</strong> <code class="bg-gray-100 px-2 py-1 rounded text-sm">${booking.bookingId}</code></p>`;
-            }
+            // if (booking.bookingId) {
+            //     detailHtml += `<p><strong>Booking ID:</strong> <code class="bg-gray-100 px-2 py-1 rounded text-sm">${booking.bookingId}</code></p>`;
+            // }
 
             // Optionally show status badge when present
             if (booking.status) {
@@ -219,7 +219,13 @@
                 }
             } else {
                 if (booking.driver) {
-                    const driverName = typeof booking.driver === 'object' ? booking.driver.nama : booking.driver;
+                    let driverName;
+                    if (typeof booking.driver === 'object' && booking.driver.nama) {
+                        driverName = booking.driver.nama;
+                    } else if (typeof booking.driver === 'string') {
+                        const driver = state.drivers.find(d => d._id === booking.driver || d.kode === booking.driver || d.nama === booking.driver);
+                        driverName = driver ? driver.nama : null;
+                    }
                     if (driverName) detailHtml += `<p><strong>Supir:</strong> ${driverName}</p>`;
                 }
             }
@@ -299,7 +305,13 @@
                     detailHtml += `<p><strong>Tujuan:</strong> ${booking.destination}</p>`;
                 }
                 if (booking.driver) {
-                    const driverName = typeof booking.driver === 'object' ? booking.driver.nama : booking.driver;
+                    let driverName;
+                    if (typeof booking.driver === 'object' && booking.driver.nama) {
+                        driverName = booking.driver.nama;
+                    } else if (typeof booking.driver === 'string') {
+                        const driver = state.drivers.find(d => d._id === booking.driver || d.kode === booking.driver || d.nama === booking.driver);
+                        driverName = driver ? driver.nama : null;
+                    }
                     if (driverName) detailHtml += `<p><strong>Supir:</strong> ${driverName}</p>`;
                 }
             }

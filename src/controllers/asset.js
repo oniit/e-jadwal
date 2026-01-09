@@ -45,6 +45,22 @@ const getAssets = async (_req, res) => {
     }
 };
 
+const getAsset = async (req, res) => {
+    try {
+        const { id } = req.params;
+        if (!id) return res.status(400).json({ message: 'ID aset diperlukan.' });
+
+        const asset = await Asset.findById(id).lean();
+        if (!asset) return res.status(404).json({ message: 'Aset tidak ditemukan.' });
+
+        res.set('Cache-Control', 'no-store');
+        return res.json(asset);
+    } catch (err) {
+        console.error('[getAsset] Error:', err.message);
+        return res.status(500).json({ message: 'Gagal mengambil data aset.' });
+    }
+};
+
 const createAsset = async (req, res) => {
     try {
         const payload = req.body;
@@ -146,6 +162,7 @@ const deleteAsset = async (req, res) => {
 
 module.exports = {
     getAssets,
+    getAsset,
     createAsset,
     updateAsset,
     deleteAsset,

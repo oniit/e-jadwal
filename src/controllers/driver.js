@@ -31,6 +31,22 @@ const getDrivers = async (_req, res) => {
     }
 };
 
+const getDriver = async (req, res) => {
+    try {
+        const { id } = req.params;
+        if (!id) return res.status(400).json({ message: 'ID supir diperlukan.' });
+
+        const driver = await Driver.findById(id).lean();
+        if (!driver) return res.status(404).json({ message: 'Supir tidak ditemukan.' });
+
+        res.set('Cache-Control', 'no-store');
+        return res.json(driver);
+    } catch (err) {
+        console.error('[getDriver] Error:', err.message);
+        return res.status(500).json({ message: 'Gagal mengambil data supir.' });
+    }
+};
+
 const createDriver = async (req, res) => {
     try {
         const payload = req.body;
@@ -100,6 +116,7 @@ const deleteDriver = async (req, res) => {
 
 module.exports = {
     getDrivers,
+    getDriver,
     createDriver,
     updateDriver,
     deleteDriver

@@ -256,25 +256,17 @@ input[type="date"].filter-menu {
 .tab-btn:hover {
     background: #ffffff;
 }
-#tab-admin.active, #admin-tab-gedung.active {
+#tab-admin.active, #admin-tab-gedung.active,
+#tab-master.active, #admin-tab-master.active,
+#tab-users.active, #admin-tab-users.active {
     background-color: #fffbee;
     color: #b8932f;
 }
-#tab-master.active, #admin-tab-kendaraan.active {
+#tab-master.active, #admin-tab-kendaraan.active, 
+#tab-request.active, #admin-tab-request.active, 
+#tab-driver.active, #admin-tab-driver.active {
     background-color: #f0fff5;
     color: #059669;
-}
-#tab-request.active, #admin-tab-request.active {
-    background-color: #eff6ff;
-    color: #0284c7;
-}
-#tab-driver.active, #admin-tab-driver.active {
-    background-color: #fef2f2;
-    color: #dc2626;
-}
-#tab-master.active, #admin-tab-master.active {
-    background-color: #f5f3ff;
-    color: #7c3aed;
 }
 
 .add-btn {

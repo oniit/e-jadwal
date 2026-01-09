@@ -193,9 +193,9 @@
             let detailHtml = `<p>${formatScheduleRange(start, end)}</p>`;
 
             // Show Booking ID when available (calendar events are bookings)
-            if (booking.bookingId) {
-                detailHtml += `<p><strong>Booking ID:</strong> <code class="bg-gray-100 px-2 py-1 rounded text-sm">${booking.bookingId}</code></p>`;
-            }
+            // if (booking.bookingId) {
+            //     detailHtml += `<p><strong>Booking ID:</strong> <code class="bg-gray-100 px-2 py-1 rounded text-sm">${booking.bookingId}</code></p>`;
+            // }
 
             // Optionally show status badge when present
             if (booking.status) {

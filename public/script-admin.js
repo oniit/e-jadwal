@@ -291,6 +291,9 @@ function initializeApp() {
         allAssetsCache: [],
     };
 
+    // Expose state for modal helpers that live outside this closure
+    window.__adminState = state;
+
     const api = {
         fetch: async function(url, options = {}) {
             try {
@@ -384,7 +387,6 @@ function initializeApp() {
             
             // Re-initialize table sorting after rendering
             initTableSorting();
-            setupTableClickHandlers();
         },
 
         renderRequestList: function(requests) {
@@ -438,9 +440,11 @@ function initializeApp() {
                     <td class="${cellClass}">${d.nama || '-'}</td>
                     <td class="${cellClass}">${d.noTelp || '-'}</td>
                     <td class="${cellClass}">${d.detail || '-'}</td>
-                    <td class="px-6 py-3 text-right">
-                        <button type="button" class="mr-2" title="Edit" aria-label="Edit supir"><i class="fas fa-pen-to-square text-emerald-700 hover:text-emerald-800 btn"></i></button>
-                        <button type="button" title="Hapus" aria-label="Hapus supir"><i class="fas fa-trash color-gedung hover:opacity-80 btn"></i></button>
+                    <td class="px-6 py-3 text-right text-sm">
+                        <div class="flex justify-end gap-3">
+                            <button class="btn-edit" data-id="${d._id}" title="Edit"><i class="fas fa-edit"></i></button>
+                            <button class="btn-delete" data-id="${d._id}" title="Hapus"><i class="fas fa-trash"></i></button>
+                        </div>
                     </td>
                 </tr>`;
             }).join('');
@@ -467,9 +471,11 @@ function initializeApp() {
                     <td class="${cellClass}"><span class="${badgeClass}">${a.tipe || '-'}</span></td>
                     <td class="${cellClass}">${a.num ?? '-'}</td>
                     <td class="${cellClass}">${a.detail || '-'}</td>
-                    <td class="px-6 py-3 text-right">
-                        <button type="button" class="mr-2" title="Edit" aria-label="Edit aset"><i class="fas fa-pen-to-square text-emerald-700 hover:text-emerald-800 btn"></i></button>
-                        <button type="button" title="Hapus" aria-label="Hapus aset"><i class="fas fa-trash color-gedung hover:opacity-80 btn"></i></button>
+                    <td class="px-6 py-3 text-right text-sm">
+                        <div class="flex justify-end gap-3">
+                            <button class="btn-edit" data-id="${a._id}" title="Edit"><i class="fas fa-edit"></i></button>
+                            <button class="btn-delete" data-id="${a._id}" title="Hapus"><i class="fas fa-trash"></i></button>
+                        </div>
                     </td>
                 </tr>`;
             }).join('');
@@ -590,6 +596,10 @@ function initializeApp() {
                 ...(state.assets.kendaraan || []),
                 ...(state.assets.barang || [])
             ];
+
+            // Ensure modal selects have the latest asset/driver options
+            populateFormSelectOptions();
+            updateGedungBarangAvailability(document.getElementById('form-gedung'));
             
             // Render all tables
             ui.renderRequestList(state.allRequestsCache);
@@ -614,112 +624,9 @@ function initializeApp() {
             setupFilterListeners();
             setupManagementFilters();
             
-            // Setup click handlers for table rows
-            setupTableClickHandlers();
-            
             console.log('✅ All data loaded and rendered');
         } catch (error) {
             console.error('Error loading data:', error);
-        }
-    }
-
-    function setupTableClickHandlers() {
-        // Remove old listeners first to prevent duplicates
-        const requestTable = document.getElementById('request-list-table');
-        if (requestTable) {
-            const newRequestTable = requestTable.cloneNode(true);
-            requestTable.parentNode.replaceChild(newRequestTable, requestTable);
-            
-            newRequestTable.addEventListener('click', (e) => {
-                const row = e.target.closest('tr[data-request-id]');
-                if (row) {
-                    const id = row.dataset.requestId;
-                    const req = state.allRequestsCache.find(r => r._id === id);
-                    if (req) showRequestDetail(req);
-                }
-            }, true);
-        }
-        
-        // Gedung table click handler
-        const gedungTable = document.getElementById('gedung-list-table');
-        if (gedungTable) {
-            gedungTable.addEventListener('click', (e) => {
-                const editBtn = e.target.closest('.btn-edit');
-                const deleteBtn = e.target.closest('.btn-delete');
-                const row = e.target.closest('tr[data-booking-id]');
-                
-                if (!row) return;
-                if (editBtn) {
-                    e.stopPropagation();
-                    console.log('Edit gedung booking:', editBtn.dataset.id || row.dataset.bookingId);
-                } else if (deleteBtn) {
-                    e.stopPropagation();
-                    console.log('Delete gedung booking:', deleteBtn.dataset.id || row.dataset.bookingId);
-                } else if (!editBtn && !deleteBtn) {
-                    const bookingData = state.allBookingsCache.find(b => b._id === row.dataset.bookingId);
-                    if (bookingData) ui.showDetailModal(bookingData, 'admin');
-                }
-            }, true);
-        }
-
-        // Kendaraan table click handler
-        const kendaraanTable = document.getElementById('kendaraan-list-table');
-        if (kendaraanTable) {
-            kendaraanTable.addEventListener('click', (e) => {
-                const editBtn = e.target.closest('.btn-edit');
-                const deleteBtn = e.target.closest('.btn-delete');
-                const row = e.target.closest('tr[data-booking-id]');
-                
-                if (!row) return;
-                if (editBtn) {
-                    e.stopPropagation();
-                    console.log('Edit kendaraan booking:', editBtn.dataset.id || row.dataset.bookingId);
-                } else if (deleteBtn) {
-                    e.stopPropagation();
-                    console.log('Delete kendaraan booking:', deleteBtn.dataset.id || row.dataset.bookingId);
-                } else if (!editBtn && !deleteBtn) {
-                    const bookingData = state.allBookingsCache.find(b => b._id === row.dataset.bookingId);
-                    if (bookingData) ui.showDetailModal(bookingData, 'admin');
-                }
-            }, true);
-        }
-
-        // Driver table click handler
-        const driverTable = document.getElementById('driver-list-table');
-        if (driverTable) {
-            driverTable.addEventListener('click', (e) => {
-                const editBtn = e.target.closest('i.fa-pen-to-square');
-                const deleteBtn = e.target.closest('i.fa-trash');
-                const row = e.target.closest('tr[data-driver-id]');
-                
-                if (!row) return;
-                if (editBtn) {
-                    e.stopPropagation();
-                    console.log('Edit driver:', row.dataset.driverId);
-                } else if (deleteBtn) {
-                    e.stopPropagation();
-                    console.log('Delete driver:', row.dataset.driverId);
-                }
-            }, true);
-        }
-
-        // Master asset table click handler
-        const masterTable = document.getElementById('master-asset-table');
-        if (masterTable) {
-            masterTable.addEventListener('click', (e) => {
-                const editBtn = e.target.closest('i.fa-pen-to-square');
-                const deleteBtn = e.target.closest('i.fa-trash');
-                const row = e.target.closest('tr[data-asset-id]');
-                
-                if (!row) return;
-                if (editBtn) {
-                    e.stopPropagation();
-                    console.log('Edit asset:', row.dataset.assetId);
-                } else if (deleteBtn) {
-                    e.stopPropagation();
-                    console.log('Delete asset:', row.dataset.assetId);
-                }
-            }, true);
         }
     }
 
@@ -774,6 +681,38 @@ function initializeApp() {
         }
     }
 
+    // Populate select options used inside gedung/kendaraan modals
+    function populateFormSelectOptions() {
+        const gedungAssets = Array.isArray(state.assets?.gedung) ? state.assets.gedung : [];
+        const kendaraanAssets = Array.isArray(state.assets?.kendaraan) ? state.assets.kendaraan : [];
+        const barangAssets = Array.isArray(state.assets?.barang) ? state.assets.barang : [];
+        const drivers = Array.isArray(state.allDrivers) ? state.allDrivers : [];
+
+        const gedungSelect = document.getElementById('gedung-nama');
+        if (gedungSelect) {
+            gedungSelect.innerHTML = '<option value="">Pilih Gedung</option>' +
+                gedungAssets.map(a => `<option value="${a.kode}">${a.nama} (${a.kode})</option>`).join('');
+        }
+
+        const kendaraanSelect = document.getElementById('kendaraan-nama');
+        if (kendaraanSelect) {
+            kendaraanSelect.innerHTML = '<option value="">Pilih Kendaraan</option>' +
+                kendaraanAssets.map(a => `<option value="${a.kode}">${a.nama} (${a.kode})</option>`).join('');
+        }
+
+        const supirSelect = document.getElementById('kendaraan-supir');
+        if (supirSelect) {
+            supirSelect.innerHTML = '<option value="">Tanpa Supir</option>' +
+                drivers.map(d => `<option value="${d._id}">${d.nama}</option>`).join('');
+        }
+
+        const barangSelect = document.getElementById('gedung-barang-select');
+        if (barangSelect) {
+            barangSelect.innerHTML = '<option value="">Pilih Barang</option>' +
+                barangAssets.map(b => `<option value="${b.kode}">${b.nama} (${b.kode})</option>`).join('');
+        }
+    }
+
     // ========== DRIVER & ASSET MANAGEMENT FILTERS ==========
     function setupManagementFilters() {
         const driverSearch = document.getElementById('filter-driver-search');
@@ -791,6 +730,16 @@ function initializeApp() {
         }
     }
 
+    async function refreshDriverList() {
+        try {
+            state.allDrivers = await api.fetchDrivers();
+            populateFormSelectOptions();
+            applyDriverFilters();
+        } catch (error) {
+            console.error('Error refreshing drivers:', error);
+        }
+    }
+
     function applyDriverFilters() {
         const searchInput = document.getElementById('filter-driver-search');
         const query = searchInput ? searchInput.value.trim().toLowerCase() : '';
@@ -803,6 +752,22 @@ function initializeApp() {
         });
 
         ui.renderDriverList(filtered);
+    }
+
+    async function refreshAssetList() {
+        try {
+            const assets = await api.fetchAssets();
+            state.assets = assets;
+            state.allAssetsCache = [
+                ...(assets.gedung || []),
+                ...(assets.kendaraan || []),
+                ...(assets.barang || [])
+            ];
+            populateFormSelectOptions();
+            applyMasterFilters();
+        } catch (error) {
+            console.error('Error refreshing assets:', error);
+        }
     }
 
     function applyMasterFilters() {
@@ -1354,11 +1319,240 @@ function initializeApp() {
         }
     }
 
+    // Expose detail helpers for cross-scope use
+    window.showBookingDetail = (props, context = 'admin') => ui.showDetailModal(props, context);
+    window.showRequestDetail = showRequestDetail;
+
     // Load data on init
     loadAndRender();
 }
 
 // ===== MODAL & FORM FUNCTIONS =====
+
+function getAdminState() {
+    return window.__adminState || null;
+}
+
+function populateBarangSelect(availabilityMap = null) {
+    const state = getAdminState();
+    const select = document.getElementById('gedung-barang-select');
+    if (!state || !select) return;
+    const assets = Array.isArray(state.assets?.barang) ? state.assets.barang : [];
+    const current = select.value;
+    select.innerHTML = '';
+    assets.forEach(b => {
+        const available = availabilityMap ? (availabilityMap.get(b.kode) ?? 0) : Number(b.num || 0);
+        const option = document.createElement('option');
+        option.value = b.kode;
+        option.textContent = `${b.nama} (${b.kode})${Number.isFinite(available) ? ` - tersisa ${available}` : ''}`;
+        option.disabled = available <= 0;
+        select.appendChild(option);
+    });
+    if (current) select.value = current;
+}
+
+function resetGedungBarangForm(form) {
+    if (!form) return;
+    form.__barangItems = new Map();
+    const chips = form.querySelector('#gedung-barang-chips');
+    if (chips) chips.innerHTML = '';
+    populateBarangSelect();
+    setBarangQtyMax(form, null);
+}
+
+function addBarangItemToForm(form, assetCode, assetName, quantity) {
+    if (!form) return;
+    if (!form.__barangItems) form.__barangItems = new Map();
+    form.__barangItems.set(assetCode, { assetCode, assetName, quantity });
+    const chips = form.querySelector('#gedung-barang-chips');
+    if (!chips) return;
+    const chip = document.createElement('span');
+    chip.className = 'inline-flex items-center bg-emerald-100 text-emerald-800 px-2 py-1 rounded-full';
+    chip.dataset.code = assetCode;
+    chip.innerHTML = `
+        <span class="mr-1 font-semibold">${assetName}: ${quantity}</span>
+        <button type="button" class="ml-1 text-emerald-800 hover:text-red-600" title="Hapus">&times;</button>
+    `;
+    chips.querySelectorAll('span[data-code]').forEach(node => {
+        if (node.dataset.code === assetCode) node.remove();
+    });
+    chips.appendChild(chip);
+    chip.querySelector('button')?.addEventListener('click', () => {
+        form.__barangItems.delete(assetCode);
+        chip.remove();
+        updateGedungBarangAvailability(form);
+    });
+}
+
+function computeBarangAvailability(start, end, excludeBookingId = null) {
+    const state = getAdminState();
+    if (!state || !start || !end) return new Map();
+    const used = new Map();
+    state.allBookingsCache.forEach(b => {
+        if (excludeBookingId && b._id === excludeBookingId) return;
+        const bs = new Date(b.startDate);
+        const be = new Date(b.endDate);
+        if (!(start < be && end > bs)) return;
+        if (!Array.isArray(b.borrowedItems)) return;
+        b.borrowedItems.forEach(it => {
+            const code = it.assetCode;
+            const qty = Number(it.quantity || 0);
+            if (!code || !Number.isFinite(qty) || qty <= 0) return;
+            used.set(code, (used.get(code) || 0) + qty);
+        });
+    });
+    const availability = new Map();
+    (state.assets?.barang || []).forEach(item => {
+        const max = Number(item.num || 0);
+        const usedQty = used.get(item.kode) || 0;
+        availability.set(item.kode, Math.max(0, max - usedQty));
+    });
+    return availability;
+}
+
+function setBarangQtyMax(form, availabilityMap) {
+    const select = form?.querySelector('#gedung-barang-select');
+    const qtyInput = form?.querySelector('#gedung-barang-qty');
+    if (!select || !qtyInput) return;
+    const code = select.value || null;
+    let max = 0;
+    if (availabilityMap && code) {
+        max = availabilityMap.get(code) ?? 0;
+    }
+    if (max < 0) max = 0;
+    qtyInput.max = String(max);
+    qtyInput.placeholder = max > 0 ? `Qty (maks: ${max})` : 'Qty';
+    if (qtyInput.value) {
+        const v = Number(qtyInput.value);
+        if (Number.isFinite(v) && v > max) qtyInput.value = max || '';
+    }
+    qtyInput.disabled = max === 0;
+}
+
+function updateGedungBarangAvailability(form) {
+    const state = getAdminState();
+    if (!state || !form) return;
+    const useTime = form.querySelector('#gedung-use-time')?.checked;
+    const startDateInput = form.querySelector('#gedung-mulai-tanggal');
+    const endDateInput = form.querySelector('#gedung-selesai-tanggal');
+    const startTimeInput = form.querySelector('#gedung-mulai-jam');
+    const endTimeInput = form.querySelector('#gedung-selesai-jam');
+    const bookingId = form.querySelector('#gedung-booking-id')?.value || null;
+
+    if (!startDateInput || !endDateInput) return;
+
+    let start;
+    let end;
+    if (useTime) {
+        if (!startDateInput.value || !endDateInput.value || !startTimeInput?.value || !endTimeInput?.value) {
+            populateBarangSelect();
+            form.__barangAvailability = null;
+            setBarangQtyMax(form, null);
+            return;
+        }
+        start = new Date(`${startDateInput.value}T${startTimeInput.value}`);
+        end = new Date(`${endDateInput.value}T${endTimeInput.value}`);
+    } else {
+        if (!startDateInput.value || !endDateInput.value) {
+            populateBarangSelect();
+            form.__barangAvailability = null;
+            setBarangQtyMax(form, null);
+            return;
+        }
+        start = new Date(startDateInput.value);
+        end = new Date(endDateInput.value);
+        end.setHours(23, 59, 59, 999);
+    }
+
+    if (isNaN(start) || isNaN(end) || start >= end) {
+        populateBarangSelect();
+        form.__barangAvailability = null;
+        setBarangQtyMax(form, null);
+        return;
+    }
+
+    const availability = computeBarangAvailability(start, end, bookingId);
+    const items = form.__barangItems ? [...form.__barangItems.values()] : [];
+    items.forEach(it => {
+        const current = availability.get(it.assetCode) ?? 0;
+        availability.set(it.assetCode, Math.max(0, current - Number(it.quantity || 0)));
+    });
+    form.__barangAvailability = availability;
+    populateBarangSelect(availability);
+    setBarangQtyMax(form, availability);
+}
+
+function hydrateBarangFromBooking(form, booking) {
+    if (!form) return;
+    resetGedungBarangForm(form);
+    if (booking?.borrowedItems && Array.isArray(booking.borrowedItems)) {
+        booking.borrowedItems.forEach(it => {
+            addBarangItemToForm(form, it.assetCode, it.assetName, it.quantity);
+        });
+    }
+    updateGedungBarangAvailability(form);
+}
+
+function initGedungBarangHandlers() {
+    const form = document.getElementById('form-gedung');
+    if (!form) return;
+
+    const useTimeCheckbox = form.querySelector('#gedung-use-time');
+    const timeInputsDiv = form.querySelector('#gedung-time-inputs');
+    const startDateInput = form.querySelector('#gedung-mulai-tanggal');
+    const endDateInput = form.querySelector('#gedung-selesai-tanggal');
+    const startTimeInput = form.querySelector('#gedung-mulai-jam');
+    const endTimeInput = form.querySelector('#gedung-selesai-jam');
+    const addBtn = form.querySelector('#gedung-barang-add');
+    const qtyInput = form.querySelector('#gedung-barang-qty');
+    const select = form.querySelector('#gedung-barang-select');
+
+    resetGedungBarangForm(form);
+
+    if (useTimeCheckbox && timeInputsDiv) {
+        useTimeCheckbox.addEventListener('change', () => {
+            timeInputsDiv.classList.toggle('hidden', !useTimeCheckbox.checked);
+            updateGedungBarangAvailability(form);
+        });
+    }
+
+    [startDateInput, endDateInput, startTimeInput, endTimeInput].forEach(input => {
+        input?.addEventListener('change', () => updateGedungBarangAvailability(form));
+    });
+
+    select?.addEventListener('change', () => setBarangQtyMax(form, form.__barangAvailability || null));
+    qtyInput?.addEventListener('input', () => setBarangQtyMax(form, form.__barangAvailability || null));
+
+    addBtn?.addEventListener('click', () => {
+        const state = getAdminState();
+        if (!state) return alert('Data aset belum siap.');
+        const code = select?.value;
+        const qty = Number(qtyInput?.value);
+        const asset = (state.assets?.barang || []).find(b => b.kode === code);
+        if (!asset) return alert('Pilih barang.');
+        if (!Number.isFinite(qty) || qty <= 0) return alert('Masukkan qty valid.');
+        const availability = form.__barangAvailability || new Map();
+        const available = availability.get(code) ?? 0;
+        if (qty > available) return alert(`Qty melebihi stok tersedia (${available}).`);
+        addBarangItemToForm(form, asset.kode, asset.nama, qty);
+        if (qtyInput) qtyInput.value = '';
+        updateGedungBarangAvailability(form);
+    });
+
+    updateGedungBarangAvailability(form);
+}
+
+// Helper to safely format date for input[type=date]
+function formatDateForInput(dateStr) {
+    try {
+        const date = new Date(dateStr);
+        if (isNaN(date.getTime())) return '';
+        return date.toISOString().split('T')[0];
+    } catch (e) {
+        console.error('Error formatting date:', dateStr, e);
+        return '';
+    }
+}
 
 // Open Gedung Modal
 function openGedungModal(booking = null) {
@@ -1368,19 +1562,23 @@ function openGedungModal(booking = null) {
     
     if (!modal || !form) return;
     
-    title.textContent = booking ? 'Edit Peminjaman Gedung' : 'Tambah Peminjaman Gedung';
+    title.textContent = booking ? 'Edit Pinjam Gedung' : 'Form Pinjam Gedung';
     form.reset();
+    resetGedungBarangForm(form);
     
     if (booking) {
-        document.getElementById('gedung-booking-id').value = booking._id;
-        document.getElementById('gedung-peminjam').value = booking.userName;
-        document.getElementById('gedung-nama').value = booking.assetCode;
-        document.getElementById('gedung-penanggung-jawab').value = booking.personInCharge;
-        document.getElementById('gedung-nomor-penanggung-jawab').value = booking.picPhoneNumber;
+        document.getElementById('gedung-booking-id').value = booking._id || '';
+        document.getElementById('gedung-peminjam').value = booking.userName || '';
+        document.getElementById('gedung-nama').value = booking.assetCode || '';
+        document.getElementById('gedung-penanggung-jawab').value = booking.personInCharge || '';
+        document.getElementById('gedung-nomor-penanggung-jawab').value = booking.picPhoneNumber || '';
         document.getElementById('gedung-kegiatan').value = booking.activityName || '';
         document.getElementById('gedung-keterangan').value = booking.notes || '';
-        document.getElementById('gedung-mulai-tanggal').value = new Date(booking.startDate).toISOString().split('T')[0];
-        document.getElementById('gedung-selesai-tanggal').value = new Date(booking.endDate).toISOString().split('T')[0];
+        document.getElementById('gedung-mulai-tanggal').value = formatDateForInput(booking.startDate);
+        document.getElementById('gedung-selesai-tanggal').value = formatDateForInput(booking.endDate);
+        hydrateBarangFromBooking(form, booking);
+    } else {
+        updateGedungBarangAvailability(form);
     }
     
     modal.classList.remove('hidden');
@@ -1394,19 +1592,19 @@ function openKendaraanModal(booking = null) {
     
     if (!modal || !form) return;
     
-    title.textContent = booking ? 'Edit Peminjaman Kendaraan' : 'Tambah Peminjaman Kendaraan';
+    title.textContent = booking ? 'Edit Pinjam Kendaraan' : 'Form Pinjam Kendaraan';
     form.reset();
     
     if (booking) {
-        document.getElementById('kendaraan-booking-id').value = booking._id;
-        document.getElementById('kendaraan-peminjam').value = booking.userName;
-        document.getElementById('kendaraan-nama').value = booking.assetCode;
-        document.getElementById('kendaraan-penanggung-jawab').value = booking.personInCharge;
-        document.getElementById('kendaraan-nomor-penanggung-jawab').value = booking.picPhoneNumber;
+        document.getElementById('kendaraan-booking-id').value = booking._id || '';
+        document.getElementById('kendaraan-peminjam').value = booking.userName || '';
+        document.getElementById('kendaraan-nama').value = booking.assetCode || '';
+        document.getElementById('kendaraan-penanggung-jawab').value = booking.personInCharge || '';
+        document.getElementById('kendaraan-nomor-penanggung-jawab').value = booking.picPhoneNumber || '';
         document.getElementById('kendaraan-tujuan').value = booking.destination || '';
         document.getElementById('kendaraan-keterangan').value = booking.notes || '';
-        document.getElementById('kendaraan-mulai-tanggal').value = new Date(booking.startDate).toISOString().split('T')[0];
-        document.getElementById('kendaraan-selesai-tanggal').value = new Date(booking.endDate).toISOString().split('T')[0];
+        document.getElementById('kendaraan-mulai-tanggal').value = formatDateForInput(booking.startDate);
+        document.getElementById('kendaraan-selesai-tanggal').value = formatDateForInput(booking.endDate);
         if (booking.driver) {
             document.getElementById('kendaraan-supir').value = typeof booking.driver === 'object' ? booking.driver._id : booking.driver;
         }
@@ -1421,17 +1619,30 @@ function openDriverModal(driver = null) {
     const form = document.getElementById('form-driver');
     const title = document.getElementById('driver-form-title');
     
-    if (!modal || !form) return;
+    if (!modal || !form || !title) {
+        console.error('Driver modal elements not found');
+        return;
+    }
     
     title.textContent = driver ? 'Edit Supir' : 'Tambah Supir';
     form.reset();
     
+    // Clear ID for new driver
+    const idInput = document.getElementById('driver-id');
+    if (idInput) idInput.value = '';
+    
     if (driver) {
-        document.getElementById('driver-id').value = driver._id;
-        document.getElementById('driver-kode').value = driver.kode;
-        document.getElementById('driver-nama').value = driver.nama;
-        document.getElementById('driver-notelp').value = driver.noTelp || '';
-        document.getElementById('driver-detail').value = driver.detail || '';
+        const idField = document.getElementById('driver-id');
+        const kodeField = document.getElementById('driver-kode');
+        const namaField = document.getElementById('driver-nama');
+        const telpField = document.getElementById('driver-no-telp');
+        const detailField = document.getElementById('driver-detail');
+        
+        if (idField) idField.value = driver._id || '';
+        if (kodeField) kodeField.value = driver.kode || '';
+        if (namaField) namaField.value = driver.nama || '';
+        if (telpField) telpField.value = driver.noTelp || '';
+        if (detailField) detailField.value = driver.detail || '';
     }
     
     modal.classList.remove('hidden');
@@ -1443,19 +1654,33 @@ function openAssetModal(asset = null) {
     const form = document.getElementById('form-asset');
     const title = document.getElementById('asset-form-title');
     
-    if (!modal || !form) return;
+    if (!modal || !form || !title) {
+        console.error('Asset modal elements not found');
+        return;
+    }
     
     title.textContent = asset ? 'Edit Aset' : 'Tambah Aset';
     form.reset();
     
+    // Clear ID for new asset
+    const idInput = document.getElementById('asset-id');
+    if (idInput) idInput.value = '';
+    
     if (asset) {
-        document.getElementById('asset-id').value = asset._id;
-        document.getElementById('asset-kode').value = asset.kode;
-        document.getElementById('asset-nama').value = asset.nama;
-        document.getElementById('asset-tipe').value = asset.tipe;
-        document.getElementById('asset-detail').value = asset.detail || '';
-        if (asset.num !== undefined && asset.num !== null) {
-            document.getElementById('asset-num').value = asset.num;
+        const idField = document.getElementById('asset-id');
+        const kodeField = document.getElementById('asset-kode');
+        const namaField = document.getElementById('asset-nama');
+        const tipeField = document.getElementById('asset-tipe');
+        const detailField = document.getElementById('asset-detail');
+        const numField = document.getElementById('asset-num');
+        
+        if (idField) idField.value = asset._id || '';
+        if (kodeField) kodeField.value = asset.kode || '';
+        if (namaField) namaField.value = asset.nama || '';
+        if (tipeField) tipeField.value = asset.tipe || '';
+        if (detailField) detailField.value = asset.detail || '';
+        if (numField && asset.num !== undefined && asset.num !== null) {
+            numField.value = asset.num;
         }
         updateAssetNumVisibility(asset.tipe);
     } else {
@@ -1484,6 +1709,21 @@ function setupFormSubmitHandlers() {
         gedungForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const id = document.getElementById('gedung-booking-id').value || null;
+            const useTime = document.getElementById('gedung-use-time').checked;
+            const startDateVal = document.getElementById('gedung-mulai-tanggal').value;
+            const endDateVal = document.getElementById('gedung-selesai-tanggal').value;
+            const startTimeVal = document.getElementById('gedung-mulai-jam').value;
+            const endTimeVal = document.getElementById('gedung-selesai-jam').value;
+            let startDate;
+            let endDate;
+            if (useTime && startDateVal && endDateVal && startTimeVal && endTimeVal) {
+                startDate = new Date(`${startDateVal}T${startTimeVal}`);
+                endDate = new Date(`${endDateVal}T${endTimeVal}`);
+            } else {
+                startDate = startDateVal ? new Date(startDateVal) : null;
+                endDate = endDateVal ? new Date(endDateVal) : null;
+                if (endDate) endDate.setHours(23, 59, 59, 999);
+            }
             const payload = {
                 bookingType: 'gedung',
                 userName: document.getElementById('gedung-peminjam').value,
@@ -1492,12 +1732,13 @@ function setupFormSubmitHandlers() {
                 picPhoneNumber: document.getElementById('gedung-nomor-penanggung-jawab').value,
                 activityName: document.getElementById('gedung-kegiatan').value,
                 notes: document.getElementById('gedung-keterangan').value,
-                startDate: new Date(document.getElementById('gedung-mulai-tanggal').value),
-                endDate: new Date(document.getElementById('gedung-selesai-tanggal').value)
+                startDate,
+                endDate,
+                borrowedItems: Array.from(gedungForm.__barangItems?.values?.() || [])
             };
             
-            if (!payload.userName || !payload.assetCode) {
-                alert('Nama peminjam dan gedung wajib diisi.');
+            if (!payload.userName || !payload.assetCode || !payload.startDate || !payload.endDate) {
+                alert('Nama peminjam, gedung, dan tanggal wajib diisi.');
                 return;
             }
             
@@ -1584,7 +1825,7 @@ function setupFormSubmitHandlers() {
             const payload = {
                 kode: document.getElementById('driver-kode').value.trim(),
                 nama: document.getElementById('driver-nama').value.trim(),
-                noTelp: document.getElementById('driver-notelp').value.trim(),
+                noTelp: document.getElementById('driver-no-telp').value.trim(),
                 detail: document.getElementById('driver-detail').value.trim()
             };
             
@@ -1669,6 +1910,20 @@ function setupFormSubmitHandlers() {
 
 // Setup Table Event Delegation
 function setupTableEventDelegation() {
+    // Request List Table
+    const requestTable = document.getElementById('request-list-table');
+    if (requestTable) {
+        requestTable.addEventListener('click', (e) => {
+            const row = e.target.closest('tr[data-request-id]');
+            if (!row) return;
+            const state = getAdminState();
+            const req = state?.allRequestsCache?.find(r => r._id === row.dataset.requestId);
+            if (req && window.showRequestDetail) {
+                window.showRequestDetail(req);
+            }
+        });
+    }
+
     // Gedung List Table
     const gedungTable = document.getElementById('gedung-list-table');
     if (gedungTable) {
@@ -1682,10 +1937,15 @@ function setupTableEventDelegation() {
             if (editBtn) {
                 const bookingId = row.dataset.bookingId;
                 try {
-                    const response = await fetch(`${API_BASE}/api/bookings/by-code/${bookingId}`, { credentials: 'include' });
+                    const response = await fetch(`${API_BASE}/api/bookings/${bookingId}`, { credentials: 'include' });
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
                     const booking = await response.json();
+                    console.log('Booking data fetched:', booking);
                     openGedungModal(booking);
                 } catch (error) {
+                    console.error('Error loading booking:', error);
                     alert('Gagal memuat data: ' + error.message);
                 }
             } else if (deleteBtn) {
@@ -1698,6 +1958,12 @@ function setupTableEventDelegation() {
                     } catch (error) {
                         alert('Gagal menghapus: ' + error.message);
                     }
+                }
+            } else if (!editBtn && !deleteBtn) {
+                const state = getAdminState();
+                const bookingData = state?.allBookingsCache?.find(b => b._id === row.dataset.bookingId);
+                if (bookingData && window.showBookingDetail) {
+                    window.showBookingDetail(bookingData, 'admin');
                 }
             }
         });
@@ -1716,10 +1982,15 @@ function setupTableEventDelegation() {
             if (editBtn) {
                 const bookingId = row.dataset.bookingId;
                 try {
-                    const response = await fetch(`${API_BASE}/api/bookings/by-code/${bookingId}`, { credentials: 'include' });
+                    const response = await fetch(`${API_BASE}/api/bookings/${bookingId}`, { credentials: 'include' });
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
                     const booking = await response.json();
+                    console.log('Booking data fetched:', booking);
                     openKendaraanModal(booking);
                 } catch (error) {
+                    console.error('Error loading booking:', error);
                     alert('Gagal memuat data: ' + error.message);
                 }
             } else if (deleteBtn) {
@@ -1732,6 +2003,12 @@ function setupTableEventDelegation() {
                     } catch (error) {
                         alert('Gagal menghapus: ' + error.message);
                     }
+                }
+            } else if (!editBtn && !deleteBtn) {
+                const state = getAdminState();
+                const bookingData = state?.allBookingsCache?.find(b => b._id === row.dataset.bookingId);
+                if (bookingData && window.showBookingDetail) {
+                    window.showBookingDetail(bookingData, 'admin');
                 }
             }
         });
@@ -1748,22 +2025,30 @@ function setupTableEventDelegation() {
             if (!row) return;
             
             if (editBtn) {
-                const driverId = row.dataset.driverId;
+                const driverId = editBtn.dataset.id || row.dataset.driverId;
                 try {
                     const response = await fetch(`${API_BASE}/api/drivers/${driverId}`, { credentials: 'include' });
+                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                    const contentType = response.headers.get('content-type');
+                    if (!contentType?.includes('application/json')) {
+                        throw new Error('Server mengembalikan response yang bukan JSON');
+                    }
                     const driver = await response.json();
                     openDriverModal(driver);
                 } catch (error) {
-                    alert('Gagal memuat data: ' + error.message);
+                    console.error('Error:', error);
+                    alert('Gagal memuat data supir: ' + error.message);
                 }
             } else if (deleteBtn) {
-                const driverId = row.dataset.driverId;
+                const driverId = deleteBtn.dataset.id || row.dataset.driverId;
                 if (confirm('Hapus supir ini?')) {
                     try {
-                        await fetch(`${API_BASE}/api/drivers/${driverId}`, { method: 'DELETE', credentials: 'include' });
+                        const response = await fetch(`${API_BASE}/api/drivers/${driverId}`, { method: 'DELETE', credentials: 'include' });
+                        if (!response.ok) throw new Error(`HTTP ${response.status}`);
                         alert('Supir berhasil dihapus.');
                         window.initializeApp?.();
                     } catch (error) {
+                        console.error('Error:', error);
                         alert('Gagal menghapus: ' + error.message);
                     }
                 }
@@ -1782,22 +2067,30 @@ function setupTableEventDelegation() {
             if (!row) return;
             
             if (editBtn) {
-                const assetId = row.dataset.assetId;
+                const assetId = editBtn.dataset.id || row.dataset.assetId;
                 try {
                     const response = await fetch(`${API_BASE}/api/assets/${assetId}`, { credentials: 'include' });
+                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                    const contentType = response.headers.get('content-type');
+                    if (!contentType?.includes('application/json')) {
+                        throw new Error('Server mengembalikan response yang bukan JSON');
+                    }
                     const asset = await response.json();
                     openAssetModal(asset);
                 } catch (error) {
-                    alert('Gagal memuat data: ' + error.message);
+                    console.error('Error:', error);
+                    alert('Gagal memuat data aset: ' + error.message);
                 }
             } else if (deleteBtn) {
-                const assetId = row.dataset.assetId;
+                const assetId = deleteBtn.dataset.id || row.dataset.assetId;
                 if (confirm('Hapus aset ini?')) {
                     try {
-                        await fetch(`${API_BASE}/api/assets/${assetId}`, { method: 'DELETE', credentials: 'include' });
+                        const response = await fetch(`${API_BASE}/api/assets/${assetId}`, { method: 'DELETE', credentials: 'include' });
+                        if (!response.ok) throw new Error(`HTTP ${response.status}`);
                         alert('Aset berhasil dihapus.');
                         window.initializeApp?.();
                     } catch (error) {
+                        console.error('Error:', error);
                         alert('Gagal menghapus: ' + error.message);
                     }
                 }
@@ -1844,6 +2137,109 @@ function setupAddButtonHandlers() {
     const btnAddAsset = document.getElementById('btn-add-asset');
     if (btnAddAsset) {
         btnAddAsset.addEventListener('click', () => openAssetModal());
+    }
+}
+
+// Render Forms - populate empty form containers
+function renderForms() {
+    const commonFormHtml = (type) => `
+        <input type="hidden" id="${type}-booking-id">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div><label for="${type}-peminjam" class="form-label text-sm">Nama Peminjam / Unit</label>
+            <input type="text" id="${type}-peminjam" required class="form-input"></div>
+            <div><label for="${type}-nama" class="form-label text-sm">Nama ${type === 'gedung' ? 'Gedung' : 'Kendaraan'}</label>
+            <select id="${type}-nama" required class="form-input"></select></div>
+            <div><label for="${type}-penanggung-jawab" class="form-label text-sm">Penanggung Jawab</label>
+            <input type="text" id="${type}-penanggung-jawab" required class="form-input"></div>
+            <div><label for="${type}-nomor-penanggung-jawab" class="form-label text-sm">Nomor HP</label>
+            <input type="tel" id="${type}-nomor-penanggung-jawab" required class="form-input"></div>
+            <div><label for="${type}-mulai-tanggal" class="form-label text-sm">Tanggal Mulai</label>
+            <input type="date" id="${type}-mulai-tanggal" required class="form-input"></div>
+            <div><label for="${type}-selesai-tanggal" class="form-label text-sm">Tanggal Selesai</label>
+            <input type="date" id="${type}-selesai-tanggal" required class="form-input"></div>
+            <div id="${type}-time-inputs" class="col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4 hidden">
+                <div><label for="${type}-mulai-jam" class="form-label text-sm">Jam Mulai</label>
+                <input type="time" id="${type}-mulai-jam" class="form-input"></div>
+                <div><label for="${type}-selesai-jam" class="form-label text-sm">Jam Selesai</label>
+                <input type="time" id="${type}-selesai-jam" class="form-input"></div>
+            </div>
+            <div class="col-span-2 flex items-center"><input id="${type}-use-time" type="checkbox" class="h-4 w-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500">
+            <label for="${type}-use-time" class="ml-2 block text-sm text-gray-900">Pakai Jam Spesifik</label></div>
+        </div>
+    `;
+    const gedungExtraFields = `
+        <div><label for="gedung-kegiatan" class="form-label text-sm">Nama Kegiatan (Opsional)</label>
+        <input type="text" id="gedung-kegiatan" class="form-input"></div>
+        <div><label for="gedung-keterangan" class="form-label text-sm">Keterangan (Opsional)</label>
+        <textarea id="gedung-keterangan" rows="2" class="form-input"></textarea></div>
+        <div>
+            <label class="form-label text-sm">Barang Dipinjam (Opsional)</label>
+            <div class="grid grid-cols-5 gap-2 mb-2">
+                <select id="gedung-barang-select" class="form-input col-span-3"></select>
+                <input id="gedung-barang-qty" type="number" min="1" step="1" class="form-input col-span-1" placeholder="Qty">
+                <button type="button" id="gedung-barang-add" class="add-btn col-span-1">Tambah</button>
+            </div>
+            <div id="gedung-barang-chips" class="flex flex-wrap gap-2 p-2 border rounded-md bg-gray-50 min-h-10 text-sm"></div>
+        </div>
+        <button type="submit" class="w-full add-btn">Simpan Peminjaman</button>
+    `;
+    const kendaraanExtraFields = `
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div><label for="kendaraan-supir" class="form-label text-sm">Supir</label>
+            <select id="kendaraan-supir" class="form-input"></select></div>
+            <div><label for="kendaraan-tujuan" class="form-label text-sm">Tujuan (Opsional)</label>
+            <input type="text" id="kendaraan-tujuan" class="form-input"></div>
+        </div>
+        <div><label for="kendaraan-keterangan" class="form-label text-sm">Keterangan (Opsional)</label>
+        <textarea id="kendaraan-keterangan" rows="2" class="form-input"></textarea></div>
+        <button type="submit" class="w-full add-btn">Simpan Peminjaman</button>
+    `;
+    
+    const formGedung = document.getElementById('form-gedung');
+    const formKendaraan = document.getElementById('form-kendaraan');
+    const formAsset = document.getElementById('form-asset');
+    
+    if (formGedung) {
+        formGedung.innerHTML = commonFormHtml('gedung') + gedungExtraFields;
+    }
+    if (formKendaraan) {
+        formKendaraan.innerHTML = commonFormHtml('kendaraan') + kendaraanExtraFields;
+    }
+    if (formAsset) {
+        formAsset.innerHTML = `
+            <input type="hidden" id="asset-id">
+            <div>
+                <label for="asset-kode" class="form-label text-sm">Kode</label>
+                <input id="asset-kode" type="text" required class="form-input" placeholder="Misal: G-01">
+            </div>
+            <div>
+                <label for="asset-nama" class="form-label text-sm">Nama</label>
+                <input id="asset-nama" type="text" required class="form-input" placeholder="Nama aset">
+            </div>
+            <div>
+                <label for="asset-tipe" class="form-label text-sm">Tipe</label>
+                <select id="asset-tipe" required class="form-input">
+                    <option value="gedung">Gedung</option>
+                    <option value="kendaraan">Kendaraan</option>
+                    <option value="barang">Barang</option>
+                </select>
+            </div>
+            <div id="asset-num-wrapper" class="hidden">
+                <label for="asset-num" class="form-label text-sm">Qty / Max</label>
+                <input id="asset-num" type="number" min="0" step="1" class="form-input" placeholder="Masukkan angka">
+            </div>
+            <div>
+                <label for="asset-detail" class="form-label text-sm">Detail (Opsional)</label>
+                <input id="asset-detail" type="text" class="form-input" placeholder="Kapasitas / keterangan lain">
+            </div>
+            <button type="submit" class="w-full add-btn">Simpan Aset</button>
+        `;
+        
+        // Update asset num visibility after rendering
+        const assetTipeSelect = formAsset.querySelector('#asset-tipe');
+        if (assetTipeSelect) {
+            updateAssetNumVisibility(assetTipeSelect.value);
+        }
     }
 }
 
@@ -1916,8 +2312,10 @@ async function loadAdminsList() {
                     </span>
                 </td>
                 <td class="px-6 py-3 text-right text-sm">
-                    <button class="btn-edit" data-id="${admin._id}" title="Edit"><i class="fas fa-edit"></i></button>
-                    <button class="btn-delete" data-id="${admin._id}" title="Hapus"><i class="fas fa-trash"></i></button>
+                    <div class="flex justify-end gap-3">
+                        <button class="btn-edit" data-id="${admin._id}" title="Edit"><i class="fas fa-edit"></i></button>
+                        <button class="btn-delete" data-id="${admin._id}" title="Hapus"><i class="fas fa-trash"></i></button>
+                    </div>
                 </td>
             </tr>
         `).join('');
@@ -2022,11 +2420,13 @@ function setupAdminManagement() {
 
 // Initialize all modal/form functionality
 function initializeModalFunctionality() {
+    renderForms(); // Render form HTML first
     setupFormSubmitHandlers();
     setupTableEventDelegation();
     setupModalCloseHandlers();
     setupAddButtonHandlers();
     setupAssetTypeChangeHandler();
+    initGedungBarangHandlers();
     setupUserAdminTypeHandlers();
     setupAdminManagement();
 }
