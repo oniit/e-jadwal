@@ -29,7 +29,21 @@ async function checkAuth() {
         
         // Show admin tab only for superadmin
         if (user.role === 'superadmin') {
-            document.getElementById('admin-tab-users').classList.remove('hidden');
+            const usersTab = document.getElementById('admin-tab-users');
+            if (usersTab) {
+                usersTab.classList.remove('hidden');
+            }
+        }
+        
+        // Hide tabs for admin khusus - only show request and gedung
+        if (user.role === 'admin' && user.adminType === 'khusus') {
+            const tabsToHide = ['admin-tab-kendaraan', 'admin-tab-driver', 'admin-tab-master', 'admin-tab-users'];
+            tabsToHide.forEach(tabId => {
+                const tab = document.getElementById(tabId);
+                if (tab) {
+                    tab.classList.add('hidden');
+                }
+            });
         }
     } catch (error) {
         console.error('Auth check failed:', error);
@@ -185,6 +199,86 @@ function setupProfileForm() {
             }
         });
     }
+    
+    // Setup admin user management form
+    setupAdminUserForm();
+}
+
+function setupAdminUserForm() {
+    const userForm = document.getElementById('form-user');
+    if (!userForm) return;
+    
+    const btnAddUser = document.getElementById('btn-add-user');
+    if (btnAddUser) {
+        btnAddUser.addEventListener('click', () => {
+            userForm.reset();
+            document.getElementById('user-id').value = '';
+            document.getElementById('generated-password-display').classList.add('hidden');
+            document.getElementById('user-form-title').textContent = 'Tambah Admin';
+            document.getElementById('user-admin-umum').checked = true;
+            document.getElementById('user-managed-assets-wrapper').classList.add('hidden');
+            document.getElementById('modal-user-form').classList.remove('hidden');
+        });
+    }
+    
+    userForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const userId = document.getElementById('user-id').value;
+        const payload = {
+            username: document.getElementById('user-username').value.trim(),
+            name: document.getElementById('user-name').value.trim(),
+            email: document.getElementById('user-email').value.trim(),
+            phone: document.getElementById('user-phone').value.trim(),
+            adminType: document.querySelector('input[name="user-admin-type"]:checked')?.value || 'umum',
+            managedAssetCodes: []
+        };
+        
+        // Collect checked assets for admin khusus
+        if (payload.adminType === 'khusus') {
+            const checkedAssets = document.querySelectorAll('input[name="managed-asset"]:checked');
+            payload.managedAssetCodes = Array.from(checkedAssets).map(cb => cb.value);
+        }
+        
+        if (!payload.username || !payload.name || !payload.email) {
+            alert('Username, nama, dan email wajib diisi');
+            return;
+        }
+        
+        try {
+            const method = userId ? 'PUT' : 'POST';
+            const url = userId ? `${API_BASE}/auth/admin/${userId}` : `${API_BASE}/auth/admin`;
+            
+            const response = await fetch(url, {
+                method,
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify(payload)
+            });
+            
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.message || 'Gagal menyimpan admin');
+            }
+            
+            const result = await response.json();
+            
+            // Show password only for new admins
+            if (!userId && result.generatedPassword) {
+                document.getElementById('generated-password-text').textContent = result.generatedPassword;
+                document.getElementById('generated-password-display').classList.remove('hidden');
+                document.getElementById('copy-password-btn').addEventListener('click', () => {
+                    navigator.clipboard.writeText(result.generatedPassword);
+                    alert('Password berhasil disalin');
+                });
+            } else {
+                alert(`Admin berhasil ${userId ? 'diperbarui' : 'dibuat'}`);
+                document.getElementById('modal-user-form').classList.add('hidden');
+                loadAdminsList();
+            }
+        } catch (error) {
+            alert(`Gagal: ${error.message}`);
+        }
+    });
 }
 
 // ===== DATA LOADING & RENDERING =====
@@ -1263,3 +1357,689 @@ function initializeApp() {
     // Load data on init
     loadAndRender();
 }
+
+// ===== MODAL & FORM FUNCTIONS =====
+
+// Open Gedung Modal
+function openGedungModal(booking = null) {
+    const modal = document.getElementById('modal-form-gedung');
+    const form = document.getElementById('form-gedung');
+    const title = document.getElementById('gedung-form-title');
+    
+    if (!modal || !form) return;
+    
+    title.textContent = booking ? 'Edit Peminjaman Gedung' : 'Tambah Peminjaman Gedung';
+    form.reset();
+    
+    if (booking) {
+        document.getElementById('gedung-booking-id').value = booking._id;
+        document.getElementById('gedung-peminjam').value = booking.userName;
+        document.getElementById('gedung-nama').value = booking.assetCode;
+        document.getElementById('gedung-penanggung-jawab').value = booking.personInCharge;
+        document.getElementById('gedung-nomor-penanggung-jawab').value = booking.picPhoneNumber;
+        document.getElementById('gedung-kegiatan').value = booking.activityName || '';
+        document.getElementById('gedung-keterangan').value = booking.notes || '';
+        document.getElementById('gedung-mulai-tanggal').value = new Date(booking.startDate).toISOString().split('T')[0];
+        document.getElementById('gedung-selesai-tanggal').value = new Date(booking.endDate).toISOString().split('T')[0];
+    }
+    
+    modal.classList.remove('hidden');
+}
+
+// Open Kendaraan Modal
+function openKendaraanModal(booking = null) {
+    const modal = document.getElementById('modal-form-kendaraan');
+    const form = document.getElementById('form-kendaraan');
+    const title = document.getElementById('kendaraan-form-title');
+    
+    if (!modal || !form) return;
+    
+    title.textContent = booking ? 'Edit Peminjaman Kendaraan' : 'Tambah Peminjaman Kendaraan';
+    form.reset();
+    
+    if (booking) {
+        document.getElementById('kendaraan-booking-id').value = booking._id;
+        document.getElementById('kendaraan-peminjam').value = booking.userName;
+        document.getElementById('kendaraan-nama').value = booking.assetCode;
+        document.getElementById('kendaraan-penanggung-jawab').value = booking.personInCharge;
+        document.getElementById('kendaraan-nomor-penanggung-jawab').value = booking.picPhoneNumber;
+        document.getElementById('kendaraan-tujuan').value = booking.destination || '';
+        document.getElementById('kendaraan-keterangan').value = booking.notes || '';
+        document.getElementById('kendaraan-mulai-tanggal').value = new Date(booking.startDate).toISOString().split('T')[0];
+        document.getElementById('kendaraan-selesai-tanggal').value = new Date(booking.endDate).toISOString().split('T')[0];
+        if (booking.driver) {
+            document.getElementById('kendaraan-supir').value = typeof booking.driver === 'object' ? booking.driver._id : booking.driver;
+        }
+    }
+    
+    modal.classList.remove('hidden');
+}
+
+// Open Driver Modal
+function openDriverModal(driver = null) {
+    const modal = document.getElementById('modal-form-driver');
+    const form = document.getElementById('form-driver');
+    const title = document.getElementById('driver-form-title');
+    
+    if (!modal || !form) return;
+    
+    title.textContent = driver ? 'Edit Supir' : 'Tambah Supir';
+    form.reset();
+    
+    if (driver) {
+        document.getElementById('driver-id').value = driver._id;
+        document.getElementById('driver-kode').value = driver.kode;
+        document.getElementById('driver-nama').value = driver.nama;
+        document.getElementById('driver-notelp').value = driver.noTelp || '';
+        document.getElementById('driver-detail').value = driver.detail || '';
+    }
+    
+    modal.classList.remove('hidden');
+}
+
+// Open Asset Modal
+function openAssetModal(asset = null) {
+    const modal = document.getElementById('modal-asset');
+    const form = document.getElementById('form-asset');
+    const title = document.getElementById('asset-form-title');
+    
+    if (!modal || !form) return;
+    
+    title.textContent = asset ? 'Edit Aset' : 'Tambah Aset';
+    form.reset();
+    
+    if (asset) {
+        document.getElementById('asset-id').value = asset._id;
+        document.getElementById('asset-kode').value = asset.kode;
+        document.getElementById('asset-nama').value = asset.nama;
+        document.getElementById('asset-tipe').value = asset.tipe;
+        document.getElementById('asset-detail').value = asset.detail || '';
+        if (asset.num !== undefined && asset.num !== null) {
+            document.getElementById('asset-num').value = asset.num;
+        }
+        updateAssetNumVisibility(asset.tipe);
+    } else {
+        updateAssetNumVisibility('gedung');
+    }
+    
+    modal.classList.remove('hidden');
+}
+
+// Update Asset Num Visibility based on type
+function updateAssetNumVisibility(tipe) {
+    const wrapper = document.getElementById('asset-num-wrapper');
+    const input = document.getElementById('asset-num');
+    if (!wrapper || !input) return;
+    
+    const show = tipe === 'barang' || tipe === 'kendaraan';
+    wrapper.classList.toggle('hidden', !show);
+    input.placeholder = tipe === 'barang' ? 'Qty (misal: 40)' : 'Max penumpang (misal: 15)';
+}
+
+// Setup Form Submit Handlers
+function setupFormSubmitHandlers() {
+    // Gedung Form
+    const gedungForm = document.getElementById('form-gedung');
+    if (gedungForm) {
+        gedungForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('gedung-booking-id').value || null;
+            const payload = {
+                bookingType: 'gedung',
+                userName: document.getElementById('gedung-peminjam').value,
+                assetCode: document.getElementById('gedung-nama').value,
+                personInCharge: document.getElementById('gedung-penanggung-jawab').value,
+                picPhoneNumber: document.getElementById('gedung-nomor-penanggung-jawab').value,
+                activityName: document.getElementById('gedung-kegiatan').value,
+                notes: document.getElementById('gedung-keterangan').value,
+                startDate: new Date(document.getElementById('gedung-mulai-tanggal').value),
+                endDate: new Date(document.getElementById('gedung-selesai-tanggal').value)
+            };
+            
+            if (!payload.userName || !payload.assetCode) {
+                alert('Nama peminjam dan gedung wajib diisi.');
+                return;
+            }
+            
+            try {
+                const method = id ? 'PUT' : 'POST';
+                const url = id ? `${API_BASE}/api/bookings/${id}` : `${API_BASE}/api/bookings`;
+                const response = await fetch(url, {
+                    method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload),
+                    credentials: 'include'
+                });
+                
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.message || 'Gagal menyimpan');
+                }
+                
+                alert(`Peminjaman gedung berhasil ${id ? 'diperbarui' : 'ditambahkan'}.`);
+                document.getElementById('modal-form-gedung').classList.add('hidden');
+                // Reload data
+                window.initializeApp?.();
+            } catch (error) {
+                alert(`Gagal: ${error.message}`);
+            }
+        });
+    }
+    
+    // Kendaraan Form
+    const kendaraanForm = document.getElementById('form-kendaraan');
+    if (kendaraanForm) {
+        kendaraanForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('kendaraan-booking-id').value || null;
+            const payload = {
+                bookingType: 'kendaraan',
+                userName: document.getElementById('kendaraan-peminjam').value,
+                assetCode: document.getElementById('kendaraan-nama').value,
+                personInCharge: document.getElementById('kendaraan-penanggung-jawab').value,
+                picPhoneNumber: document.getElementById('kendaraan-nomor-penanggung-jawab').value,
+                destination: document.getElementById('kendaraan-tujuan').value,
+                notes: document.getElementById('kendaraan-keterangan').value,
+                driver: document.getElementById('kendaraan-supir').value || null,
+                startDate: new Date(document.getElementById('kendaraan-mulai-tanggal').value),
+                endDate: new Date(document.getElementById('kendaraan-selesai-tanggal').value)
+            };
+            
+            if (!payload.userName || !payload.assetCode) {
+                alert('Nama peminjam dan kendaraan wajib diisi.');
+                return;
+            }
+            
+            try {
+                const method = id ? 'PUT' : 'POST';
+                const url = id ? `${API_BASE}/api/bookings/${id}` : `${API_BASE}/api/bookings`;
+                const response = await fetch(url, {
+                    method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload),
+                    credentials: 'include'
+                });
+                
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.message || 'Gagal menyimpan');
+                }
+                
+                alert(`Peminjaman kendaraan berhasil ${id ? 'diperbarui' : 'ditambahkan'}.`);
+                document.getElementById('modal-form-kendaraan').classList.add('hidden');
+                // Reload data
+                window.initializeApp?.();
+            } catch (error) {
+                alert(`Gagal: ${error.message}`);
+            }
+        });
+    }
+    
+    // Driver Form
+    const driverForm = document.getElementById('form-driver');
+    if (driverForm) {
+        driverForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('driver-id').value || null;
+            const payload = {
+                kode: document.getElementById('driver-kode').value.trim(),
+                nama: document.getElementById('driver-nama').value.trim(),
+                noTelp: document.getElementById('driver-notelp').value.trim(),
+                detail: document.getElementById('driver-detail').value.trim()
+            };
+            
+            if (!payload.kode || !payload.nama) {
+                alert('Kode dan nama supir wajib diisi.');
+                return;
+            }
+            
+            try {
+                const method = id ? 'PUT' : 'POST';
+                const url = id ? `${API_BASE}/api/drivers/${id}` : `${API_BASE}/api/drivers`;
+                const response = await fetch(url, {
+                    method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload),
+                    credentials: 'include'
+                });
+                
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.message || 'Gagal menyimpan');
+                }
+                
+                alert(`Supir berhasil ${id ? 'diperbarui' : 'ditambahkan'}.`);
+                document.getElementById('modal-form-driver').classList.add('hidden');
+                // Reload data
+                window.initializeApp?.();
+            } catch (error) {
+                alert(`Gagal: ${error.message}`);
+            }
+        });
+    }
+    
+    // Asset Form
+    const assetForm = document.getElementById('form-asset');
+    if (assetForm) {
+        assetForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('asset-id').value || null;
+            const payload = {
+                kode: document.getElementById('asset-kode').value.trim(),
+                nama: document.getElementById('asset-nama').value.trim(),
+                tipe: document.getElementById('asset-tipe').value,
+                detail: document.getElementById('asset-detail').value.trim(),
+            };
+            
+            const numValue = document.getElementById('asset-num').value;
+            if (numValue !== '') {
+                payload.num = Number(numValue);
+            }
+            
+            if (!payload.kode || !payload.nama) {
+                alert('Kode dan nama aset wajib diisi.');
+                return;
+            }
+            
+            try {
+                const method = id ? 'PUT' : 'POST';
+                const url = id ? `${API_BASE}/api/assets/${id}` : `${API_BASE}/api/assets`;
+                const response = await fetch(url, {
+                    method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload),
+                    credentials: 'include'
+                });
+                
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.message || 'Gagal menyimpan');
+                }
+                
+                alert(`Aset berhasil ${id ? 'diperbarui' : 'ditambahkan'}.`);
+                document.getElementById('modal-asset').classList.add('hidden');
+                // Reload data
+                window.initializeApp?.();
+            } catch (error) {
+                alert(`Gagal: ${error.message}`);
+            }
+        });
+    }
+}
+
+// Setup Table Event Delegation
+function setupTableEventDelegation() {
+    // Gedung List Table
+    const gedungTable = document.getElementById('gedung-list-table');
+    if (gedungTable) {
+        gedungTable.addEventListener('click', async (e) => {
+            const editBtn = e.target.closest('.btn-edit');
+            const deleteBtn = e.target.closest('.btn-delete');
+            const row = e.target.closest('tr[data-booking-id]');
+            
+            if (!row) return;
+            
+            if (editBtn) {
+                const bookingId = row.dataset.bookingId;
+                try {
+                    const response = await fetch(`${API_BASE}/api/bookings/by-code/${bookingId}`, { credentials: 'include' });
+                    const booking = await response.json();
+                    openGedungModal(booking);
+                } catch (error) {
+                    alert('Gagal memuat data: ' + error.message);
+                }
+            } else if (deleteBtn) {
+                const bookingId = row.dataset.bookingId;
+                if (confirm('Hapus peminjaman ini?')) {
+                    try {
+                        await fetch(`${API_BASE}/api/bookings/${bookingId}`, { method: 'DELETE', credentials: 'include' });
+                        alert('Peminjaman berhasil dihapus.');
+                        window.initializeApp?.();
+                    } catch (error) {
+                        alert('Gagal menghapus: ' + error.message);
+                    }
+                }
+            }
+        });
+    }
+    
+    // Kendaraan List Table
+    const kendaraanTable = document.getElementById('kendaraan-list-table');
+    if (kendaraanTable) {
+        kendaraanTable.addEventListener('click', async (e) => {
+            const editBtn = e.target.closest('.btn-edit');
+            const deleteBtn = e.target.closest('.btn-delete');
+            const row = e.target.closest('tr[data-booking-id]');
+            
+            if (!row) return;
+            
+            if (editBtn) {
+                const bookingId = row.dataset.bookingId;
+                try {
+                    const response = await fetch(`${API_BASE}/api/bookings/by-code/${bookingId}`, { credentials: 'include' });
+                    const booking = await response.json();
+                    openKendaraanModal(booking);
+                } catch (error) {
+                    alert('Gagal memuat data: ' + error.message);
+                }
+            } else if (deleteBtn) {
+                const bookingId = row.dataset.bookingId;
+                if (confirm('Hapus peminjaman ini?')) {
+                    try {
+                        await fetch(`${API_BASE}/api/bookings/${bookingId}`, { method: 'DELETE', credentials: 'include' });
+                        alert('Peminjaman berhasil dihapus.');
+                        window.initializeApp?.();
+                    } catch (error) {
+                        alert('Gagal menghapus: ' + error.message);
+                    }
+                }
+            }
+        });
+    }
+    
+    // Driver List Table
+    const driverTable = document.getElementById('driver-list-table');
+    if (driverTable) {
+        driverTable.addEventListener('click', async (e) => {
+            const editBtn = e.target.closest('.btn-edit');
+            const deleteBtn = e.target.closest('.btn-delete');
+            const row = e.target.closest('tr[data-driver-id]');
+            
+            if (!row) return;
+            
+            if (editBtn) {
+                const driverId = row.dataset.driverId;
+                try {
+                    const response = await fetch(`${API_BASE}/api/drivers/${driverId}`, { credentials: 'include' });
+                    const driver = await response.json();
+                    openDriverModal(driver);
+                } catch (error) {
+                    alert('Gagal memuat data: ' + error.message);
+                }
+            } else if (deleteBtn) {
+                const driverId = row.dataset.driverId;
+                if (confirm('Hapus supir ini?')) {
+                    try {
+                        await fetch(`${API_BASE}/api/drivers/${driverId}`, { method: 'DELETE', credentials: 'include' });
+                        alert('Supir berhasil dihapus.');
+                        window.initializeApp?.();
+                    } catch (error) {
+                        alert('Gagal menghapus: ' + error.message);
+                    }
+                }
+            }
+        });
+    }
+    
+    // Master Asset Table
+    const masterTable = document.getElementById('master-asset-table');
+    if (masterTable) {
+        masterTable.addEventListener('click', async (e) => {
+            const editBtn = e.target.closest('.btn-edit');
+            const deleteBtn = e.target.closest('.btn-delete');
+            const row = e.target.closest('tr[data-asset-id]');
+            
+            if (!row) return;
+            
+            if (editBtn) {
+                const assetId = row.dataset.assetId;
+                try {
+                    const response = await fetch(`${API_BASE}/api/assets/${assetId}`, { credentials: 'include' });
+                    const asset = await response.json();
+                    openAssetModal(asset);
+                } catch (error) {
+                    alert('Gagal memuat data: ' + error.message);
+                }
+            } else if (deleteBtn) {
+                const assetId = row.dataset.assetId;
+                if (confirm('Hapus aset ini?')) {
+                    try {
+                        await fetch(`${API_BASE}/api/assets/${assetId}`, { method: 'DELETE', credentials: 'include' });
+                        alert('Aset berhasil dihapus.');
+                        window.initializeApp?.();
+                    } catch (error) {
+                        alert('Gagal menghapus: ' + error.message);
+                    }
+                }
+            }
+        });
+    }
+}
+
+// Setup Modal Close Buttons
+function setupModalCloseHandlers() {
+    document.querySelectorAll('.modal-backdrop').forEach(modal => {
+        const closeBtn = modal.querySelector('.modal-close-btn');
+        if (closeBtn) {
+            closeBtn.addEventListener('click', () => {
+                modal.classList.add('hidden');
+            });
+        }
+        
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.classList.add('hidden');
+            }
+        });
+    });
+}
+
+// Setup Add Buttons
+function setupAddButtonHandlers() {
+    const btnAddGedung = document.getElementById('btn-add-gedung');
+    if (btnAddGedung) {
+        btnAddGedung.addEventListener('click', () => openGedungModal());
+    }
+    
+    const btnAddKendaraan = document.getElementById('btn-add-kendaraan');
+    if (btnAddKendaraan) {
+        btnAddKendaraan.addEventListener('click', () => openKendaraanModal());
+    }
+    
+    const btnAddDriver = document.getElementById('btn-add-driver');
+    if (btnAddDriver) {
+        btnAddDriver.addEventListener('click', () => openDriverModal());
+    }
+    
+    const btnAddAsset = document.getElementById('btn-add-asset');
+    if (btnAddAsset) {
+        btnAddAsset.addEventListener('click', () => openAssetModal());
+    }
+}
+
+// Setup Asset Type Change Handler
+function setupAssetTypeChangeHandler() {
+    const assetTypeSelect = document.getElementById('asset-tipe');
+    if (assetTypeSelect) {
+        assetTypeSelect.addEventListener('change', (e) => {
+            updateAssetNumVisibility(e.target.value);
+        });
+    }
+}
+
+// Setup User Form for Admin Type
+function setupUserAdminTypeHandlers() {
+    const adminTypeRadios = document.querySelectorAll('input[name="user-admin-type"]');
+    const managedAssetsWrapper = document.getElementById('user-managed-assets-wrapper');
+    
+    adminTypeRadios.forEach(radio => {
+        radio.addEventListener('change', async (e) => {
+            if (e.target.value === 'khusus') {
+                managedAssetsWrapper?.classList.remove('hidden');
+                // Populate assets
+                try {
+                    const response = await fetch(`${API_BASE}/api/assets`, { credentials: 'include' });
+                    const assets = await response.json();
+                    const container = document.getElementById('user-managed-assets');
+                    if (container && assets && assets.length > 0) {
+                        container.innerHTML = assets.map(asset => `
+                            <label class="flex items-center">
+                                <input type="checkbox" class="mr-2" value="${asset.kode}" name="managed-asset">
+                                <span>${asset.kode} - ${asset.nama}</span>
+                            </label>
+                        `).join('');
+                    }
+                } catch (error) {
+                    console.error('Gagal memuat aset:', error);
+                }
+            } else {
+                managedAssetsWrapper?.classList.add('hidden');
+            }
+        });
+    });
+}
+
+// Load and render admins list
+async function loadAdminsList() {
+    try {
+        const response = await fetch(`${API_BASE}/auth/admins`, { credentials: 'include' });
+        const data = await response.json();
+        const admins = data.admins || [];
+        
+        const tableBody = document.getElementById('users-list-table');
+        if (!tableBody) return;
+        
+        if (admins.length === 0) {
+            tableBody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-gray-500">Belum ada admin.</td></tr>';
+            return;
+        }
+        
+        tableBody.innerHTML = admins.map(admin => `
+            <tr class="table-row" data-admin-id="${admin._id}">
+                <td class="px-6 py-3 whitespace-nowrap text-sm text-gray-700 font-mono">${admin.username}</td>
+                <td class="px-6 py-3 whitespace-nowrap text-sm text-gray-900 font-medium">${admin.name}</td>
+                <td class="px-6 py-3 whitespace-nowrap text-sm text-gray-700">${admin.email}</td>
+                <td class="px-6 py-3 whitespace-nowrap text-sm text-gray-700">${admin.phone || '-'}</td>
+                <td class="px-6 py-3 whitespace-nowrap text-sm">
+                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold ${admin.isActive ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}">
+                        ${admin.isActive ? 'Aktif' : 'Nonaktif'}
+                    </span>
+                </td>
+                <td class="px-6 py-3 text-right text-sm">
+                    <button class="btn-edit" data-id="${admin._id}" title="Edit"><i class="fas fa-edit"></i></button>
+                    <button class="btn-delete" data-id="${admin._id}" title="Hapus"><i class="fas fa-trash"></i></button>
+                </td>
+            </tr>
+        `).join('');
+    } catch (error) {
+        console.error('Gagal memuat admin:', error);
+    }
+}
+
+// Setup admin table event delegation
+function setupAdminTableEvents() {
+    const tableBody = document.getElementById('users-list-table');
+    if (!tableBody) return;
+    
+    tableBody.addEventListener('click', async (e) => {
+        const editBtn = e.target.closest('.btn-edit');
+        const deleteBtn = e.target.closest('.btn-delete');
+        const row = e.target.closest('tr[data-admin-id]');
+        
+        if (!row) return;
+        
+        if (editBtn) {
+            const adminId = editBtn.dataset.id;
+            try {
+                const response = await fetch(`${API_BASE}/auth/admin/${adminId}`, { credentials: 'include' });
+                const data = await response.json();
+                const admin = data.admin || data;
+                
+                document.getElementById('user-id').value = admin._id;
+                document.getElementById('user-username').value = admin.username;
+                document.getElementById('user-name').value = admin.name;
+                document.getElementById('user-email').value = admin.email;
+                document.getElementById('user-phone').value = admin.phone || '';
+                
+                const adminType = admin.adminType || 'umum';
+                document.getElementById('user-admin-umum').checked = adminType === 'umum';
+                document.getElementById('user-admin-khusus').checked = adminType === 'khusus';
+                
+                if (adminType === 'khusus') {
+                    document.getElementById('user-managed-assets-wrapper').classList.remove('hidden');
+                    // Populate assets and check managed ones
+                    const assetsResponse = await fetch(`${API_BASE}/api/assets`, { credentials: 'include' });
+                    const assets = await assetsResponse.json();
+                    const container = document.getElementById('user-managed-assets');
+                    if (container) {
+                        container.innerHTML = assets.map(asset => {
+                            const isManaged = (admin.managedAssetCodes || []).includes(asset.kode);
+                            return `
+                                <label class="flex items-center">
+                                    <input type="checkbox" class="mr-2" value="${asset.kode}" name="managed-asset" ${isManaged ? 'checked' : ''}>
+                                    <span>${asset.kode} - ${asset.nama}</span>
+                                </label>
+                            `;
+                        }).join('');
+                    }
+                } else {
+                    document.getElementById('user-managed-assets-wrapper').classList.add('hidden');
+                }
+                
+                document.getElementById('user-form-title').textContent = 'Edit Admin';
+                document.getElementById('generated-password-display').classList.add('hidden');
+                document.getElementById('modal-user-form').classList.remove('hidden');
+            } catch (error) {
+                alert('Gagal memuat data admin: ' + error.message);
+            }
+        } else if (deleteBtn) {
+            const adminId = deleteBtn.dataset.id;
+            if (confirm('Hapus admin ini?')) {
+                try {
+                    const response = await fetch(`${API_BASE}/auth/admin/${adminId}`, { 
+                        method: 'DELETE', 
+                        credentials: 'include' 
+                    });
+                    
+                    if (response.ok) {
+                        alert('Admin berhasil dihapus');
+                        loadAdminsList();
+                    } else {
+                        const error = await response.json();
+                        alert('Gagal menghapus: ' + (error.message || 'Error'));
+                    }
+                } catch (error) {
+                    alert('Gagal menghapus admin: ' + error.message);
+                }
+            }
+        }
+    });
+}
+
+// Initialize admin functionality
+function setupAdminManagement() {
+    // Load admins list on page load if user is superadmin
+    fetch(`${API_BASE}/auth/me`, { credentials: 'include' })
+        .then(r => r.json())
+        .then(user => {
+            if (user.role === 'superadmin') {
+                loadAdminsList();
+                setupAdminTableEvents();
+            }
+        })
+        .catch(err => console.error('Error loading admin data:', err));
+}
+
+// Initialize all modal/form functionality
+function initializeModalFunctionality() {
+    setupFormSubmitHandlers();
+    setupTableEventDelegation();
+    setupModalCloseHandlers();
+    setupAddButtonHandlers();
+    setupAssetTypeChangeHandler();
+    setupUserAdminTypeHandlers();
+    setupAdminManagement();
+}
+
+// Call initialization when DOM is ready
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeModalFunctionality);
+} else {
+    initializeModalFunctionality();
+}
+
+// Expose functions globally for inline onclick handlers if needed
+window.openGedungModal = openGedungModal;
+window.openKendaraanModal = openKendaraanModal;
+window.openDriverModal = openDriverModal;
+window.openAssetModal = openAssetModal;

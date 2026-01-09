@@ -1,10 +1,22 @@
 const Request = require('../models/request');
 const Booking = require('../models/booking');
 const Asset = require('../models/asset');
+const { getAllowedAssetCodes } = require('../middleware/permissions');
 
 const getAllRequests = async (req, res) => {
     try {
-        const requests = await Request.find({}).populate('driver').sort({ createdAt: -1 });
+        let query = {};
+        
+        // Apply permission filtering for admin khusus
+        if (req.user && req.user.role === 'admin' && req.user.adminType === 'khusus') {
+            const allowedCodes = getAllowedAssetCodes(req.user);
+            if (allowedCodes.length === 0) {
+                return res.json([]); // No assets to view
+            }
+            query = { assetCode: { $in: allowedCodes } };
+        }
+        
+        const requests = await Request.find(query).populate('driver').sort({ createdAt: -1 });
         res.json(requests);
     } catch (err) {
         res.status(500).json({ message: err.message });

@@ -209,15 +209,15 @@ exports.updateProfile = async (req, res) => {
 exports.getCurrentUser = async (req, res) => {
   try {
     res.json({
-      user: {
-        id: req.user._id,
-        username: req.user.username,
-        email: req.user.email,
-        name: req.user.name,
-        phone: req.user.phone,
-        role: req.user.role,
-        firstLogin: req.user.firstLogin
-      }
+      id: req.user._id,
+      username: req.user.username,
+      email: req.user.email,
+      name: req.user.name,
+      phone: req.user.phone,
+      role: req.user.role,
+      adminType: req.user.adminType,
+      managedAssetCodes: req.user.managedAssetCodes,
+      firstLogin: req.user.firstLogin
     });
   } catch (error) {
     console.error('Get current user error:', error);
@@ -228,7 +228,7 @@ exports.getCurrentUser = async (req, res) => {
 // Create Admin (Superadmin only)
 exports.createAdmin = async (req, res) => {
   try {
-    const { username, email, name, phone } = req.body;
+    const { username, email, name, phone, adminType, managedAssetCodes } = req.body;
 
     if (!username || !email || !name) {
       return res.status(400).json({ message: 'Username, email, dan nama harus diisi.' });
@@ -253,6 +253,8 @@ exports.createAdmin = async (req, res) => {
       phone: phone || '',
       password: generatedPassword,
       role: 'admin',
+      adminType: adminType || 'umum',
+      managedAssetCodes: managedAssetCodes || [],
       firstLogin: true
     });
 
@@ -266,7 +268,9 @@ exports.createAdmin = async (req, res) => {
         email: newAdmin.email,
         name: newAdmin.name,
         phone: newAdmin.phone,
-        role: newAdmin.role
+        role: newAdmin.role,
+        adminType: newAdmin.adminType,
+        managedAssetCodes: newAdmin.managedAssetCodes
       },
       generatedPassword // One-time display
     });
@@ -287,11 +291,28 @@ exports.getAllAdmins = async (req, res) => {
   }
 };
 
+// Get Admin by ID (Superadmin only)
+exports.getAdminById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const admin = await User.findOne({ _id: id, role: 'admin' }).select('-password -refreshToken -resetToken');
+    
+    if (!admin) {
+      return res.status(404).json({ message: 'Admin tidak ditemukan.' });
+    }
+    
+    res.json({ admin });
+  } catch (error) {
+    console.error('Get admin by id error:', error);
+    res.status(500).json({ message: 'Terjadi kesalahan saat mengambil data admin.' });
+  }
+};
+
 // Update Admin (Superadmin only)
 exports.updateAdmin = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, email, phone, isActive } = req.body;
+    const { name, email, phone, isActive, adminType, managedAssetCodes } = req.body;
 
     const admin = await User.findById(id);
 
@@ -303,6 +324,8 @@ exports.updateAdmin = async (req, res) => {
     if (email) admin.email = email;
     if (phone !== undefined) admin.phone = phone;
     if (typeof isActive === 'boolean') admin.isActive = isActive;
+    if (adminType) admin.adminType = adminType;
+    if (managedAssetCodes) admin.managedAssetCodes = managedAssetCodes;
 
     await admin.save();
 
@@ -315,7 +338,9 @@ exports.updateAdmin = async (req, res) => {
         name: admin.name,
         phone: admin.phone,
         role: admin.role,
-        isActive: admin.isActive
+        isActive: admin.isActive,
+        adminType: admin.adminType,
+        managedAssetCodes: admin.managedAssetCodes
       }
     });
   } catch (error) {

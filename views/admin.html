@@ -33,6 +33,9 @@
                         <button id="admin-tab-users" class="tab-btn hidden"><i class="fas fa-users-cog"></i></button>
                     </div>
                     <div class="flex items-center gap-3">
+                        <a href="/" class="p-2 text-gray-600 hover:text-gray-800 bg-gray-100 hover:bg-gray-200 rounded-lg" title="Lihat Kalender">
+                            <i class="fas fa-calendar-alt"></i>
+                        </a>
                         <button id="btn-profile" class="p-2 text-gray-600 hover:text-gray-800 bg-gray-100 hover:bg-gray-200 rounded-lg" title="Profil">
                             <i class="fas fa-user"></i>
                         </button>
@@ -262,7 +265,7 @@
                             <h3 class="text-xl font-bold color-gedung">Kelola Admin</h3>
                             <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
                                 <input id="filter-users-search" type="text" class="filter-menu w-full sm:w-64" placeholder="Cari nama/username...">
-                                <button id="btn-add-user" class="add-btn px-2 sm:px-3 py-2 text-sm">+ Tambah Admin</button>
+                                <button id="btn-add-user" class="add-btn px-2 sm:px-3 py-2 text-sm">+ Tambah</button>
                             </div>
                         </div>
                         <div class="overflow-x-auto">
@@ -423,6 +426,25 @@
                         <div>
                             <label for="user-phone" class="form-label">No. Telepon</label>
                             <input type="tel" id="user-phone" class="form-input">
+                        </div>
+                        <div>
+                            <label class="form-label">Tipe Admin</label>
+                            <div class="space-y-2 mt-2">
+                                <label class="flex items-center">
+                                    <input type="radio" name="user-admin-type" id="user-admin-umum" value="umum" class="mr-2" checked>
+                                    <span>Umum (Akses Semua Aset)</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="radio" name="user-admin-type" id="user-admin-khusus" value="khusus" class="mr-2">
+                                    <span>Khusus (Akses Aset Tertentu)</span>
+                                </label>
+                            </div>
+                        </div>
+                        <div id="user-managed-assets-wrapper" class="hidden">
+                            <label for="user-managed-assets" class="form-label">Pilih Aset yang Dikelola</label>
+                            <div id="user-managed-assets" class="space-y-2 mt-2 p-3 border rounded bg-gray-50 max-h-48 overflow-y-auto">
+                                <!-- Populated by script -->
+                            </div>
                         </div>
                         <button type="submit" class="w-full add-btn save-btn">Simpan Admin</button>
                     </form>

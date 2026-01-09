@@ -33,6 +33,15 @@ const userSchema = new mongoose.Schema({
     enum: ['superadmin', 'admin'],
     default: 'admin'
   },
+  adminType: {
+    type: String,
+    enum: ['umum', 'khusus'],
+    default: 'umum'
+  },
+  managedAssetCodes: {
+    type: [String],
+    default: []
+  },
   isActive: {
     type: Boolean,
     default: true
