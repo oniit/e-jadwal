@@ -64,14 +64,24 @@ const createRequest = async (req, res) => {
             payload.letterFile = req.file.filename;
         }
         
-        // Validasi jam untuk peminjaman gedung
+        // Otomatis set jam gedung ke 07:00-16:00 jika di luar jam operasional
         if (payload.bookingType === 'gedung') {
             const sMin = getJakartaMinutesOfDay(payload.startDate);
             const eMin = getJakartaMinutesOfDay(payload.endDate);
             const minAllowed = 7 * 60;
             const maxAllowed = 16 * 60;
-            if (sMin < minAllowed || sMin > maxAllowed || eMin < minAllowed || eMin > maxAllowed) {
-                return res.status(400).json({ message: 'Peminjaman gedung hanya diizinkan antara 07.00-16.00 WIB.' });
+            
+            // Jika start time < 07:00, set ke 07:00
+            if (sMin < minAllowed) {
+                const date = new Date(payload.startDate);
+                date.setHours(7, 0, 0, 0);
+                payload.startDate = date;
+            }
+            // Jika end time > 16:00, set ke 16:00
+            if (eMin > maxAllowed) {
+                const date = new Date(payload.endDate);
+                date.setHours(16, 0, 0, 0);
+                payload.endDate = date;
             }
         }
 

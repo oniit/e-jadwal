@@ -155,14 +155,24 @@ function getJakartaMinutesOfDay(date) {
 const createBooking = async (req, res) => {
     try {
         const payload = await normalizePayload(req.body);
-        // Validasi jam untuk peminjaman gedung (07:00-16:00 WIB)
+        // Otomatis set jam gedung ke 07:00-16:00 jika di luar jam operasional
         if (payload.bookingType === 'gedung') {
             const sMin = getJakartaMinutesOfDay(payload.startDate);
             const eMin = getJakartaMinutesOfDay(payload.endDate);
             const minAllowed = 7 * 60;   // 07:00
             const maxAllowed = 16 * 60;  // 16:00
-            if (sMin < minAllowed || sMin > maxAllowed || eMin < minAllowed || eMin > maxAllowed) {
-                return res.status(400).json({ message: 'Peminjaman gedung hanya diizinkan antara 07.00-16.00 WIB.' });
+            
+            // Jika start time < 07:00, set ke 07:00
+            if (sMin < minAllowed) {
+                const date = new Date(payload.startDate);
+                date.setHours(7, 0, 0, 0);
+                payload.startDate = date;
+            }
+            // Jika end time > 16:00, set ke 16:00
+            if (eMin > maxAllowed) {
+                const date = new Date(payload.endDate);
+                date.setHours(16, 0, 0, 0);
+                payload.endDate = date;
             }
         }
         const conflictMessage = await checkConflict(payload);
@@ -189,13 +199,24 @@ const updateBooking = async (req, res) => {
     try {
         const { id } = req.params;
         const payload = await normalizePayload(req.body);
+        // Otomatis set jam gedung ke 07:00-16:00 jika di luar jam operasional
         if (payload.bookingType === 'gedung') {
             const sMin = getJakartaMinutesOfDay(payload.startDate);
             const eMin = getJakartaMinutesOfDay(payload.endDate);
             const minAllowed = 7 * 60;
             const maxAllowed = 16 * 60;
-            if (sMin < minAllowed || sMin > maxAllowed || eMin < minAllowed || eMin > maxAllowed) {
-                return res.status(400).json({ message: 'Peminjaman gedung hanya diizinkan antara 07.00-16.00 WIB.' });
+            
+            // Jika start time < 07:00, set ke 07:00
+            if (sMin < minAllowed) {
+                const date = new Date(payload.startDate);
+                date.setHours(7, 0, 0, 0);
+                payload.startDate = date;
+            }
+            // Jika end time > 16:00, set ke 16:00
+            if (eMin > maxAllowed) {
+                const date = new Date(payload.endDate);
+                date.setHours(16, 0, 0, 0);
+                payload.endDate = date;
             }
         }
         const conflictMessage = await checkConflict(payload, id);
