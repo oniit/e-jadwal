@@ -2276,7 +2276,13 @@ function setupUserAdminTypeHandlers() {
                 // Populate assets
                 try {
                     const response = await fetch(`${API_BASE}/api/assets`, { credentials: 'include' });
-                    const assets = await response.json();
+                    const assetsData = await response.json();
+                    // Flatten grouped assets into single array
+                    const assets = [
+                        ...(assetsData.gedung || []),
+                        ...(assetsData.kendaraan || []),
+                        ...(assetsData.barang || [])
+                    ];
                     const container = document.getElementById('user-managed-assets');
                     if (container && assets && assets.length > 0) {
                         container.innerHTML = assets.map(asset => `
@@ -2368,7 +2374,13 @@ function setupAdminTableEvents() {
                     document.getElementById('user-managed-assets-wrapper').classList.remove('hidden');
                     // Populate assets and check managed ones
                     const assetsResponse = await fetch(`${API_BASE}/api/assets`, { credentials: 'include' });
-                    const assets = await assetsResponse.json();
+                    const assetsData = await assetsResponse.json();
+                    // Flatten grouped assets into single array
+                    const assets = [
+                        ...(assetsData.gedung || []),
+                        ...(assetsData.kendaraan || []),
+                        ...(assetsData.barang || [])
+                    ];
                     const container = document.getElementById('user-managed-assets');
                     if (container) {
                         container.innerHTML = assets.map(asset => {
