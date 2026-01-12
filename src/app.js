@@ -40,6 +40,9 @@ app.get('/partials/*', (req, res, next) => {
 
 app.use(express.static(path.join(__dirname, '..', 'public')));
 
+// Serve uploaded files
+app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
+
 // Public landing page (calendar view)
 app.get('/', (req, res) => {
     res.sendFile(path.resolve(__dirname, '..', 'views', 'index.html'));

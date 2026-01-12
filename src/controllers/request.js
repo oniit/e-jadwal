@@ -47,7 +47,22 @@ const getRequestByCode = async (req, res) => {
 
 const createRequest = async (req, res) => {
     try {
-        const payload = await normalizeRequestPayload(req.body);
+        // Handle FormData with 'data' field or direct JSON
+        let bodyData = req.body;
+        if (req.body.data) {
+            try {
+                bodyData = JSON.parse(req.body.data);
+            } catch (e) {
+                bodyData = req.body;
+            }
+        }
+        
+        const payload = await normalizeRequestPayload(bodyData);
+        
+        // Add letterFile if uploaded
+        if (req.file) {
+            payload.letterFile = req.file.filename;
+        }
         
         // Validasi jam untuk peminjaman gedung
         if (payload.bookingType === 'gedung') {
@@ -124,7 +139,8 @@ const approveRequest = async (req, res) => {
             activityName: request.activityName,
             borrowedItems: request.borrowedItems,
             driver: request.driver,
-            destination: request.destination
+            destination: request.destination,
+            letterFile: request.letterFile  // Copy letterFile dari request ke booking
         };
 
         const booking = new Booking(bookingData);

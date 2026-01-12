@@ -23,6 +23,7 @@ const bookingSchema = new Schema({
     ],
     driver: { type: Schema.Types.ObjectId, ref: 'Driver' },
     destination: String,
+    letterFile: { type: String }, // reference ke file surat dari request
 }, { timestamps: true });
 
 function generateBookingId() {

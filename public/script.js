@@ -321,9 +321,7 @@
                 detailHtml += `<p><strong>Catatan:</strong> ${booking.notes}</p>`;
             }
             
-            if (booking.letterFile) {
-                detailHtml += `<p><strong>Surat:</strong> <a href="/api/public/requests/download-surat/${booking.letterFile}" target="_blank" class="text-blue-500 underline">Download Surat</a></p>`;
-            }
+            // Letter file is only visible to admin, not in public calendar
             
             if (booking.submissionDate) {
                 const subDate = new Date(booking.submissionDate);
@@ -702,10 +700,19 @@
             }
 
             try {
+                // Use FormData to support file upload
+                const formData = new FormData();
+                formData.append('data', JSON.stringify(requestData));
+                
+                // Add surat file if selected
+                const suratInput = form.querySelector('#req-surat');
+                if (suratInput && suratInput.files && suratInput.files[0]) {
+                    formData.append('letterFile', suratInput.files[0]);
+                }
+                
                 const response = await fetch('/api/public/requests', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(requestData),
+                    body: formData,
                 });
                 
                 const contentType = response.headers.get('content-type') || '';

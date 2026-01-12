@@ -548,7 +548,16 @@ function initializeApp() {
                 }
                 
                 if (props.letterFile) {
-                    detailsHtml += `<p><strong>Surat:</strong> <a href="/api/requests/download-surat/${props.letterFile}" target="_blank" class="text-blue-500 underline">Download Surat</a></p>`;
+                    detailsHtml += `
+                        <div style="margin-top: 12px; padding: 12px; background-color: #f3f4f6; border-radius: 6px;">
+                            <p style="margin: 0 0 8px 0; font-weight: 600; font-size: 14px;">📄 Surat Permohonan</p>
+                            <a href="/uploads/${props.letterFile}" 
+                               target="_blank" 
+                               style="display: inline-block; padding: 8px 12px; background-color: #3b82f6; color: white; border-radius: 4px; text-decoration: none; font-size: 13px; font-weight: 500;">
+                                <i class="fas fa-eye"></i> Lihat Surat
+                            </a>
+                        </div>
+                    `;
                 }
             }
             
@@ -993,6 +1002,9 @@ function initializeApp() {
     }
 
     function showRequestDetail(request) {
+        console.log('📋 showRequestDetail called with:', request);
+        console.log('📎 letterFile:', request.letterFile);
+        
         const start = new Date(request.startDate);
         const end = new Date(request.endDate);
         
@@ -1040,6 +1052,21 @@ function initializeApp() {
         }
         
         if (request.notes) detailHtml += `<p><strong>Keterangan:</strong> ${request.notes}</p>`;
+        
+        // Display surat/letter file if exists
+        if (request.letterFile) {
+            detailHtml += `
+                <div style="margin-top: 12px; padding: 12px; background-color: #f3f4f6; border-radius: 6px;">
+                    <p style="margin: 0 0 8px 0; font-weight: 600; font-size: 14px;">📄 Surat Permohonan</p>
+                    <a href="/uploads/${request.letterFile}" 
+                       target="_blank" 
+                       style="display: inline-block; padding: 8px 12px; background-color: #3b82f6; color: white; border-radius: 4px; text-decoration: none; font-size: 13px; font-weight: 500;">
+                        <i class="fas fa-eye"></i> Lihat Surat
+                    </a>
+                </div>
+            `;
+        }
+        
         if (request.status === 'rejected' && request.rejectionReason) {
             detailHtml += `<p><strong>Alasan Penolakan:</strong> <span class="text-red-600">${request.rejectionReason}</span></p>`;
         }
