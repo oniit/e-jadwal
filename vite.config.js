@@ -6,11 +6,16 @@ export default defineConfig({
   build: {
     outDir: 'public/dist',
     emptyOutDir: false,
-    lib: {
-      entry: path.resolve(__dirname, 'public/js/admin/main.js'),
-      name: 'AdminApp',
-      fileName: () => 'admin.bundle.js',
-      formats: ['iife']
+    rollupOptions: {
+      input: {
+        admin: path.resolve(__dirname, 'public/js/admin/main.js'),
+        public: path.resolve(__dirname, 'public/js/public/main.js'),
+      },
+      output: {
+        entryFileNames: '[name].bundle.js',
+        format: 'es',
+        inlineDynamicImports: false
+      }
     }
   }
 })
