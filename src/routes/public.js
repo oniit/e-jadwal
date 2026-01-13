@@ -35,9 +35,9 @@ router.get('/assets', async (req, res) => {
     try {
         const assets = await Asset.find({});
         const groupedAssets = {
-            gedung: assets.filter(a => a.tipe === 'gedung'),
-            kendaraan: assets.filter(a => a.tipe === 'kendaraan'),
-            barang: assets.filter(a => a.tipe === 'barang')
+            gedung: assets.filter(a => a.type === 'gedung'),
+            kendaraan: assets.filter(a => a.type === 'kendaraan'),
+            barang: assets.filter(a => a.type === 'barang')
         };
         res.json(groupedAssets);
     } catch (error) {

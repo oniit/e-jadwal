@@ -19,10 +19,10 @@ const seedDriversFromFile = async () => {
 const getDrivers = async (_req, res) => {
     try {
         let drivers = await Driver.find({}).lean();
-        if (!drivers.length) {
-            await seedDriversFromFile();
-            drivers = await Driver.find({}).lean();
-        }
+        // if (!drivers.length) {
+        //     await seedDriversFromFile();
+        //     drivers = await Driver.find({}).lean();
+        // }
         res.set('Cache-Control', 'no-store');
         return res.json(drivers);
     } catch (err) {
@@ -50,13 +50,13 @@ const getDriver = async (req, res) => {
 const createDriver = async (req, res) => {
     try {
         const payload = req.body;
-        if (!payload || !payload.kode || !payload.nama) {
-            return res.status(400).json({ message: 'kode dan nama wajib diisi.' });
+        if (!payload || !payload.code || !payload.name) {
+            return res.status(400).json({ message: 'code dan name wajib diisi.' });
         }
 
         const driver = new Driver({
-            kode: payload.kode,
-            nama: payload.nama,
+            code: payload.code,
+            name: payload.name,
             noTelp: payload.noTelp || '',
             detail: payload.detail || '',
             status: payload.status || 'aktif'
@@ -81,8 +81,8 @@ const updateDriver = async (req, res) => {
         if (!id) return res.status(400).json({ message: 'ID supir diperlukan.' });
 
         const updateDoc = {};
-        if (payload.kode !== undefined) updateDoc.kode = payload.kode;
-        if (payload.nama !== undefined) updateDoc.nama = payload.nama;
+        if (payload.code !== undefined) updateDoc.code = payload.code;
+        if (payload.name !== undefined) updateDoc.name = payload.name;
         if (payload.noTelp !== undefined) updateDoc.noTelp = payload.noTelp;
         if (payload.detail !== undefined) updateDoc.detail = payload.detail;
         if (payload.status !== undefined) updateDoc.status = payload.status;

@@ -231,7 +231,7 @@ exports.createAdmin = async (req, res) => {
     const { username, email, name, phone, adminType, managedAssetCodes } = req.body;
 
     if (!username || !email || !name) {
-      return res.status(400).json({ message: 'Username, email, dan nama harus diisi.' });
+      return res.status(400).json({ message: 'Username, email, dan name harus diisi.' });
     }
 
     // Check if username or email already exists

@@ -6,7 +6,7 @@ const { ALLOWED_TYPES } = require('../models/asset');
 const groupAssets = (assets = []) => {
     const grouped = { gedung: [], kendaraan: [], barang: [] };
     assets.forEach((asset) => {
-        const key = asset.tipe;
+        const key = asset.type;
         if (!grouped[key]) grouped[key] = [];
         grouped[key].push(asset);
     });
@@ -18,8 +18,8 @@ const seedAssetsFromFile = async () => {
     try {
         const raw = await fs.readFile(assetsPath, 'utf8');
         const parsed = JSON.parse(raw);
-        const flattened = Object.entries(parsed).flatMap(([tipe, list]) =>
-            list.map((item) => ({ ...item, tipe }))
+        const flattened = Object.entries(parsed).flatMap(([type, list]) =>
+            list.map((item) => ({ ...item, type }))
         );
 
         if (flattened.length) {
@@ -33,10 +33,10 @@ const seedAssetsFromFile = async () => {
 const getAssets = async (_req, res) => {
     try {
         let assets = await Asset.find({}).lean();
-        if (!assets.length) {
-            await seedAssetsFromFile();
-            assets = await Asset.find({}).lean();
-        }
+        // if (!assets.length) {
+        //     await seedAssetsFromFile();
+        //     assets = await Asset.find({}).lean();
+        // }
         res.set('Cache-Control', 'no-store');
         return res.json(groupAssets(assets));
     } catch (err) {
@@ -64,12 +64,12 @@ const getAsset = async (req, res) => {
 const createAsset = async (req, res) => {
     try {
         const payload = req.body;
-        if (!payload || !payload.kode || !payload.nama || !payload.tipe) {
-            return res.status(400).json({ message: 'kode, nama, dan tipe wajib diisi.' });
+        if (!payload || !payload.code || !payload.name || !payload.type) {
+            return res.status(400).json({ message: 'code, name, dan type wajib diisi.' });
         }
 
-        const tipe = String(payload.tipe).toLowerCase();
-        if (!ALLOWED_TYPES.includes(tipe)) {
+        const type = String(payload.type).toLowerCase();
+        if (!ALLOWED_TYPES.includes(type)) {
             return res.status(400).json({ message: `Tipe harus salah satu dari: ${ALLOWED_TYPES.join(', ')}.` });
         }
 
@@ -79,9 +79,9 @@ const createAsset = async (req, res) => {
         }
 
         const asset = new Asset({
-            kode: payload.kode,
-            nama: payload.nama,
-            tipe,
+            code: payload.code,
+            name: payload.name,
+            type,
             num: Number.isFinite(parsedNum) ? parsedNum : undefined,
             detail: payload.detail || ''
         });
@@ -101,7 +101,7 @@ const updateAsset = async (req, res) => {
 
         if (!id) return res.status(400).json({ message: 'ID aset diperlukan.' });
 
-        if (payload.tipe && !ALLOWED_TYPES.includes(String(payload.tipe).toLowerCase())) {
+        if (payload.type && !ALLOWED_TYPES.includes(String(payload.type).toLowerCase())) {
             return res.status(400).json({ message: `Tipe harus salah satu dari: ${ALLOWED_TYPES.join(', ')}.` });
         }
 
@@ -111,9 +111,9 @@ const updateAsset = async (req, res) => {
         }
 
         const updateDoc = {};
-        if (payload.kode !== undefined) updateDoc.kode = payload.kode;
-        if (payload.nama !== undefined) updateDoc.nama = payload.nama;
-        if (payload.tipe !== undefined) updateDoc.tipe = String(payload.tipe).toLowerCase();
+        if (payload.code !== undefined) updateDoc.code = payload.code;
+        if (payload.name !== undefined) updateDoc.name = payload.name;
+        if (payload.type !== undefined) updateDoc.type = String(payload.type).toLowerCase();
         if (payload.detail !== undefined) updateDoc.detail = payload.detail;
 
         const unsetDoc = {};

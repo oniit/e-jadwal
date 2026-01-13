@@ -240,7 +240,7 @@ function setupAdminUserForm() {
         }
         
         if (!payload.username || !payload.name || !payload.email) {
-            alert('Username, nama, dan email wajib diisi');
+            alert('Username, name, dan email wajib diisi');
             return;
         }
         
@@ -369,7 +369,7 @@ function initializeApp() {
                         </td>
                     </tr>`;
                 } else {
-                    const driverName = typeof b.driver === 'object' && b.driver ? b.driver.nama : (b.driver || '-');
+                    const driverName = typeof b.driver === 'object' && b.driver ? b.driver.name : (b.driver || '-');
                     return `<tr class="table-row cursor-pointer" data-booking-id="${b._id}">
                         <td class="${cellClass}">${createdDate}</td>
                         <td class="${cellClass} font-medium text-gray-900">${b.assetName}</td>
@@ -426,7 +426,7 @@ function initializeApp() {
             if (!tableBody) return;
             
             tableBody.innerHTML = '';
-            const sorted = [...drivers].sort((a, b) => (a.kode || '').localeCompare(b.kode || ''));
+            const sorted = [...drivers].sort((a, b) => (a.code || '').localeCompare(b.code || ''));
             
             if (sorted.length === 0) {
                 tableBody.innerHTML = `<tr><td colspan="6" class="px-6 py-3 text-center text-gray-500">Tidak ada data</td></tr>`;
@@ -438,8 +438,8 @@ function initializeApp() {
                 const statusClass = d.status === 'aktif' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600';
                 const statusLabel = d.status === 'aktif' ? 'Aktif' : 'Tidak Aktif';
                 return `<tr class="cursor-pointer" data-driver-id="${d._id}">
-                    <td class="${cellClass}">${d.kode || '-'}</td>
-                    <td class="${cellClass}">${d.nama || '-'}</td>
+                    <td class="${cellClass}">${d.code || '-'}</td>
+                    <td class="${cellClass}">${d.name || '-'}</td>
                     <td class="${cellClass}">${d.noTelp || '-'}</td>
                     <td class="${cellClass}">${d.detail || '-'}</td>
                     <td class="${cellClass}">
@@ -460,7 +460,7 @@ function initializeApp() {
             if (!tableBody) return;
             
             tableBody.innerHTML = '';
-            const sorted = [...assets].sort((a, b) => a.nama.localeCompare(b.nama));
+            const sorted = [...assets].sort((a, b) => a.name.localeCompare(b.name));
             
             if (sorted.length === 0) {
                 tableBody.innerHTML = `<tr><td colspan="6" class="px-6 py-3 text-center text-gray-500">Tidak ada data</td></tr>`;
@@ -471,9 +471,9 @@ function initializeApp() {
                 const cellClass = "px-6 py-3 whitespace-nowrap text-sm text-gray-500";
                 const badgeClass = "inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700";
                 return `<tr class="cursor-pointer" data-asset-id="${a._id}">
-                    <td class="${cellClass}">${a.kode || '-'}</td>
-                    <td class="${cellClass}">${a.nama || '-'}</td>
-                    <td class="${cellClass}"><span class="${badgeClass}">${a.tipe || '-'}</span></td>
+                    <td class="${cellClass}">${a.code || '-'}</td>
+                    <td class="${cellClass}">${a.name || '-'}</td>
+                    <td class="${cellClass}"><span class="${badgeClass}">${a.type || '-'}</span></td>
                     <td class="${cellClass}">${a.num ?? '-'}</td>
                     <td class="${cellClass}">${a.detail || '-'}</td>
                     <td class="px-6 py-3 text-right text-sm">
@@ -489,9 +489,9 @@ function initializeApp() {
         showDetailModal: function(props, context = 'admin') {
             let assetDisplay = props.assetName;
             if (props.bookingType === 'kendaraan' && state.assets && state.assets.kendaraan) {
-                const kendaraan = state.assets.kendaraan.find(k => k.nama === props.assetName);
-                const kode = kendaraan && kendaraan.kode ? kendaraan.kode : '';
-                assetDisplay = kode ? `${props.assetName} (${kode})` : props.assetName;
+                const kendaraan = state.assets.kendaraan.find(k => k.name === props.assetName);
+                const code = kendaraan && kendaraan.code ? kendaraan.code : '';
+                assetDisplay = code ? `${props.assetName} (${code})` : props.assetName;
             }
             
             const modalTitle = document.getElementById('modal-title');
@@ -538,8 +538,8 @@ function initializeApp() {
                     if (props.destination) {
                         detailsHtml += `<p><strong>Tujuan:</strong> ${props.destination}</p>`;
                     }
-                    if (props.driver && (typeof props.driver === 'object' ? props.driver.nama : props.driver)) {
-                        const driverName = typeof props.driver === 'object' ? props.driver.nama : props.driver;
+                    if (props.driver && (typeof props.driver === 'object' ? props.driver.name : props.driver)) {
+                        const driverName = typeof props.driver === 'object' ? props.driver.name : props.driver;
                         detailsHtml += `<p><strong>Supir:</strong> ${driverName}</p>`;
                     }
                 }
@@ -660,7 +660,7 @@ function initializeApp() {
         if (filterGedungAsset && state.assets && state.assets.gedung) {
             filterGedungAsset.innerHTML = '<option value="all">Semua Gedung</option>';
             state.assets.gedung.forEach(asset => {
-                filterGedungAsset.innerHTML += `<option value="${asset.kode}">${asset.nama}</option>`;
+                filterGedungAsset.innerHTML += `<option value="${asset.code}">${asset.name}</option>`;
             });
             console.log('✅ Populated gedung assets:', state.assets.gedung.length);
         }
@@ -669,7 +669,7 @@ function initializeApp() {
         if (filterGedungBarang && state.assets && state.assets.barang) {
             filterGedungBarang.innerHTML = '<option value="all">Semua Barang</option>';
             state.assets.barang.forEach(asset => {
-                filterGedungBarang.innerHTML += `<option value="${asset.kode}">${asset.nama}</option>`;
+                filterGedungBarang.innerHTML += `<option value="${asset.code}">${asset.name}</option>`;
             });
             console.log('✅ Populated barang:', state.assets.barang.length);
         }
@@ -678,7 +678,7 @@ function initializeApp() {
         if (filterKendaraanAsset && state.assets && state.assets.kendaraan) {
             filterKendaraanAsset.innerHTML = '<option value="all">Semua Kendaraan</option>';
             state.assets.kendaraan.forEach(asset => {
-                filterKendaraanAsset.innerHTML += `<option value="${asset.kode}">${asset.nama}</option>`;
+                filterKendaraanAsset.innerHTML += `<option value="${asset.code}">${asset.name}</option>`;
             });
             console.log('✅ Populated kendaraan assets:', state.assets.kendaraan.length);
         }
@@ -688,7 +688,7 @@ function initializeApp() {
             const activeDrivers = state.allDrivers.filter(d => d.status === 'aktif');
             filterKendaraanDriver.innerHTML = '<option value="all">Semua Supir</option>';
             activeDrivers.forEach(driver => {
-                filterKendaraanDriver.innerHTML += `<option value="${driver._id}">${driver.nama}</option>`;
+                filterKendaraanDriver.innerHTML += `<option value="${driver._id}">${driver.name}</option>`;
             });
             console.log('✅ Populated drivers:', activeDrivers.length);
         } else {
@@ -703,29 +703,29 @@ function initializeApp() {
         const barangAssets = Array.isArray(state.assets?.barang) ? state.assets.barang : [];
         const drivers = Array.isArray(state.allDrivers) ? state.allDrivers : [];
 
-        const gedungSelect = document.getElementById('gedung-nama');
+        const gedungSelect = document.getElementById('gedung-name');
         if (gedungSelect) {
             gedungSelect.innerHTML = '<option value="">Pilih Gedung</option>' +
-                gedungAssets.map(a => `<option value="${a.kode}">${a.nama} (${a.kode})</option>`).join('');
+                gedungAssets.map(a => `<option value="${a.code}">${a.name} (${a.code})</option>`).join('');
         }
 
-        const kendaraanSelect = document.getElementById('kendaraan-nama');
+        const kendaraanSelect = document.getElementById('kendaraan-name');
         if (kendaraanSelect) {
             kendaraanSelect.innerHTML = '<option value="">Pilih Kendaraan</option>' +
-                kendaraanAssets.map(a => `<option value="${a.kode}">${a.nama} (${a.kode})</option>`).join('');
+                kendaraanAssets.map(a => `<option value="${a.code}">${a.name} (${a.code})</option>`).join('');
         }
 
         const supirSelect = document.getElementById('kendaraan-supir');
         if (supirSelect) {
             const activeDrivers = drivers.filter(d => d.status === 'aktif');
             supirSelect.innerHTML = '<option value="">Tanpa Supir</option>' +
-                activeDrivers.map(d => `<option value="${d._id}">${d.nama}</option>`).join('');
+                activeDrivers.map(d => `<option value="${d._id}">${d.name}</option>`).join('');
         }
 
         const barangSelect = document.getElementById('gedung-barang-select');
         if (barangSelect) {
             barangSelect.innerHTML = '<option value="">Pilih Barang</option>' +
-                barangAssets.map(b => `<option value="${b.kode}">${b.nama} (${b.kode})</option>`).join('');
+                barangAssets.map(b => `<option value="${b.code}">${b.name} (${b.code})</option>`).join('');
         }
     }
 
@@ -762,7 +762,7 @@ function initializeApp() {
         const source = Array.isArray(state.allDrivers) ? state.allDrivers : [];
 
         const filtered = !query ? source : source.filter(driver => {
-            const fields = [driver.kode, driver.nama, driver.noTelp, driver.detail]
+            const fields = [driver.code, driver.name, driver.noTelp, driver.detail]
                 .map(val => (val || '').toString().toLowerCase());
             return fields.some(text => text.includes(query));
         });
@@ -795,12 +795,12 @@ function initializeApp() {
         let assets = Array.isArray(state.allAssetsCache) ? [...state.allAssetsCache] : [];
 
         if (selectedType && selectedType !== 'all') {
-            assets = assets.filter(asset => asset.tipe === selectedType);
+            assets = assets.filter(asset => asset.type === selectedType);
         }
 
         if (query) {
             assets = assets.filter(asset => {
-                const fields = [asset.kode, asset.nama, asset.detail]
+                const fields = [asset.code, asset.name, asset.detail]
                     .map(val => (val || '').toString().toLowerCase());
                 return fields.some(text => text.includes(query));
             });
@@ -915,7 +915,7 @@ function initializeApp() {
                     if (borrowedItemsText.includes(filters.searchQuery)) additionalFieldsMatch = true;
                 }
                 if (b.bookingType === 'kendaraan') {
-                    const driverName = typeof b.driver === 'object' && b.driver ? b.driver.nama : (b.driver || '');
+                    const driverName = typeof b.driver === 'object' && b.driver ? b.driver.name : (b.driver || '');
                     if (driverName.toLowerCase().includes(filters.searchQuery)) additionalFieldsMatch = true;
                     if (b.destination && b.destination.toLowerCase().includes(filters.searchQuery)) additionalFieldsMatch = true;
                 }
@@ -1045,7 +1045,7 @@ function initializeApp() {
             }
         } else if (request.bookingType === 'kendaraan') {
             if (request.driver) {
-                const driverName = typeof request.driver === 'object' ? request.driver.nama : request.driver;
+                const driverName = typeof request.driver === 'object' ? request.driver.name : request.driver;
                 detailHtml += `<p><strong>Supir:</strong> ${driverName}</p>`;
             }
             if (request.destination) detailHtml += `<p><strong>Tujuan:</strong> ${request.destination}</p>`;
@@ -1079,7 +1079,7 @@ function initializeApp() {
                     <label for="req-approve-supir" class="form-label text-sm font-semibold">Pilih Supir</label>
                     <select id="req-approve-supir" class="form-input">
                         <option value="">Tanpa Supir</option>
-                        ${activeDrivers.map(d => `<option value="${d._id}">${d.nama}</option>`).join('')}
+                        ${activeDrivers.map(d => `<option value="${d._id}">${d.name}</option>`).join('')}
                     </select>
                 </div>
             ` : '';
@@ -1201,7 +1201,7 @@ function initializeApp() {
                     valueB = parseIndonesianDate(rowB.cells[0].textContent.trim());
                     break;
                 }
-                case 'tipe': {
+                case 'type': {
                     const idx = tableId === 'master-asset-table' ? 2 : 1;
                     valueA = rowA.cells[idx].textContent.trim().toLowerCase();
                     valueB = rowB.cells[idx].textContent.trim().toLowerCase();
@@ -1258,12 +1258,12 @@ function initializeApp() {
                     valueB = rowB.cells[idx].textContent.trim().toLowerCase();
                     break;
                 }
-                case 'kode': {
+                case 'code': {
                     valueA = rowA.cells[0].textContent.trim().toLowerCase();
                     valueB = rowB.cells[0].textContent.trim().toLowerCase();
                     break;
                 }
-                case 'nama': {
+                case 'name': {
                     valueA = rowA.cells[1].textContent.trim().toLowerCase();
                     valueB = rowB.cells[1].textContent.trim().toLowerCase();
                     break;
@@ -1376,10 +1376,10 @@ function populateBarangSelect(availabilityMap = null) {
     const current = select.value;
     select.innerHTML = '';
     assets.forEach(b => {
-        const available = availabilityMap ? (availabilityMap.get(b.kode) ?? 0) : Number(b.num || 0);
+        const available = availabilityMap ? (availabilityMap.get(b.code) ?? 0) : Number(b.num || 0);
         const option = document.createElement('option');
-        option.value = b.kode;
-        option.textContent = `${b.nama} (${b.kode})${Number.isFinite(available) ? ` - tersisa ${available}` : ''}`;
+        option.value = b.code;
+        option.textContent = `${b.name} (${b.code})${Number.isFinite(available) ? ` - tersisa ${available}` : ''}`;
         option.disabled = available <= 0;
         select.appendChild(option);
     });
@@ -1439,8 +1439,8 @@ function computeBarangAvailability(start, end, excludeBookingId = null) {
     const availability = new Map();
     (state.assets?.barang || []).forEach(item => {
         const max = Number(item.num || 0);
-        const usedQty = used.get(item.kode) || 0;
-        availability.set(item.kode, Math.max(0, max - usedQty));
+        const usedQty = used.get(item.code) || 0;
+        availability.set(item.code, Math.max(0, max - usedQty));
     });
     return availability;
 }
@@ -1563,13 +1563,13 @@ function initGedungBarangHandlers() {
         if (!state) return alert('Data aset belum siap.');
         const code = select?.value;
         const qty = Number(qtyInput?.value);
-        const asset = (state.assets?.barang || []).find(b => b.kode === code);
+        const asset = (state.assets?.barang || []).find(b => b.code === code);
         if (!asset) return alert('Pilih barang.');
         if (!Number.isFinite(qty) || qty <= 0) return alert('Masukkan qty valid.');
         const availability = form.__barangAvailability || new Map();
         const available = availability.get(code) ?? 0;
         if (qty > available) return alert(`Qty melebihi stok tersedia (${available}).`);
-        addBarangItemToForm(form, asset.kode, asset.nama, qty);
+        addBarangItemToForm(form, asset.code, asset.name, qty);
         if (qtyInput) qtyInput.value = '';
         updateGedungBarangAvailability(form);
     });
@@ -1604,7 +1604,7 @@ function openGedungModal(booking = null) {
     if (booking) {
         document.getElementById('gedung-booking-id').value = booking._id || '';
         document.getElementById('gedung-peminjam').value = booking.userName || '';
-        document.getElementById('gedung-nama').value = booking.assetCode || '';
+        document.getElementById('gedung-name').value = booking.assetCode || '';
         document.getElementById('gedung-penanggung-jawab').value = booking.personInCharge || '';
         document.getElementById('gedung-nomor-penanggung-jawab').value = booking.picPhoneNumber || '';
         document.getElementById('gedung-kegiatan').value = booking.activityName || '';
@@ -1633,7 +1633,7 @@ function openKendaraanModal(booking = null) {
     if (booking) {
         document.getElementById('kendaraan-booking-id').value = booking._id || '';
         document.getElementById('kendaraan-peminjam').value = booking.userName || '';
-        document.getElementById('kendaraan-nama').value = booking.assetCode || '';
+        document.getElementById('kendaraan-name').value = booking.assetCode || '';
         document.getElementById('kendaraan-penanggung-jawab').value = booking.personInCharge || '';
         document.getElementById('kendaraan-nomor-penanggung-jawab').value = booking.picPhoneNumber || '';
         document.getElementById('kendaraan-tujuan').value = booking.destination || '';
@@ -1668,15 +1668,15 @@ function openDriverModal(driver = null) {
     
     if (driver) {
         const idField = document.getElementById('driver-id');
-        const kodeField = document.getElementById('driver-kode');
-        const namaField = document.getElementById('driver-nama');
+        const kodeField = document.getElementById('driver-code');
+        const namaField = document.getElementById('driver-name');
         const telpField = document.getElementById('driver-no-telp');
         const detailField = document.getElementById('driver-detail');
         const statusField = document.getElementById('driver-status');
         
         if (idField) idField.value = driver._id || '';
-        if (kodeField) kodeField.value = driver.kode || '';
-        if (namaField) namaField.value = driver.nama || '';
+        if (kodeField) kodeField.value = driver.code || '';
+        if (namaField) namaField.value = driver.name || '';
         if (telpField) telpField.value = driver.noTelp || '';
         if (detailField) detailField.value = driver.detail || '';
         if (statusField) statusField.value = driver.status || 'aktif';
@@ -1705,21 +1705,21 @@ function openAssetModal(asset = null) {
     
     if (asset) {
         const idField = document.getElementById('asset-id');
-        const kodeField = document.getElementById('asset-kode');
-        const namaField = document.getElementById('asset-nama');
-        const tipeField = document.getElementById('asset-tipe');
+        const kodeField = document.getElementById('asset-code');
+        const namaField = document.getElementById('asset-name');
+        const tipeField = document.getElementById('asset-type');
         const detailField = document.getElementById('asset-detail');
         const numField = document.getElementById('asset-num');
         
         if (idField) idField.value = asset._id || '';
-        if (kodeField) kodeField.value = asset.kode || '';
-        if (namaField) namaField.value = asset.nama || '';
-        if (tipeField) tipeField.value = asset.tipe || '';
+        if (kodeField) kodeField.value = asset.code || '';
+        if (namaField) namaField.value = asset.name || '';
+        if (tipeField) tipeField.value = asset.type || '';
         if (detailField) detailField.value = asset.detail || '';
         if (numField && asset.num !== undefined && asset.num !== null) {
             numField.value = asset.num;
         }
-        updateAssetNumVisibility(asset.tipe);
+        updateAssetNumVisibility(asset.type);
     } else {
         updateAssetNumVisibility('gedung');
     }
@@ -1728,14 +1728,14 @@ function openAssetModal(asset = null) {
 }
 
 // Update Asset Num Visibility based on type
-function updateAssetNumVisibility(tipe) {
+function updateAssetNumVisibility(type) {
     const wrapper = document.getElementById('asset-num-wrapper');
     const input = document.getElementById('asset-num');
     if (!wrapper || !input) return;
     
-    const show = tipe === 'barang' || tipe === 'kendaraan';
+    const show = type === 'barang' || type === 'kendaraan';
     wrapper.classList.toggle('hidden', !show);
-    input.placeholder = tipe === 'barang' ? 'Qty (misal: 40)' : 'Max penumpang (misal: 15)';
+    input.placeholder = type === 'barang' ? 'Qty (misal: 40)' : 'Max penumpang (misal: 15)';
 }
 
 // Setup Form Submit Handlers
@@ -1764,7 +1764,7 @@ function setupFormSubmitHandlers() {
             const payload = {
                 bookingType: 'gedung',
                 userName: document.getElementById('gedung-peminjam').value,
-                assetCode: document.getElementById('gedung-nama').value,
+                assetCode: document.getElementById('gedung-name').value,
                 personInCharge: document.getElementById('gedung-penanggung-jawab').value,
                 picPhoneNumber: document.getElementById('gedung-nomor-penanggung-jawab').value,
                 activityName: document.getElementById('gedung-kegiatan').value,
@@ -1813,7 +1813,7 @@ function setupFormSubmitHandlers() {
             const payload = {
                 bookingType: 'kendaraan',
                 userName: document.getElementById('kendaraan-peminjam').value,
-                assetCode: document.getElementById('kendaraan-nama').value,
+                assetCode: document.getElementById('kendaraan-name').value,
                 personInCharge: document.getElementById('kendaraan-penanggung-jawab').value,
                 picPhoneNumber: document.getElementById('kendaraan-nomor-penanggung-jawab').value,
                 destination: document.getElementById('kendaraan-tujuan').value,
@@ -1860,15 +1860,15 @@ function setupFormSubmitHandlers() {
             e.preventDefault();
             const id = document.getElementById('driver-id').value || null;
             const payload = {
-                kode: document.getElementById('driver-kode').value.trim(),
-                nama: document.getElementById('driver-nama').value.trim(),
+                code: document.getElementById('driver-code').value.trim(),
+                name: document.getElementById('driver-name').value.trim(),
                 noTelp: document.getElementById('driver-no-telp').value.trim(),
                 detail: document.getElementById('driver-detail').value.trim(),
                 status: document.getElementById('driver-status').value || 'aktif'
             };
             
-            if (!payload.kode || !payload.nama) {
-                alert('Kode dan nama supir wajib diisi.');
+            if (!payload.code || !payload.name) {
+                alert('Kode dan name supir wajib diisi.');
                 return;
             }
             
@@ -1904,9 +1904,9 @@ function setupFormSubmitHandlers() {
             e.preventDefault();
             const id = document.getElementById('asset-id').value || null;
             const payload = {
-                kode: document.getElementById('asset-kode').value.trim(),
-                nama: document.getElementById('asset-nama').value.trim(),
-                tipe: document.getElementById('asset-tipe').value,
+                code: document.getElementById('asset-code').value.trim(),
+                name: document.getElementById('asset-name').value.trim(),
+                type: document.getElementById('asset-type').value,
                 detail: document.getElementById('asset-detail').value.trim(),
             };
             
@@ -1915,8 +1915,8 @@ function setupFormSubmitHandlers() {
                 payload.num = Number(numValue);
             }
             
-            if (!payload.kode || !payload.nama) {
-                alert('Kode dan nama aset wajib diisi.');
+            if (!payload.code || !payload.name) {
+                alert('Kode dan name aset wajib diisi.');
                 return;
             }
             
@@ -2185,8 +2185,8 @@ function renderForms() {
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div><label for="${type}-peminjam" class="form-label text-sm">Nama Peminjam / Unit</label>
             <input type="text" id="${type}-peminjam" required class="form-input"></div>
-            <div><label for="${type}-nama" class="form-label text-sm">Nama ${type === 'gedung' ? 'Gedung' : 'Kendaraan'}</label>
-            <select id="${type}-nama" required class="form-input"></select></div>
+            <div><label for="${type}-name" class="form-label text-sm">Nama ${type === 'gedung' ? 'Gedung' : 'Kendaraan'}</label>
+            <select id="${type}-name" required class="form-input"></select></div>
             <div><label for="${type}-penanggung-jawab" class="form-label text-sm">Penanggung Jawab</label>
             <input type="text" id="${type}-penanggung-jawab" required class="form-input"></div>
             <div><label for="${type}-nomor-penanggung-jawab" class="form-label text-sm">Nomor HP</label>
@@ -2247,16 +2247,16 @@ function renderForms() {
         formAsset.innerHTML = `
             <input type="hidden" id="asset-id">
             <div>
-                <label for="asset-kode" class="form-label text-sm">Kode</label>
-                <input id="asset-kode" type="text" required class="form-input" placeholder="Misal: G-01">
+                <label for="asset-code" class="form-label text-sm">Kode</label>
+                <input id="asset-code" type="text" required class="form-input" placeholder="Misal: G-01">
             </div>
             <div>
-                <label for="asset-nama" class="form-label text-sm">Nama</label>
-                <input id="asset-nama" type="text" required class="form-input" placeholder="Nama aset">
+                <label for="asset-name" class="form-label text-sm">Nama</label>
+                <input id="asset-name" type="text" required class="form-input" placeholder="Nama aset">
             </div>
             <div>
-                <label for="asset-tipe" class="form-label text-sm">Tipe</label>
-                <select id="asset-tipe" required class="form-input">
+                <label for="asset-type" class="form-label text-sm">Tipe</label>
+                <select id="asset-type" required class="form-input">
                     <option value="gedung">Gedung</option>
                     <option value="kendaraan">Kendaraan</option>
                     <option value="barang">Barang</option>
@@ -2274,7 +2274,7 @@ function renderForms() {
         `;
         
         // Update asset num visibility after rendering
-        const assetTipeSelect = formAsset.querySelector('#asset-tipe');
+        const assetTipeSelect = formAsset.querySelector('#asset-type');
         if (assetTipeSelect) {
             updateAssetNumVisibility(assetTipeSelect.value);
         }
@@ -2283,7 +2283,7 @@ function renderForms() {
 
 // Setup Asset Type Change Handler
 function setupAssetTypeChangeHandler() {
-    const assetTypeSelect = document.getElementById('asset-tipe');
+    const assetTypeSelect = document.getElementById('asset-type');
     if (assetTypeSelect) {
         assetTypeSelect.addEventListener('change', (e) => {
             updateAssetNumVisibility(e.target.value);
@@ -2314,8 +2314,8 @@ function setupUserAdminTypeHandlers() {
                     if (container && assets && assets.length > 0) {
                         container.innerHTML = assets.map(asset => `
                             <label class="flex items-center">
-                                <input type="checkbox" class="mr-2" value="${asset.kode}" name="managed-asset">
-                                <span>${asset.kode} - ${asset.nama}</span>
+                                <input type="checkbox" class="mr-2" value="${asset.code}" name="managed-asset">
+                                <span>${asset.code} - ${asset.name}</span>
                             </label>
                         `).join('');
                     }
@@ -2411,11 +2411,11 @@ function setupAdminTableEvents() {
                     const container = document.getElementById('user-managed-assets');
                     if (container) {
                         container.innerHTML = assets.map(asset => {
-                            const isManaged = (admin.managedAssetCodes || []).includes(asset.kode);
+                            const isManaged = (admin.managedAssetCodes || []).includes(asset.code);
                             return `
                                 <label class="flex items-center">
-                                    <input type="checkbox" class="mr-2" value="${asset.kode}" name="managed-asset" ${isManaged ? 'checked' : ''}>
-                                    <span>${asset.kode} - ${asset.nama}</span>
+                                    <input type="checkbox" class="mr-2" value="${asset.code}" name="managed-asset" ${isManaged ? 'checked' : ''}>
+                                    <span>${asset.code} - ${asset.name}</span>
                                 </label>
                             `;
                         }).join('');

@@ -55,7 +55,7 @@
   - Client-side auth logic
   
 - [views/admin.html](views/admin.html) - **Admin Panel**
-  - Header dengan nama user, profil, logout
+  - Header dengan name user, profil, logout
   - 6 tabs:
     - Request Management
     - Gedung

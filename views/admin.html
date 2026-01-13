@@ -69,7 +69,7 @@
                                 <input type="text" id="filter-request-search" placeholder="Cari..." class="filter-menu flex-grow">
                             </div>
                             <div class="col-span-1 lg:col-span-1 flex justify-end">
-                                <button id="btn-search-booking" class="add-btn px-2 sm:px-3 py-2 text-sm whitespace-nowrap"><i class="fas fa-search"></i> Cari kode ID</button>
+                                <button id="btn-search-booking" class="add-btn px-2 sm:px-3 py-2 text-sm whitespace-nowrap"><i class="fas fa-search"></i> Cari code ID</button>
                             </div>
                         </div>
                         <div class="overflow-x-auto">
@@ -77,7 +77,7 @@
                                 <thead class="bg-gray-50">
                                     <tr>
                                         <th class="table-header sortable" data-sort="created">Diajukan</th>
-                                        <th class="table-header sortable" data-sort="tipe">Tipe</th>
+                                        <th class="table-header sortable" data-sort="type">Tipe</th>
                                         <th class="table-header sortable" data-sort="aset">Aset</th>
                                         <th class="table-header sortable" data-sort="peminjam">Peminjam</th>
                                         <th class="table-header sortable" data-sort="tanggal">Tanggal</th>
@@ -196,7 +196,7 @@
                                     <option value="kendaraan">Kendaraan</option>
                                     <option value="barang">Barang</option>
                                 </select>
-                                <input id="master-search" type="text" class="filter-menu w-full sm:w-64" placeholder="Cari kode/nama...">
+                                <input id="master-search" type="text" class="filter-menu w-full sm:w-64" placeholder="Cari code/name...">
                                 <button id="btn-add-asset" class="add-btn px-2 sm:px-3 py-2 text-sm whitespace-nowrap">+ Tambah</button>
                             </div>
                         </div>
@@ -205,13 +205,13 @@
                             <table class="min-w-full divide-y divide-gray-200 rounded-lg overflow-hidden text-xs">
                                 <thead class="bg-gray-50">
                                     <tr>
-                                        <th class="table-header sortable" data-sort="kode">
+                                        <th class="table-header sortable" data-sort="code">
                                             Kode <span class="sort-icon"><i class="fa fa-sort"></i></span>
                                         </th>
-                                        <th class="table-header sortable" data-sort="nama">
+                                        <th class="table-header sortable" data-sort="name">
                                             Nama <span class="sort-icon"><i class="fa fa-sort"></i></span>
                                         </th>
-                                        <th class="table-header sortable" data-sort="tipe">
+                                        <th class="table-header sortable" data-sort="type">
                                             Tipe <span class="sort-icon"><i class="fa fa-sort"></i></span>
                                         </th>
                                         <th class="table-header sortable" data-sort="qty">
@@ -232,7 +232,7 @@
                         <div class="flex flex-col gap-3 mb-4 sm:flex-row sm:items-center sm:justify-between">
                             <h3 class="text-xl font-bold color-gedung">Kelola Supir</h3>
                             <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
-                                <input id="filter-driver-search" type="text" class="filter-menu w-full sm:w-64" placeholder="Cari kode/nama...">
+                                <input id="filter-driver-search" type="text" class="filter-menu w-full sm:w-64" placeholder="Cari code/name...">
                                 <button id="btn-add-driver" class="add-btn px-2 sm:px-3 py-2 text-sm">+ Tambah</button>
                             </div>
                         </div>
@@ -240,10 +240,10 @@
                             <table class="min-w-full divide-y divide-gray-200 rounded-lg overflow-hidden text-xs">
                                 <thead class="bg-gray-50">
                                     <tr>
-                                        <th class="table-header sortable" data-sort="kode">
+                                        <th class="table-header sortable" data-sort="code">
                                             Kode <span class="sort-icon"><i class="fa fa-sort"></i></span>
                                         </th>
-                                        <th class="table-header sortable" data-sort="nama">
+                                        <th class="table-header sortable" data-sort="name">
                                             Nama <span class="sort-icon"><i class="fa fa-sort"></i></span>
                                         </th>
                                         <th class="table-header sortable" data-sort="no-telp">
@@ -267,7 +267,7 @@
                         <div class="flex flex-col gap-3 mb-4 sm:flex-row sm:items-center sm:justify-between">
                             <h3 class="text-xl font-bold color-gedung">Kelola Admin</h3>
                             <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
-                                <input id="filter-users-search" type="text" class="filter-menu w-full sm:w-64" placeholder="Cari nama/username...">
+                                <input id="filter-users-search" type="text" class="filter-menu w-full sm:w-64" placeholder="Cari name/username...">
                                 <button id="btn-add-user" class="add-btn px-2 sm:px-3 py-2 text-sm">+ Tambah</button>
                             </div>
                         </div>
@@ -340,12 +340,12 @@
                     <form id="form-driver" class="space-y-4">
                         <input type="hidden" id="driver-id">
                         <div>
-                            <label for="driver-kode" class="form-label">Kode Supir</label>
-                            <input type="text" id="driver-kode" required class="form-input" placeholder="e.g., DRV001">
+                            <label for="driver-code" class="form-label">Kode Supir</label>
+                            <input type="text" id="driver-code" required class="form-input" placeholder="e.g., DRV001">
                         </div>
                         <div>
-                            <label for="driver-nama" class="form-label">Nama Lengkap</label>
-                            <input type="text" id="driver-nama" required class="form-input" placeholder="Nama supir">
+                            <label for="driver-name" class="form-label">Nama Lengkap</label>
+                            <input type="text" id="driver-name" required class="form-input" placeholder="Nama supir">
                         </div>
                         <div>
                             <label for="driver-no-telp" class="form-label">No. Telepon</label>

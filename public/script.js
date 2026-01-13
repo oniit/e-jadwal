@@ -119,8 +119,8 @@
                         if (state.viewType !== 'kendaraan' || state.selectedDriver === 'all') return true;
                         if (!b.driver) return false;
                         
-                        const driverCode = b.driverCode || (typeof b.driver === 'object' && b.driver ? b.driver.kode : null);
-                        const driverName = typeof b.driver === 'object' && b.driver ? b.driver.nama : b.driver;
+                        const driverCode = b.driverCode || (typeof b.driver === 'object' && b.driver ? b.driver.code : null);
+                        const driverName = typeof b.driver === 'object' && b.driver ? b.driver.name : b.driver;
                         const driverId = typeof b.driver === 'object' && b.driver ? b.driver._id : null;
                         
                         return state.selectedDriver === driverCode || state.selectedDriver === driverName || state.selectedDriver === driverId;
@@ -147,8 +147,8 @@
             const activeDrivers = drivers.filter(d => d.status === 'aktif');
             elements.driverFilter.innerHTML = `<option value="all">Semua Supir</option>`;
             activeDrivers.forEach(driver => {
-                const value = driver._id || driver.kode || driver.code || driver.nama;
-                const label = driver.nama || driver.kode || driver.code || 'Supir';
+                const value = driver._id || driver.code || driver.code || driver.name;
+                const label = driver.name || driver.code || driver.code || 'Supir';
                 const option = new Option(label, value);
                 elements.driverFilter.add(option);
             });
@@ -162,7 +162,7 @@
             const label = state.viewType === 'gedung' ? 'Gedung' : 'Kendaraan';
             elements.assetFilter.innerHTML = `<option value="all">Semua ${label}</option>`;
             assets.forEach(item => {
-                const option = new Option(item.nama, item.kode);
+                const option = new Option(item.name, item.code);
                 elements.assetFilter.add(option);
             });
             elements.assetFilter.value = 'all';
@@ -221,11 +221,11 @@
             } else {
                 if (booking.driver) {
                     let driverName;
-                    if (typeof booking.driver === 'object' && booking.driver.nama) {
-                        driverName = booking.driver.nama;
+                    if (typeof booking.driver === 'object' && booking.driver.name) {
+                        driverName = booking.driver.name;
                     } else if (typeof booking.driver === 'string') {
-                        const driver = state.drivers.find(d => d._id === booking.driver || d.kode === booking.driver || d.nama === booking.driver);
-                        driverName = driver ? driver.nama : null;
+                        const driver = state.drivers.find(d => d._id === booking.driver || d.code === booking.driver || d.name === booking.driver);
+                        driverName = driver ? driver.name : null;
                     }
                     if (driverName) detailHtml += `<p><strong>Supir:</strong> ${driverName}</p>`;
                 }
@@ -307,11 +307,11 @@
                 }
                 if (booking.driver) {
                     let driverName;
-                    if (typeof booking.driver === 'object' && booking.driver.nama) {
-                        driverName = booking.driver.nama;
+                    if (typeof booking.driver === 'object' && booking.driver.name) {
+                        driverName = booking.driver.name;
                     } else if (typeof booking.driver === 'string') {
-                        const driver = state.drivers.find(d => d._id === booking.driver || d.kode === booking.driver || d.nama === booking.driver);
-                        driverName = driver ? driver.nama : null;
+                        const driver = state.drivers.find(d => d._id === booking.driver || d.code === booking.driver || d.name === booking.driver);
+                        driverName = driver ? driver.name : null;
                     }
                     if (driverName) detailHtml += `<p><strong>Supir:</strong> ${driverName}</p>`;
                 }
@@ -342,8 +342,8 @@
                     <input type="text" id="req-penanggung-jawab" required class="form-input"></div>
                     <div><label for="req-hp-pj" class="form-label text-sm">No HP PIC/PJ</label>
                     <input type="tel" id="req-hp-pj" required class="form-input"></div>
-                    <div><label for="req-nama" class="form-label text-sm">Nama Unit</label>
-                    <input type="text" id="req-nama" required class="form-input"></div>
+                    <div><label for="req-name" class="form-label text-sm">Nama Unit</label>
+                    <input type="text" id="req-name" required class="form-input"></div>
                     <div><label for="req-aset" class="form-label text-sm">Pilih ${type === 'gedung' ? 'Gedung' : 'Kendaraan'}</label>
                     <select id="req-aset" required class="form-input"></select></div>
                     <div><label for="req-mulai-tanggal" class="form-label text-sm">Tanggal Mulai</label>
@@ -400,10 +400,10 @@
             const assets = state.viewType === 'gedung' ? state.assets.gedung : state.assets.kendaraan;
             select.innerHTML = '';
             assets.forEach(a => {
-                const option = new Option(a.nama, a.kode);
-                if (unavailableAssets.has(a.kode)) {
+                const option = new Option(a.name, a.code);
+                if (unavailableAssets.has(a.code)) {
                     option.disabled = true;
-                    option.text = `${a.nama} (Tidak Tersedia)`;
+                    option.text = `${a.name} (Tidak Tersedia)`;
                 }
                 select.add(option);
             });
@@ -555,8 +555,8 @@
             const availability = new Map();
             (state.assets.barang || []).forEach(b => {
                 const max = Number(b.num || 0);
-                const u = used.get(b.kode) || 0;
-                availability.set(b.kode, Math.max(0, max - u));
+                const u = used.get(b.code) || 0;
+                availability.set(b.code, Math.max(0, max - u));
             });
             
             const form = elements.formRequest;
@@ -577,8 +577,8 @@
             const current = select.value;
             select.innerHTML = '';
             assetsBarang.forEach(b => {
-                const available = availabilityMap ? (availabilityMap.get(b.kode) ?? b.num ?? 0) : (b.num ?? 0);
-                const option = new Option(`${b.nama} (stok: ${available})`, b.kode);
+                const available = availabilityMap ? (availabilityMap.get(b.code) ?? b.num ?? 0) : (b.num ?? 0);
+                const option = new Option(`${b.name} (stok: ${available})`, b.code);
                 option.disabled = available <= 0;
                 select.add(option);
             });
@@ -678,7 +678,7 @@
 
             const requestData = {
                 bookingType: state.viewType,
-                userName: form.querySelector('#req-nama').value,
+                userName: form.querySelector('#req-name').value,
                 personInCharge: form.querySelector('#req-penanggung-jawab').value,
                 picPhoneNumber: form.querySelector('#req-hp-pj').value,
                 assetCode: form.querySelector('#req-aset').value,

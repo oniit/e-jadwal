@@ -250,7 +250,7 @@ async function checkConflict(bookingData) {
             return `Aset "${conflictingBooking.assetName}" sudah dipesan pada rentang waktu tersebut.`;
         }
         if (conflictingBooking.driver && String(conflictingBooking.driver._id) === String(driver)) {
-            return `Supir "${conflictingBooking.driver.nama}" sudah bertugas pada rentang waktu tersebut.`;
+            return `Supir "${conflictingBooking.driver.name}" sudah bertugas pada rentang waktu tersebut.`;
         }
     }
     return null;
@@ -291,19 +291,19 @@ async function validateBarangAvailability(bookingData) {
     }
 
     const codes = [...aggregated.keys()];
-    const assets = await Asset.find({ kode: { $in: codes }, tipe: 'barang' }).select('kode nama num');
-    const assetsByCode = new Map(assets.map(a => [a.kode, a]));
+    const assets = await Asset.find({ code: { $in: codes }, type: 'barang' }).select('code name num');
+    const assetsByCode = new Map(assets.map(a => [a.code, a]));
 
     for (const [code, reqQty] of aggregated.entries()) {
         const asset = assetsByCode.get(code);
         const maxQty = Number(asset?.num ?? 0);
         if (!asset || !Number.isFinite(maxQty) || maxQty <= 0) {
-            return `Aset barang dengan kode ${code} tidak tersedia.`;
+            return `Aset barang dengan code ${code} tidak tersedia.`;
         }
         const alreadyUsed = usedMap.get(code) || 0;
         if (alreadyUsed + reqQty > maxQty) {
             const sisa = Math.max(0, maxQty - alreadyUsed);
-            return `Permintaan melebihi stok. "${asset.nama}" tersisa ${sisa} pada waktu tersebut.`;
+            return `Permintaan melebihi stok. "${asset.name}" tersisa ${sisa} pada waktu tersebut.`;
         }
     }
     return null;
@@ -326,8 +326,8 @@ async function normalizeRequestPayload(body) {
 
             if (items.length) {
                 const codes = items.map(i => i.assetCode);
-                const aset = await Asset.find({ kode: { $in: codes }, tipe: 'barang' }).select('kode nama');
-                const nameMap = new Map(aset.map(a => [a.kode, a.nama]));
+                const aset = await Asset.find({ code: { $in: codes }, type: 'barang' }).select('code name');
+                const nameMap = new Map(aset.map(a => [a.code, a.name]));
                 base.borrowedItems = items.map(i => ({
                     assetCode: i.assetCode,
                     assetName: nameMap.get(i.assetCode) || i.assetCode,

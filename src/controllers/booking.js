@@ -71,13 +71,13 @@ const checkConflict = async (bookingData, id = null) => {
             return `Aset "${conflictingBooking.assetName}" sudah dipesan pada rentang waktu tersebut.`;
         }
         if (conflictingBooking.driver && String(conflictingBooking.driver._id) === String(driver)) {
-            return `Supir "${conflictingBooking.driver.nama}" sudah bertugas pada rentang waktu tersebut.`;
+            return `Supir "${conflictingBooking.driver.name}" sudah bertugas pada rentang waktu tersebut.`;
         }
     }
     return null;
 };
 
-// Validasi ketersediaan barang (tipe aset "barang") berdasarkan qty dan jadwal overlap
+// Validasi ketersediaan barang (type aset "barang") berdasarkan qty dan jadwal overlap
 const validateBarangAvailability = async (bookingData, id = null) => {
     const items = Array.isArray(bookingData.borrowedItems) ? bookingData.borrowedItems : [];
     if (!items.length) return null; // optional
@@ -103,7 +103,7 @@ const validateBarangAvailability = async (bookingData, id = null) => {
 
     const overlapping = await Booking.find(overlapQuery).select('borrowedItems');
 
-    // Hitung pemakaian per kode dari semua booking overlap
+    // Hitung pemakaian per code dari semua booking overlap
     const usedMap = new Map();
     for (const b of overlapping) {
         if (!Array.isArray(b.borrowedItems)) continue;
@@ -116,21 +116,21 @@ const validateBarangAvailability = async (bookingData, id = null) => {
         }
     }
 
-    // Ambil stok dari koleksi Asset (tipe barang)
+    // Ambil stok dari koleksi Asset (type barang)
     const codes = [...aggregated.keys()];
-    const assets = await Asset.find({ kode: { $in: codes }, tipe: 'barang' }).select('kode nama num');
-    const assetsByCode = new Map(assets.map(a => [a.kode, a]));
+    const assets = await Asset.find({ code: { $in: codes }, type: 'barang' }).select('code name num');
+    const assetsByCode = new Map(assets.map(a => [a.code, a]));
 
     for (const [code, reqQty] of aggregated.entries()) {
         const asset = assetsByCode.get(code);
         const maxQty = Number(asset?.num ?? 0);
         if (!asset || !Number.isFinite(maxQty) || maxQty <= 0) {
-            return `Aset barang dengan kode ${code} tidak tersedia.`;
+            return `Aset barang dengan code ${code} tidak tersedia.`;
         }
         const alreadyUsed = usedMap.get(code) || 0;
         if (alreadyUsed + reqQty > maxQty) {
             const sisa = Math.max(0, maxQty - alreadyUsed);
-            return `Permintaan melebihi stok. "${asset.nama}" tersisa ${sisa} pada waktu tersebut.`;
+            return `Permintaan melebihi stok. "${asset.name}" tersisa ${sisa} pada waktu tersebut.`;
         }
     }
     return null;
@@ -271,7 +271,7 @@ async function normalizePayload(body) {
     base.endDate = new Date(base.endDate);
 
     if (base.bookingType === 'gedung') {
-        // borrowedItems opsional; jika ada, validasi format dan sinkronkan nama dari master asset
+        // borrowedItems opsional; jika ada, validasi format dan sinkronkan name dari master asset
         if (Array.isArray(base.borrowedItems)) {
             const items = base.borrowedItems
                 .map(it => ({
@@ -282,8 +282,8 @@ async function normalizePayload(body) {
 
             if (items.length) {
                 const codes = items.map(i => i.assetCode);
-                const aset = await Asset.find({ kode: { $in: codes }, tipe: 'barang' }).select('kode nama');
-                const nameMap = new Map(aset.map(a => [a.kode, a.nama]));
+                const aset = await Asset.find({ code: { $in: codes }, type: 'barang' }).select('code name');
+                const nameMap = new Map(aset.map(a => [a.code, a.name]));
                 base.borrowedItems = items.map(i => ({
                     assetCode: i.assetCode,
                     assetName: nameMap.get(i.assetCode) || i.assetCode,
