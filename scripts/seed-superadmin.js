@@ -18,9 +18,9 @@ const seedSuperAdmin = async () => {
 
     // Create superadmin
     const superadmin = new User({
-      username: 'onit',
+      username: 'superadmin',
       email: 'admin@uinssc.ac.id',
-      password: '7',
+      password: '123',
       name: 'Super Administrator',
       phone: '',
       role: 'superadmin',
@@ -31,8 +31,8 @@ const seedSuperAdmin = async () => {
     await superadmin.save();
 
     console.log('✅ Superadmin berhasil dibuat!');
-    console.log('Username: onit');
-    console.log('Password: 7');
+    console.log(`Username: ${superadmin.username}`);
+    console.log(`Password: ${superadmin.password}`);
     console.log('\nSilakan login dan ubah password Anda.');
 
     process.exit(0);
