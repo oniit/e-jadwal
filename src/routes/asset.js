@@ -1,7 +1,31 @@
 const express = require('express');
 const router = express.Router();
+const multer = require('multer');
 const assetController = require('../controllers/asset');
+const assetImportController = require('../controllers/assetImport');
 
+// Configure multer for Excel files
+const storage = multer.memoryStorage();
+const upload = multer({
+    storage,
+    fileFilter: (req, file, cb) => {
+        const allowedMimes = [
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'application/vnd.ms-excel'
+        ];
+        if (allowedMimes.includes(file.mimetype)) {
+            cb(null, true);
+        } else {
+            cb(new Error('Hanya file Excel yang diizinkan'));
+        }
+    }
+});
+
+// Import routes (must be before /post route for same path)
+router.post('/import/excel', upload.single('file'), assetImportController.importFromExcel);
+router.get('/import/status', assetImportController.getImportStatus);
+
+// Asset CRUD routes
 router.get('/', assetController.getAssets);
 router.get('/:id', assetController.getAsset);
 router.post('/', assetController.createAsset);
