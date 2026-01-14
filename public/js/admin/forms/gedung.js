@@ -181,12 +181,41 @@ export function initGedungBarangHandlers() {
         useTimeCheckbox.addEventListener('change', () => {
             timeInputsDiv.classList.toggle('hidden', !useTimeCheckbox.checked);
             updateGedungBarangAvailability(form);
+            updateGedungAssetAvailability();
         });
     }
-
-    [startDateInput, endDateInput, startTimeInput, endTimeInput].forEach(input => {
-        input?.addEventListener('change', () => updateGedungBarangAvailability(form));
-    });
+    
+    // Date validation - tanggal selesai harus >= tanggal mulai
+    if (startDateInput) {
+        startDateInput.addEventListener('change', () => {
+            if (endDateInput) {
+                endDateInput.min = startDateInput.value;
+            }
+            updateGedungAssetAvailability();
+            updateGedungBarangAvailability(form);
+        });
+    }
+    
+    if (endDateInput) {
+        endDateInput.addEventListener('change', () => {
+            updateGedungAssetAvailability();
+            updateGedungBarangAvailability(form);
+        });
+    }
+    
+    if (startTimeInput) {
+        startTimeInput.addEventListener('change', () => {
+            updateGedungAssetAvailability();
+            updateGedungBarangAvailability(form);
+        });
+    }
+    
+    if (endTimeInput) {
+        endTimeInput.addEventListener('change', () => {
+            updateGedungAssetAvailability();
+            updateGedungBarangAvailability(form);
+        });
+    }
 
     select?.addEventListener('change', () => setBarangQtyMax(form, form.__barangAvailability || null));
     qtyInput?.addEventListener('input', () => setBarangQtyMax(form, form.__barangAvailability || null));
@@ -210,6 +239,62 @@ export function initGedungBarangHandlers() {
     updateGedungBarangAvailability(form);
 }
 
+// Update asset dropdown based on date availability
+export function updateGedungAssetAvailability() {
+    const state = getAdminState();
+    if (!state) return;
+    
+    const select = document.getElementById('gedung-name');
+    const startDateInput = document.getElementById('gedung-mulai-tanggal');
+    const endDateInput = document.getElementById('gedung-selesai-tanggal');
+    const startTimeInput = document.getElementById('gedung-mulai-jam');
+    const endTimeInput = document.getElementById('gedung-selesai-jam');
+    const useTime = document.getElementById('gedung-use-time')?.checked;
+    const bookingId = document.getElementById('gedung-booking-id')?.value || null;
+    
+    if (!select || !startDateInput?.value || !endDateInput?.value) return;
+    
+    let start, end;
+    if (useTime && startTimeInput?.value && endTimeInput?.value) {
+        start = new Date(`${startDateInput.value}T${startTimeInput.value}`);
+        end = new Date(`${endDateInput.value}T${endTimeInput.value}`);
+    } else {
+        start = new Date(`${startDateInput.value}T07:00`);
+        end = new Date(`${endDateInput.value}T16:00`);
+    }
+    
+    if (isNaN(start) || isNaN(end) || start >= end) return;
+    
+    // Find unavailable assets
+    const unavailable = new Set();
+    (state.allBookingsCache || []).forEach(booking => {
+        if (booking.bookingType !== 'gedung') return;
+        if (bookingId && booking._id === bookingId) return; // exclude current booking
+        const bs = new Date(booking.startDate);
+        const be = new Date(booking.endDate);
+        if (start < be && end > bs) {
+            unavailable.add(booking.assetCode);
+        }
+    });
+    
+    // Update select options
+    const currentValue = select.value;
+    Array.from(select.options).forEach(option => {
+        if (option.value && unavailable.has(option.value)) {
+            option.disabled = true;
+            option.text = option.text.replace(' (Tidak Tersedia)', '') + ' (Tidak Tersedia)';
+        } else if (option.value) {
+            option.disabled = false;
+            option.text = option.text.replace(' (Tidak Tersedia)', '');
+        }
+    });
+    
+    // Restore selection if still available
+    if (currentValue && !unavailable.has(currentValue)) {
+        select.value = currentValue;
+    }
+}
+
 export function openGedungModal(booking = null) {
     const modal = document.getElementById('modal-form-gedung');
     const form = document.getElementById('form-gedung');
@@ -231,7 +316,15 @@ export function openGedungModal(booking = null) {
         document.getElementById('gedung-keterangan').value = booking.notes || '';
         document.getElementById('gedung-mulai-tanggal').value = formatDateForInput(booking.startDate);
         document.getElementById('gedung-selesai-tanggal').value = formatDateForInput(booking.endDate);
+        
+        // Set min for end date
+        const startVal = formatDateForInput(booking.startDate);
+        if (startVal) {
+            document.getElementById('gedung-selesai-tanggal').min = startVal;
+        }
+        
         hydrateBarangFromBooking(form, booking);
+        updateGedungAssetAvailability();
     } else {
         updateGedungBarangAvailability(form);
     }

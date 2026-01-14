@@ -33,6 +33,11 @@ export async function checkAuth() {
                     tab.classList.add('hidden');
                 }
             });
+            
+            // Filter managedAssetCodes to only show gedung assets
+            if (user.managedAssetCodes && Array.isArray(user.managedAssetCodes)) {
+                window.__adminKhususGedungOnly = user.managedAssetCodes.filter(code => code.startsWith('GD'));
+            }
         }
     } catch (error) {
         console.error('Auth check failed:', error);
@@ -313,15 +318,10 @@ export function setupAdminTableEvents() {
                 
                 if (adminType === 'khusus') {
                     document.getElementById('user-managed-assets-wrapper').classList.remove('hidden');
-                    // Populate assets and check managed ones
+                    // Admin khusus hanya untuk gedung
                     const assetsResponse = await fetch(`${API_BASE}/api/assets`, { credentials: 'include' });
                     const assetsData = await assetsResponse.json();
-                    // Flatten grouped assets into single array
-                    const assets = [
-                        ...(assetsData.gedung || []),
-                        ...(assetsData.kendaraan || []),
-                        ...(assetsData.barang || [])
-                    ];
+                    const assets = assetsData.gedung || [];
                     const container = document.getElementById('user-managed-assets');
                     if (container) {
                         container.innerHTML = assets.map(asset => {
@@ -381,12 +381,8 @@ export function setupUserAdminTypeHandlers() {
                 try {
                     const response = await fetch(`${API_BASE}/api/assets`, { credentials: 'include' });
                     const assetsData = await response.json();
-                    // Flatten grouped assets into single array
-                    const assets = [
-                        ...(assetsData.gedung || []),
-                        ...(assetsData.kendaraan || []),
-                        ...(assetsData.barang || [])
-                    ];
+                    // Admin khusus hanya untuk gedung
+                    const assets = assetsData.gedung || [];
                     const container = document.getElementById('user-managed-assets');
                     if (container && assets && assets.length > 0) {
                         container.innerHTML = assets.map(asset => `

@@ -18,6 +18,7 @@ import {
 } from './filters.js';
 import { initTableSorting } from './table-sort.js';
 import { initGedungBarangHandlers, updateGedungBarangAvailability } from './forms/gedung.js';
+import { initKendaraanDateHandlers } from './forms/kendaraan.js';
 import { setupAssetTypeChangeHandler } from './forms/asset.js';
 import { setupFormSubmitHandlers, setupTableEventDelegation, setupModalCloseHandlers, setupAddButtonHandlers } from './events.js';
 import { renderForms, populateFormSelectOptions } from './modals.js';
@@ -42,6 +43,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Initialize modal/form functionality (event bindings depend on rendered forms)
     initializeModalFunctionality();
+    
+    // Initialize date handlers for forms
+    initKendaraanDateHandlers();
     
     // Initialize app data and UI from script.js logic
     initializeApp();
