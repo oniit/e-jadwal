@@ -3,6 +3,7 @@ const router = express.Router();
 const multer = require('multer');
 const assetController = require('../controllers/asset');
 const assetImportController = require('../controllers/assetImport');
+const assetExportController = require('../controllers/assetExport');
 
 // Configure multer for Excel files
 const storage = multer.memoryStorage();
@@ -21,9 +22,10 @@ const upload = multer({
     }
 });
 
-// Import routes (must be before /post route for same path)
+// Import/Export routes (must be before CRUD routes)
 router.post('/import/excel', upload.single('file'), assetImportController.importFromExcel);
 router.get('/import/status', assetImportController.getImportStatus);
+router.get('/export/excel', assetExportController.exportAssets);
 
 // Asset CRUD routes
 router.get('/', assetController.getAssets);

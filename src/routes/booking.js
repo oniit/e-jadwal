@@ -1,7 +1,12 @@
 const express = require('express');
 const router = express.Router();
 const bookingController = require('../controllers/booking');
+const assetExportController = require('../controllers/assetExport');
 
+// Export route
+router.get('/export/excel', assetExportController.exportBookings);
+
+// CRUD routes
 router.get('/', bookingController.getAllBookings);
 router.get('/by-code/:code', bookingController.getBookingByCode);
 router.get('/:id', bookingController.getBooking);

@@ -27,6 +27,7 @@ import { openKendaraanModal } from './forms/kendaraan.js';
 import { openDriverModal } from './forms/driver.js';
 import { openAssetModal } from './forms/asset.js';
 import { initializeExcelImport } from './excel-import.js';
+import { initializeExcelExport } from './excel-export.js';
 
 // Initialize admin panel
 document.addEventListener('DOMContentLoaded', async () => {
@@ -139,6 +140,7 @@ function initializeModalFunctionality() {
     setupUserAdminTypeHandlers();
     setupAdminManagement();
     initializeExcelImport();
+    initializeExcelExport();
 }
 
 // Expose functions globally for inline onclick handlers if needed
