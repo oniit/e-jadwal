@@ -7,6 +7,9 @@ const resetDatabase = async () => {
     console.log('🔄 Menghubungkan ke database...');
     await connectDB();
 
+    // Daftar collections yang TIDAK akan dihapus
+    const skipCollections = ['users']; // Tambahkan nama collection yang ingin di-skip
+
     console.log('📋 Daftar collections yang akan dihapus:');
     const db = mongoose.connection.db;
     const collections = await db.listCollections().toArray();
@@ -14,15 +17,22 @@ const resetDatabase = async () => {
     if (collections.length === 0) {
       console.log('   (Tidak ada collection)');
     } else {
-      collections.forEach(col => console.log(`   - ${col.name}`));
+      collections.forEach(col => {
+        const willSkip = skipCollections.includes(col.name) || col.name === 'system.indexes';
+        const status = willSkip ? '[SKIP]' : '[HAPUS]';
+        console.log(`   ${status} ${col.name}`);
+      });
     }
 
     console.log('\n⚠️  Ini akan MENGHAPUS SEMUA DATA dari database!');
+    if (skipCollections.length > 0) {
+      console.log(`   ⚡ Kecuali collections: ${skipCollections.join(', ')}`);
+    }
     console.log('   Pastikan Anda benar-benar ingin melanjutkan.\n');
 
     // Drop all collections
     for (const col of collections) {
-      if (col.name !== 'system.indexes') {
+      if (col.name !== 'system.indexes' && !skipCollections.includes(col.name)) {
         await db.dropCollection(col.name);
         console.log(`✅ Dihapus: ${col.name}`);
       }

@@ -1,7 +1,7 @@
- /**
+/**
  * Generate unique code for asset
- * Format: TYPE + sequential number (GD001, KD001, BR001, etc)
- * @param {string} type - Asset type: 'gedung', 'kendaraan', 'barang'
+ * Format: TYPE + sequential number (GD001, KD001, BR001, UM001, etc)
+ * @param {string} type - Asset type: 'gedung', 'kendaraan', 'barang', 'umum'
  * @param {number} index - Sequential index for this type in current batch
  * @returns {string} Generated code
  */
@@ -9,7 +9,8 @@ function generateCode(type, index) {
     const typePrefix = {
         'gedung': 'GD',
         'kendaraan': 'KD',
-        'barang': 'BR'
+        'barang': 'BR',
+        'umum': 'UM'
     };
     const prefix = typePrefix[type] || 'AS';
     const num = String(index).padStart(4, '0');
@@ -22,10 +23,11 @@ function generateCode(type, index) {
  */
 
 const FIELD_MAPPING = {
-    code: ['Code', 'Kode', 'ID', 'No'],
-    type: ['Type', 'Jenis BMN', 'Jenis', 'Kategori'],
-    name: ['Name', 'Nama', 'Nama Asset', 'Nama Gedung', 'Nama Kendaraan', 'Nama Barang', 'Nama Item'],
-    barcode: ['Kode Barang', 'No Barang', 'Kode Inventaris'],
+    code: ['Code'],
+    type: ['Type'],
+    name: ['Name'],
+    jenis_bmn: ['Jenis BMN'],
+    kode_bmn: ['Kode Barang'],
     itemName: ['Nama Barang', 'Nama Item'],
     status: ['Status Penggunaan', 'Status', 'Status BMN'],
     merk: ['Merk', 'Brand'],
@@ -55,12 +57,18 @@ function findColumnIndex(headers, aliases) {
 /**
  * Infer asset type from data
  * @param {object} data - Parsed row data
- * @returns {string} 'gedung', 'kendaraan', or 'barang'
+ * @returns {string} 'gedung', 'kendaraan', 'barang', or 'umum'
  */
 function inferAssetType(data) {
-    const typeStr = (data.type || '').toLowerCase();
+    const typeStr = (data.type || '').toLowerCase().trim();
     
-    // Check explicit type indicators
+    // Direct mapping for exact matches (case-insensitive)
+    if (typeStr === 'gedung') return 'gedung';
+    if (typeStr === 'kendaraan') return 'kendaraan';
+    if (typeStr === 'barang') return 'barang';
+    if (typeStr === 'umum') return 'umum';
+    
+    // Check if contains keywords
     if (typeStr.includes('gedung') || typeStr.includes('bangunan') || typeStr.includes('ruangan')) {
         return 'gedung';
     }
@@ -70,9 +78,12 @@ function inferAssetType(data) {
     if (typeStr.includes('barang') || typeStr.includes('peralatan') || typeStr.includes('equipment')) {
         return 'barang';
     }
+    if (typeStr.includes('umum') || typeStr.includes('lainnya') || typeStr.includes('general')) {
+        return 'umum';
+    }
     
-    // Default to barang (most common)
-    return 'barang';
+    // Default to umum for unrecognized types
+    return 'umum';
 }
 
 /**
@@ -89,6 +100,8 @@ function mapExcelRowToAsset(row, headers, options = {}) {
     const codeIdx = findColumnIndex(headers, FIELD_MAPPING.code);
     const typeIdx = findColumnIndex(headers, FIELD_MAPPING.type);
     const nameIdx = findColumnIndex(headers, FIELD_MAPPING.name);
+    const jenisBmnIdx = findColumnIndex(headers, FIELD_MAPPING.jenis_bmn);
+    const kodeBmnIdx = findColumnIndex(headers, FIELD_MAPPING.kode_bmn);
     const merkIdx = findColumnIndex(headers, FIELD_MAPPING.merk);
     const tipeIdx = findColumnIndex(headers, FIELD_MAPPING.tipe);
     const kondisiIdx = findColumnIndex(headers, FIELD_MAPPING.kondisi);
@@ -104,8 +117,16 @@ function mapExcelRowToAsset(row, headers, options = {}) {
     // Extract name - more flexible
     data.name = nameIdx !== null ? String(row[nameIdx] || '').trim() : '';
     
-    // Infer type if not explicit
-    data.type = inferAssetType(data);
+    // Extract jenis_bmn dan kode_bmn
+    data.jenis_bmn = jenisBmnIdx !== null ? String(row[jenisBmnIdx] || '').trim() : '';
+    data.kode_bmn = kodeBmnIdx !== null ? String(row[kodeBmnIdx] || '').trim() : '';
+    
+    // Infer and normalize type from Excel value
+    if (data.type) {
+        data.type = inferAssetType({ type: data.type });
+    } else {
+        data.type = 'umum';
+    }
     
     // Auto-generate code if empty and option enabled
     if (!data.code && options.autoGenerateCode && options.index !== undefined) {
@@ -147,7 +168,9 @@ function validateAsset(asset, options = {}) {
     
     // Code: auto-generated or provided
     if (!asset.code || asset.code.length === 0) {
-        errors.push('Code wajib ada (atau akan di-generate otomatis)');
+        if (!options.allowEmptyCode) {
+            errors.push('Code wajib ada (atau akan di-generate otomatis)');
+        }
     }
     
     // Name: bisa kosong atau dari field lain
@@ -158,8 +181,8 @@ function validateAsset(asset, options = {}) {
     }
     
     // Type: harus valid
-    if (!['gedung', 'kendaraan', 'barang'].includes(asset.type)) {
-        errors.push(`Type invalid: ${asset.type} (harus: gedung, kendaraan, atau barang)`);
+    if (!['gedung', 'kendaraan', 'barang', 'umum'].includes(asset.type)) {
+        errors.push(`Type invalid: ${asset.type} (harus: gedung, kendaraan, barang, atau umum)`);
     }
     
     return {

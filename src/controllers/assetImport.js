@@ -88,14 +88,19 @@ exports.importFromExcel = async (req, res) => {
             const row = rows[i];
             
             try {
-                // Map Excel row to Asset schema with auto-generate enabled
-                const mappedData = mapExcelRowToAsset(Object.values(row), headerRow, {
-                    autoGenerateCode: true,
-                    index: i + 1  // Start dari 1
+                // Convert row object back to array in same order as headers
+                // Use case-insensitive key lookup since row keys might differ in case
+                const rowArray = headerRow.map((header) => {
+                    // Find matching key in row object (case-insensitive)
+                    const key = Object.keys(row).find(k => k.toLowerCase() === header.toLowerCase());
+                    return key ? row[key] : '';
                 });
+                
+                // Map Excel row to Asset schema
+                const mappedData = mapExcelRowToAsset(rowArray, headerRow);
 
-                // Validate mapped data - allow empty name boleh
-                const validation = validateAsset(mappedData, { allowEmptyName: true });
+                // Validate mapped data - allow empty code dan name untuk import
+                const validation = validateAsset(mappedData, { allowEmptyName: true, allowEmptyCode: true });
                 if (!validation.valid) {
                     results.failed++;
                     results.errors.push({
@@ -106,7 +111,12 @@ exports.importFromExcel = async (req, res) => {
                     continue;
                 }
 
-                // Use name dari Excel, atau auto-generate dari code jika kosong
+                // Auto-generate code dari schema jika kosong
+                if (!mappedData.code) {
+                    mappedData.code = await Asset.generateCode(mappedData.type);
+                }
+                
+                // Set default name jika kosong
                 if (!mappedData.name) {
                     mappedData.name = mappedData.code;
                 }
@@ -115,16 +125,17 @@ exports.importFromExcel = async (req, res) => {
                 const existing = await Asset.findOne({ code: mappedData.code });
 
                 if (existing) {
-                    // Update existing
-                    await Asset.updateOne(
-                        { code: mappedData.code },
-                        {
-                            name: mappedData.name,
-                            type: mappedData.type,
-                            detail: mappedData.detail,
-                            updatedAt: new Date()
-                        }
-                    );
+                    // Update existing - merge dengan data baru (hanya update field yang ada value)
+                    const updateData = {};
+                    if (mappedData.name) updateData.name = mappedData.name;
+                    if (mappedData.type) updateData.type = mappedData.type;
+                    if (mappedData.detail) updateData.detail = mappedData.detail;
+                    if (mappedData.jenis_bmn) updateData.jenis_bmn = mappedData.jenis_bmn;
+                    if (mappedData.kode_bmn) updateData.kode_bmn = mappedData.kode_bmn;
+                    if (mappedData.num !== undefined) updateData.num = mappedData.num;
+                    updateData.updatedAt = new Date();
+                    
+                    await Asset.updateOne({ code: mappedData.code }, updateData);
                     results.updated.push(mappedData.code);
                 } else {
                     // Create new

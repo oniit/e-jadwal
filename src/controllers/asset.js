@@ -4,7 +4,7 @@ const Asset = require('../models/asset');
 const { ALLOWED_TYPES } = require('../models/asset');
 
 const groupAssets = (assets = []) => {
-    const grouped = { gedung: [], kendaraan: [], barang: [] };
+    const grouped = { gedung: [], kendaraan: [], barang: [], umum: [] };
     assets.forEach((asset) => {
         const key = asset.type;
         if (!grouped[key]) grouped[key] = [];
@@ -64,8 +64,8 @@ const getAsset = async (req, res) => {
 const createAsset = async (req, res) => {
     try {
         const payload = req.body;
-        if (!payload || !payload.code || !payload.name || !payload.type) {
-            return res.status(400).json({ message: 'code, name, dan type wajib diisi.' });
+        if (!payload || !payload.name || !payload.type) {
+            return res.status(400).json({ message: 'name dan type wajib diisi.' });
         }
 
         const type = String(payload.type).toLowerCase();
@@ -78,8 +78,13 @@ const createAsset = async (req, res) => {
             return res.status(400).json({ message: 'Nilai angka tidak valid.' });
         }
 
+        // Auto-generate code if not provided
+        const code = payload.code && payload.code.trim() !== '' 
+            ? payload.code 
+            : await Asset.generateCode(type);
+
         const asset = new Asset({
-            code: payload.code,
+            code,
             name: payload.name,
             type,
             num: Number.isFinite(parsedNum) ? parsedNum : undefined,

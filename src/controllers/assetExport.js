@@ -12,7 +12,7 @@ exports.exportAssets = async (req, res) => {
 
         // Build query
         const query = {};
-        if (type && ['gedung', 'kendaraan', 'barang'].includes(type)) {
+        if (type && ['gedung', 'kendaraan', 'barang', 'umum'].includes(type)) {
             query.type = type;
         }
 
