@@ -1,2 +1,5 @@
 /.env
 /node_modules
+/scripts/reset-db.js
+/dist
+/uploads

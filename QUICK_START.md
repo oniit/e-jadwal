@@ -18,7 +18,7 @@
 
 ### Superadmin
 ```
-Username: onit
+Username: adm
 Password: 7
 ```
 
@@ -96,6 +96,9 @@ npm run dev
 
 # Run production server
 npm start
+
+# Build frontend bundles (Vite)
+npm run build
 ```
 
 ---
@@ -136,25 +139,16 @@ DELETE /auth/admin/:id     Delete admin
 
 ---
 
-## ⚠️ Known Issues & TODO
+## 📦 Frontend Build Notes
 
-### ⚠️ CRITICAL
-**File `public/script-admin.js` belum dibuat!**
-
-Saat ini admin panel (`/admin`) belum fully functional karena:
-- Tidak ada auth check saat load page
-- Tab switching belum implemented
-- Form submission ke API belum ada
-- Logout button belum functional
-- Profile update form belum connected
-
-### 📝 Next Steps
-1. Create `public/script-admin.js`
-2. Implement auth check on page load
-3. Connect logout button
-4. Connect profile form
-5. Implement admin CRUD forms (superadmin)
-6. Add loading states & error handling
+- Project menggunakan Vite untuk membundel frontend.
+- Entry points:
+   - Public: `public/js/public/main.js` → output: `public/dist/public.bundle.js`
+   - Admin: `public/js/admin/main.js` → output: `public/dist/admin.bundle.js`
+- HTML yang dipakai:
+   - Public: `views/index.html` memuat `/dist/public.bundle.js`
+   - Admin: `views/admin.html` memuat `/dist/admin.bundle.js`
+- Jika mengubah file di `public/js/**`, jalankan `npm run build` agar perubahan tampil.
 
 ---
 
@@ -181,12 +175,14 @@ Saat ini admin panel (`/admin`) belum fully functional karena:
 # Check MongoDB connection
 # Check .env file
 # Run: npm install
+# Jika error EADDRINUSE (port 3000 dipakai), hentikan server lain
+# atau set PORT berbeda di .env lalu jalankan lagi
 ```
 
 ### Cannot login
 ```bash
 # Check if superadmin exists: npm run seed
-# Check credentials: onit / 7
+# Check credentials: adm / 7
 # Clear browser cookies
 ```
 
@@ -202,6 +198,7 @@ Saat ini admin panel (`/admin`) belum fully functional karena:
 # Must login first at /login
 # Check if account is active
 # Check role (admin or superadmin)
+# Pastikan sudah build frontend: npm run build
 ```
 
 ---
@@ -214,4 +211,4 @@ Saat ini admin panel (`/admin`) belum fully functional karena:
 ---
 
 **Server Running**: `http://localhost:3000`
-**Status**: ✅ Backend Complete | ⚠️ Frontend Partial
+**Status**: ✅ Backend Complete | ✅ Frontend Admin & Public Active (Vite bundles)

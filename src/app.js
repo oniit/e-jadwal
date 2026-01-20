@@ -7,7 +7,12 @@ const apiRoutes = require('./routes/api');
 const authRoutes = require('./routes/auth');
 
 const app = express();
+const fs = require('fs');
+const uploadsDir = path.join(__dirname, '..', 'uploads');
 
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
 app.use(cors());
 app.use(express.json());
 app.use(cookieParser());
