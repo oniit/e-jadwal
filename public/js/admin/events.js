@@ -1,14 +1,12 @@
-// Form Submit Handlers and Event Delegation
 const API_BASE = window.location.origin;
 
 import { openGedungModal } from './forms/gedung.js';
 import { openKendaraanModal } from './forms/kendaraan.js';
 import { openDriverModal } from './forms/driver.js';
 import { openAssetModal } from './forms/asset.js';
+import { resetGedungBarangForm } from './forms/gedung.js';
 
-// Setup Form Submit Handlers
 export function setupFormSubmitHandlers() {
-    // Gedung Form
     const gedungForm = document.getElementById('form-gedung');
     if (gedungForm) {
         gedungForm.addEventListener('submit', async (e) => {
@@ -30,7 +28,6 @@ export function setupFormSubmitHandlers() {
                 if (endDate) endDate.setHours(23, 59, 59, 999);
             }
             
-            // Get asset name from state
             const assetCode = document.getElementById('gedung-name').value;
             const state = window.__adminState || {};
             const assets = state.assets?.gedung || [];
@@ -73,7 +70,6 @@ export function setupFormSubmitHandlers() {
                 
                 alert(`Peminjaman gedung berhasil ${id ? 'diperbarui' : 'ditambahkan'}.`);
                 document.getElementById('modal-form-gedung').classList.add('hidden');
-                // Reload data
                 window.initializeApp?.();
             } catch (error) {
                 alert(`Gagal: ${error.message}`);
@@ -81,14 +77,12 @@ export function setupFormSubmitHandlers() {
         });
     }
     
-    // Kendaraan Form
     const kendaraanForm = document.getElementById('form-kendaraan');
     if (kendaraanForm) {
         kendaraanForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const id = document.getElementById('kendaraan-booking-id').value || null;
             
-            // Get asset name from state
             const assetCode = document.getElementById('kendaraan-name').value;
             const state = window.__adminState || {};
             const assets = state.assets?.kendaraan || [];
@@ -131,7 +125,6 @@ export function setupFormSubmitHandlers() {
                 
                 alert(`Peminjaman kendaraan berhasil ${id ? 'diperbarui' : 'ditambahkan'}.`);
                 document.getElementById('modal-form-kendaraan').classList.add('hidden');
-                // Reload data
                 window.initializeApp?.();
             } catch (error) {
                 alert(`Gagal: ${error.message}`);
@@ -139,7 +132,6 @@ export function setupFormSubmitHandlers() {
         });
     }
     
-    // Driver Form - Using direct reference + event delegation backup
     const driverForm = document.getElementById('form-driver');
     if (driverForm) {
         console.log('✅ Driver form found, attaching submit handler');
@@ -162,7 +154,6 @@ export function setupFormSubmitHandlers() {
                 phone: phoneField?.value?.trim() || ''
             };
             
-            // Include isActive only when editing (when id exists and status field is visible)
             if (id && statusField && !document.getElementById('driver-status-wrapper').classList.contains('hidden')) {
                 payload.isActive = statusField.value === 'true';
             }
@@ -193,7 +184,6 @@ export function setupFormSubmitHandlers() {
                 const result = await response.json();
                 console.log('✅ Response:', result);
                 
-                // Show generated password for new driver
                 if (!id && result.password) {
                     const passwordDisplay = document.getElementById('driver-generated-password-display');
                     const passwordText = document.getElementById('driver-generated-password-text');
@@ -203,7 +193,6 @@ export function setupFormSubmitHandlers() {
                         passwordText.textContent = result.password;
                         passwordDisplay.classList.remove('hidden');
                         
-                        // Copy button
                         if (copyBtn) {
                             copyBtn.onclick = (e) => {
                                 e.preventDefault();
@@ -229,7 +218,6 @@ export function setupFormSubmitHandlers() {
         console.warn('❌ Driver form not found');
     }
     
-    // Asset Form
     const assetForm = document.getElementById('form-asset');
     if (assetForm) {
         assetForm.addEventListener('submit', async (e) => {
@@ -242,7 +230,6 @@ export function setupFormSubmitHandlers() {
                 detail: document.getElementById('asset-detail').value.trim(),
             };
             
-            // Only include code if user provided one
             if (codeValue) {
                 payload.code = codeValue;
             }
@@ -274,7 +261,6 @@ export function setupFormSubmitHandlers() {
                 
                 alert(`Aset berhasil ${id ? 'diperbarui' : 'ditambahkan'}.`);
                 document.getElementById('modal-asset').classList.add('hidden');
-                // Reload data
                 window.initializeApp?.();
             } catch (error) {
                 alert(`Gagal: ${error.message}`);
@@ -283,9 +269,7 @@ export function setupFormSubmitHandlers() {
     }
 }
 
-// Setup Table Event Delegation
 export function setupTableEventDelegation(getAdminState) {
-    // Request List Table
     const requestTable = document.getElementById('request-list-table');
     if (requestTable) {
         requestTable.addEventListener('click', (e) => {
@@ -299,7 +283,6 @@ export function setupTableEventDelegation(getAdminState) {
         });
     }
 
-    // Gedung List Table
     const gedungTable = document.getElementById('gedung-list-table');
     if (gedungTable) {
         gedungTable.addEventListener('click', async (e) => {
@@ -344,7 +327,6 @@ export function setupTableEventDelegation(getAdminState) {
         });
     }
     
-    // Kendaraan List Table
     const kendaraanTable = document.getElementById('kendaraan-list-table');
     if (kendaraanTable) {
         kendaraanTable.addEventListener('click', async (e) => {
@@ -389,7 +371,6 @@ export function setupTableEventDelegation(getAdminState) {
         });
     }
     
-    // Driver List Table
     const driverTable = document.getElementById('driver-list-table');
     if (driverTable) {
         driverTable.addEventListener('click', async (e) => {
@@ -431,7 +412,6 @@ export function setupTableEventDelegation(getAdminState) {
         });
     }
     
-    // Master Asset Table
     const masterTable = document.getElementById('master-asset-table');
     if (masterTable) {
         masterTable.addEventListener('click', async (e) => {
@@ -474,13 +454,26 @@ export function setupTableEventDelegation(getAdminState) {
     }
 }
 
-// Setup Modal Close Buttons
 export function setupModalCloseHandlers() {
     document.querySelectorAll('.modal-backdrop').forEach(modal => {
         const closeBtn = modal.querySelector('.modal-close-btn');
         if (closeBtn) {
             closeBtn.addEventListener('click', () => {
                 modal.classList.add('hidden');
+            });
+        }
+        
+        const resetBtn = modal.querySelector('.modal-reset-btn');
+        if (resetBtn) {
+            resetBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const form = modal.querySelector('form');
+                if (form) {
+                    form.reset();
+                    if (form.id === 'form-gedung') {
+                        resetGedungBarangForm(form);
+                    }
+                }
             });
         }
         
@@ -492,7 +485,6 @@ export function setupModalCloseHandlers() {
     });
 }
 
-// Setup Add Buttons
 export function setupAddButtonHandlers() {
     const btnAddGedung = document.getElementById('btn-add-gedung');
     if (btnAddGedung) {

@@ -286,6 +286,8 @@ const resetRequestBarangChips = (state, elements) => {
     populateRequestBarangSelector(elements, state.assets.barang || []);
 };
 
+export { resetRequestBarangChips };
+
 const addRequestBarangToForm = (state, elements, assetCode, assetName, quantity) => {
     const form = elements.formRequest;
     if (!form.__barangItems) form.__barangItems = new Map();

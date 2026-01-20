@@ -5,7 +5,7 @@ import { showError } from './utils.js';
 import { initializeCalendar } from './calendar.js';
 import { populateAssetFilter, populateDriverFilter } from './filters.js';
 import { initializeModals, showDetailModalFull } from './modals.js';
-import { renderFormRequest, handleRequestSubmit } from './request-form.js';
+import { renderFormRequest, handleRequestSubmit, resetRequestBarangChips } from './request-form.js';
 
 let initialized = false;
 
@@ -65,7 +65,12 @@ async function initializePublicSchedule() {
     const resetReqBtn = elements.modalFormRequest?.querySelector('.modal-reset-btn');
     resetReqBtn?.addEventListener('click', (e) => {
         e.stopPropagation();
-        if (elements.formRequest) elements.formRequest.reset();
+        if (elements.formRequest) {
+            elements.formRequest.reset();
+            if (state.viewType === 'gedung') {
+                resetRequestBarangChips(state, elements);
+            }
+        }
     });
     elements.modalFormRequest?.addEventListener('click', (e) => {
         if (e.target === elements.modalFormRequest) elements.modalFormRequest.classList.add('hidden');

@@ -762,7 +762,12 @@
             const resetReqBtn = elements.modalFormRequest?.querySelector('.modal-reset-btn');
             resetReqBtn?.addEventListener('click', (e) => {
                 e.stopPropagation();
-                if (elements.formRequest) elements.formRequest.reset();
+                if (elements.formRequest) {
+                    elements.formRequest.reset();
+                    if (state.viewType === 'gedung') {
+                        resetRequestBarangChips();
+                    }
+                }
             });
             elements.modalFormRequest?.addEventListener('click', (e) => {
                 if (e.target === elements.modalFormRequest) elements.modalFormRequest.classList.add('hidden');

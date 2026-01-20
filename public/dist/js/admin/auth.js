@@ -44,6 +44,12 @@ export async function checkAuth() {
             if (kendaraanContent) {
                 kendaraanContent.classList.remove('hidden');
             }
+            
+            // Hide filter panel for supir
+            const filterKendaraan = document.getElementById('filters-kendaraan');
+            if (filterKendaraan) {
+                filterKendaraan.classList.add('hidden');
+            }
         }
         
         // Hide tabs for admin khusus - only show request and gedung
