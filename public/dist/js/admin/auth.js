@@ -16,11 +16,33 @@ export async function checkAuth() {
         const user = await response.json();
         displayUserName(user.name);
         
+        // Store user role globally for later use
+        window.__adminUserRole = user.role;
+        
         // Show admin tab only for superadmin
         if (user.role === 'superadmin') {
             const usersTab = document.getElementById('admin-tab-users');
             if (usersTab) {
                 usersTab.classList.remove('hidden');
+            }
+        }
+        
+        // Hide tabs for supir - only show kendaraan
+        if (user.role === 'supir') {
+            const tabContainer = document.querySelector('.flex.space-x-1.p-1.rounded-xl.bg-gray-100');
+            if (tabContainer) {
+                tabContainer.classList.add('hidden');
+            }
+            
+            // Hide all content except kendaraan
+            document.querySelectorAll('[id^="admin-content-"]').forEach(div => {
+                div.classList.add('hidden');
+            });
+            
+            // Show only kendaraan content
+            const kendaraanContent = document.getElementById('admin-content-kendaraan');
+            if (kendaraanContent) {
+                kendaraanContent.classList.remove('hidden');
             }
         }
         
@@ -98,6 +120,12 @@ export function setupModalHandlers() {
                 document.getElementById('profile-email').value = user.email || '';
                 document.getElementById('profile-phone').value = user.phone || '';
                 
+                // Hide status field - only visible when superadmin edits other users
+                const statusWrapper = document.getElementById('profile-status-wrapper');
+                if (statusWrapper) {
+                    statusWrapper.classList.add('hidden');
+                }
+                
                 profileModal.classList.remove('hidden');
             } catch (error) {
                 console.error('Load profile failed:', error);
@@ -135,9 +163,15 @@ export function setupProfileForm() {
             const phone = document.getElementById('profile-phone').value;
             const currentPassword = document.getElementById('profile-current-password').value;
             const newPassword = document.getElementById('profile-new-password').value;
+            const statusField = document.getElementById('profile-status');
             
             try {
                 const updateData = { name, email, phone };
+                
+                // Include isActive if status field is visible
+                if (statusField && !document.getElementById('profile-status-wrapper').classList.contains('hidden')) {
+                    updateData.isActive = statusField.value === 'true';
+                }
                 
                 if (newPassword && currentPassword) {
                     updateData.currentPassword = currentPassword;
@@ -184,6 +218,13 @@ function setupAdminUserForm() {
             document.getElementById('user-form-title').textContent = 'Tambah Admin';
             document.getElementById('user-admin-umum').checked = true;
             document.getElementById('user-managed-assets-wrapper').classList.add('hidden');
+            
+            // Hide status field for new user
+            const userStatusWrapper = document.getElementById('user-status-wrapper');
+            if (userStatusWrapper) {
+                userStatusWrapper.classList.add('hidden');
+            }
+            
             document.getElementById('modal-user-form').classList.remove('hidden');
         });
     }
@@ -199,6 +240,13 @@ function setupAdminUserForm() {
             adminType: document.querySelector('input[name="user-admin-type"]:checked')?.value || 'umum',
             managedAssetCodes: []
         };
+        
+        // Include isActive if status field is visible (editing existing user)
+        const userStatusWrapper = document.getElementById('user-status-wrapper');
+        const userStatusField = document.getElementById('user-status');
+        if (userId && userStatusWrapper && !userStatusWrapper.classList.contains('hidden') && userStatusField) {
+            payload.isActive = userStatusField.value === 'true';
+        }
         
         // Collect checked assets for admin khusus
         if (payload.adminType === 'khusus') {
@@ -315,6 +363,14 @@ export function setupAdminTableEvents() {
                 const adminType = admin.adminType || 'umum';
                 document.getElementById('user-admin-umum').checked = adminType === 'umum';
                 document.getElementById('user-admin-khusus').checked = adminType === 'khusus';
+                
+                // Show status field for editing
+                const userStatusWrapper = document.getElementById('user-status-wrapper');
+                const userStatusField = document.getElementById('user-status');
+                if (userStatusWrapper && userStatusField) {
+                    userStatusWrapper.classList.remove('hidden');
+                    userStatusField.value = admin.isActive ? 'true' : 'false';
+                }
                 
                 if (adminType === 'khusus') {
                     document.getElementById('user-managed-assets-wrapper').classList.remove('hidden');

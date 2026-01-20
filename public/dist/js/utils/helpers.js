@@ -3,9 +3,16 @@
 // Setup tab switching
 export function setupTabSwitching() {
     const tabButtons = document.querySelectorAll('.tab-btn');
+    const userRole = window.__adminUserRole;
     
     tabButtons.forEach(button => {
         button.addEventListener('click', (e) => {
+            // Supir users cannot switch tabs
+            if (userRole === 'supir') {
+                e.preventDefault();
+                return;
+            }
+            
             const tabId = button.id.replace('admin-tab-', '');
             
             // Remove active class from all buttons
@@ -25,6 +32,23 @@ export function setupTabSwitching() {
             }
         });
     });
+    
+    // For supir: show kendaraan and hide everything else
+    if (userRole === 'supir') {
+        document.querySelectorAll('[id^="admin-content-"]').forEach(div => {
+            div.classList.add('hidden');
+        });
+        const kendaraanContent = document.getElementById('admin-content-kendaraan');
+        if (kendaraanContent) {
+            kendaraanContent.classList.remove('hidden');
+        }
+    } else {
+        // Default tab for admin users: request
+        const requestTab = document.getElementById('admin-tab-request');
+        if (requestTab && !requestTab.classList.contains('hidden')) {
+            requestTab.click();
+        }
+    }
 }
 
 // Helper to safely format date for input[type=date]

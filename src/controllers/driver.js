@@ -1,6 +1,6 @@
 const fs = require('fs/promises');
 const path = require('path');
-const Driver = require('../models/driver');
+const User = require('../models/user');
 
 const seedDriversFromFile = async () => {
     const driversPath = path.join(__dirname, '..', 'data', 'drivers.json');
@@ -9,7 +9,16 @@ const seedDriversFromFile = async () => {
         const parsed = JSON.parse(raw);
         
         if (parsed.length) {
-            await Driver.insertMany(parsed);
+            const drivers = parsed.map(d => ({
+                username: d.code,
+                email: `${d.code}@supir.local`,
+                password: 'password123',
+                name: d.name,
+                phone: d.noTelp || '',
+                role: 'supir',
+                isActive: d.status === 'aktif'
+            }));
+            await User.insertMany(drivers);
         }
     } catch (err) {
         console.error('[seedDriversFromFile] Failed to seed drivers:', err.message);
@@ -18,11 +27,7 @@ const seedDriversFromFile = async () => {
 
 const getDrivers = async (_req, res) => {
     try {
-        let drivers = await Driver.find({}).lean();
-        // if (!drivers.length) {
-        //     await seedDriversFromFile();
-        //     drivers = await Driver.find({}).lean();
-        // }
+        let drivers = await User.find({ role: 'supir' }).lean();
         res.set('Cache-Control', 'no-store');
         return res.json(drivers);
     } catch (err) {
@@ -36,7 +41,7 @@ const getDriver = async (req, res) => {
         const { id } = req.params;
         if (!id) return res.status(400).json({ message: 'ID supir diperlukan.' });
 
-        const driver = await Driver.findById(id).lean();
+        const driver = await User.findOne({ _id: id, role: 'supir' }).lean();
         if (!driver) return res.status(404).json({ message: 'Supir tidak ditemukan.' });
 
         res.set('Cache-Control', 'no-store');
@@ -50,24 +55,34 @@ const getDriver = async (req, res) => {
 const createDriver = async (req, res) => {
     try {
         const payload = req.body;
-        if (!payload || !payload.code || !payload.name) {
-            return res.status(400).json({ message: 'code dan name wajib diisi.' });
+        if (!payload || !payload.username || !payload.name || !payload.email) {
+            return res.status(400).json({ message: 'username, name, dan email wajib diisi.' });
         }
+        
+        // Generate random password for new driver
+        const password = User.generatePassword();
 
-        const driver = new Driver({
-            code: payload.code,
+        const driver = new User({
+            username: payload.username,
+            email: payload.email,
+            password: password,
             name: payload.name,
-            noTelp: payload.noTelp || '',
-            detail: payload.detail || '',
-            status: payload.status || 'aktif'
+            phone: payload.phone || '',
+            role: 'supir',
+            isActive: true
         });
 
         const saved = await driver.save();
-        return res.status(201).json(saved);
+        
+        // Return password to frontend (only on creation)
+        const result = saved.toJSON();
+        result.password = password;
+        
+        return res.status(201).json(result);
     } catch (err) {
         console.error('[createDriver] Error:', err.message);
         if (err.code === 11000) {
-            return res.status(400).json({ message: 'Kode supir sudah digunakan.' });
+            return res.status(400).json({ message: 'Username atau email sudah digunakan.' });
         }
         return res.status(500).json({ message: 'Gagal menambahkan supir.' });
     }
@@ -81,13 +96,25 @@ const updateDriver = async (req, res) => {
         if (!id) return res.status(400).json({ message: 'ID supir diperlukan.' });
 
         const updateDoc = {};
-        if (payload.code !== undefined) updateDoc.code = payload.code;
+        if (payload.username !== undefined) updateDoc.username = payload.username;
         if (payload.name !== undefined) updateDoc.name = payload.name;
-        if (payload.noTelp !== undefined) updateDoc.noTelp = payload.noTelp;
-        if (payload.detail !== undefined) updateDoc.detail = payload.detail;
-        if (payload.status !== undefined) updateDoc.status = payload.status;
+        if (payload.phone !== undefined) updateDoc.phone = payload.phone;
+        if (payload.email !== undefined) updateDoc.email = payload.email;
+        if (payload.isActive !== undefined) updateDoc.isActive = payload.isActive;
+        if (payload.password !== undefined) {
+            const user = await User.findById(id);
+            if (user) {
+                user.password = payload.password;
+                await user.save();
+                return res.json(user);
+            }
+        }
 
-        const updated = await Driver.findByIdAndUpdate(id, updateDoc, { new: true, runValidators: true });
+        const updated = await User.findOneAndUpdate(
+            { _id: id, role: 'supir' },
+            updateDoc,
+            { new: true, runValidators: true }
+        );
 
         if (!updated) return res.status(404).json({ message: 'Supir tidak ditemukan.' });
 
@@ -95,7 +122,7 @@ const updateDriver = async (req, res) => {
     } catch (err) {
         console.error('[updateDriver] Error:', err.message);
         if (err.code === 11000) {
-            return res.status(400).json({ message: 'Kode supir sudah digunakan.' });
+            return res.status(400).json({ message: 'Username atau email sudah digunakan.' });
         }
         return res.status(500).json({ message: 'Gagal memperbarui supir.' });
     }
@@ -106,7 +133,7 @@ const deleteDriver = async (req, res) => {
         const { id } = req.params;
         if (!id) return res.status(400).json({ message: 'ID supir diperlukan.' });
 
-        const deleted = await Driver.findByIdAndDelete(id);
+        const deleted = await User.findOneAndDelete({ _id: id, role: 'supir' });
         if (!deleted) return res.status(404).json({ message: 'Supir tidak ditemukan.' });
 
         return res.json({ message: 'Supir berhasil dihapus.', deleted });

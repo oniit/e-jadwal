@@ -47,6 +47,14 @@ const isAdmin = (req, res, next) => {
   next();
 };
 
+// Check if user is admin or superadmin or supir (for booking access)
+const isAdminOrDriver = (req, res, next) => {
+  if (!['admin', 'superadmin', 'supir'].includes(req.user.role)) {
+    return res.status(403).json({ message: 'Akses ditolak.' });
+  }
+  next();
+};
+
 // Check first login status
 const checkFirstLogin = async (req, res, next) => {
   if (req.user.firstLogin) {
@@ -62,5 +70,6 @@ module.exports = {
   verifyToken,
   isSuperAdmin,
   isAdmin,
+  isAdminOrDriver,
   checkFirstLogin
 };

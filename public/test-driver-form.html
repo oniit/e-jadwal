@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Driver Form</title>
+    <style>
+        body { font-family: Arial; padding: 20px; }
+        .form-group { margin: 10px 0; }
+        input { padding: 8px; width: 300px; }
+        button { padding: 10px 20px; background: #166a4c; color: white; border: none; cursor: pointer; }
+        #log { background: #f0f0f0; padding: 10px; margin-top: 20px; height: 300px; overflow-y: auto; border: 1px solid #ccc; font-family: monospace; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <h1>Driver Form Test</h1>
+    <form id="test-form">
+        <div class="form-group">
+            <label>Username:</label><br>
+            <input type="text" id="username" value="testdriver001" required>
+        </div>
+        <div class="form-group">
+            <label>Name:</label><br>
+            <input type="text" id="name" value="Test Driver" required>
+        </div>
+        <div class="form-group">
+            <label>Email:</label><br>
+            <input type="email" id="email" value="testdriver@test.com" required>
+        </div>
+        <div class="form-group">
+            <label>Phone:</label><br>
+            <input type="tel" id="phone" value="081234567890">
+        </div>
+        <button type="submit">Submit Test Form</button>
+    </form>
+
+    <div id="log"></div>
+
+    <script>
+        const log = (msg) => {
+            const logEl = document.getElementById('log');
+            logEl.innerHTML += new Date().toLocaleTimeString() + ' - ' + msg + '\n';
+            logEl.scrollTop = logEl.scrollHeight;
+        };
+
+        document.getElementById('test-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            log('🚀 Form submitted');
+
+            const payload = {
+                username: document.getElementById('username').value,
+                name: document.getElementById('name').value,
+                email: document.getElementById('email').value,
+                phone: document.getElementById('phone').value
+            };
+
+            log('Payload: ' + JSON.stringify(payload));
+
+            try {
+                log('📡 Sending POST request to /api/drivers');
+                const response = await fetch('/api/drivers', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload),
+                    credentials: 'include'
+                });
+
+                log('📦 Response status: ' + response.status);
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    log('❌ Error: ' + error.message);
+                    return;
+                }
+
+                const result = await response.json();
+                log('✅ Success: ' + JSON.stringify(result));
+                if (result.password) {
+                    log('🔐 Generated Password: ' + result.password);
+                }
+            } catch (error) {
+                log('⚠️  Exception: ' + error.message);
+            }
+        });
+
+        log('✓ Test page loaded');
+    </script>
+</body>
+</html>

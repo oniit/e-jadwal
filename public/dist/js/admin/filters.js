@@ -22,6 +22,7 @@ export function populateFilterOptions(state) {
     }
     
     const filterKendaraanAsset = document.getElementById('filter-kendaraan-asset');
+    const filterKendaraanDriver = document.getElementById('filter-kendaraan-driver');
     if (filterKendaraanAsset && state.assets && state.assets.kendaraan) {
         filterKendaraanAsset.innerHTML = '<option value="all">Semua Kendaraan</option>';
         state.assets.kendaraan.forEach(asset => {
@@ -29,17 +30,14 @@ export function populateFilterOptions(state) {
         });
         console.log('✅ Populated kendaraan assets:', state.assets.kendaraan.length);
     }
-    
-    const filterKendaraanDriver = document.getElementById('filter-kendaraan-driver');
+
     if (filterKendaraanDriver && state.allDrivers && state.allDrivers.length > 0) {
-        const activeDrivers = state.allDrivers.filter(d => d.status === 'aktif');
+        const activeDrivers = state.allDrivers.filter(d => d.isActive);
         filterKendaraanDriver.innerHTML = '<option value="all">Semua Supir</option>';
         activeDrivers.forEach(driver => {
             filterKendaraanDriver.innerHTML += `<option value="${driver._id}">${driver.name}</option>`;
         });
         console.log('✅ Populated drivers:', activeDrivers.length);
-    } else {
-        console.log('❌ Could not populate drivers');
     }
 }
 
@@ -101,7 +99,7 @@ export function applyAdminFilters(type, state, filterData) {
     const assetInput = filterPanel.querySelector(`#filter-${type}-asset`);
     const barangInput = type === 'gedung' ? filterPanel.querySelector('#filter-gedung-barang') : null;
     const searchInput = filterPanel.querySelector(`#filter-${type}-search`);
-    const driverInput = (type === 'kendaraan') ? filterPanel.querySelector(`#filter-${type}-driver`) : null;
+    const driverInput = (type === 'kendaraan') ? filterPanel.querySelector('#filter-kendaraan-driver') : null;
     
     const month = monthInput ? monthInput.value : '';
     const asset = assetInput ? assetInput.value : 'all';
@@ -135,7 +133,7 @@ export function filterData(bookings, filters) {
             const hasBarang = Array.isArray(b.borrowedItems) && b.borrowedItems.some(it => it.assetCode === filters.barang);
             if (!hasBarang) return false;
         }
-        
+
         if (filters.driver && filters.driver !== 'all') {
             const driverId = typeof b.driver === 'object' && b.driver ? b.driver._id : b.driver;
             if (!driverId || driverId !== filters.driver) return false;
@@ -234,7 +232,7 @@ export function applyDriverFilters(state) {
     const source = Array.isArray(state.allDrivers) ? state.allDrivers : [];
 
     const filtered = !query ? source : source.filter(driver => {
-        const fields = [driver.code, driver.name, driver.noTelp, driver.detail]
+        const fields = [driver.username, driver.name, driver.phone, driver.email]
             .map(val => (val || '').toString().toLowerCase());
         return fields.some(text => text.includes(query));
     });

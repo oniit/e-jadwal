@@ -139,28 +139,45 @@ export function setupFormSubmitHandlers() {
         });
     }
     
-    // Driver Form
+    // Driver Form - Using direct reference + event delegation backup
     const driverForm = document.getElementById('form-driver');
     if (driverForm) {
-        driverForm.addEventListener('submit', async (e) => {
+        console.log('✅ Driver form found, attaching submit handler');
+        const handleDriverSubmit = async (e) => {
             e.preventDefault();
+            console.log('🚗 Driver form submitted');
             const id = document.getElementById('driver-id').value || null;
+            const usernameField = document.getElementById('driver-username');
+            const nameField = document.getElementById('driver-name');
+            const emailField = document.getElementById('driver-email');
+            const phoneField = document.getElementById('driver-phone');
+            const statusField = document.getElementById('driver-status');
+            
+            console.log('Fields:', { usernameField: !!usernameField, nameField: !!nameField, emailField: !!emailField, phoneField: !!phoneField });
+            
             const payload = {
-                code: document.getElementById('driver-code').value.trim(),
-                name: document.getElementById('driver-name').value.trim(),
-                noTelp: document.getElementById('driver-no-telp').value.trim(),
-                detail: document.getElementById('driver-detail').value.trim(),
-                status: document.getElementById('driver-status').value || 'aktif'
+                username: usernameField?.value?.trim() || '',
+                name: nameField?.value?.trim() || '',
+                email: emailField?.value?.trim() || '',
+                phone: phoneField?.value?.trim() || ''
             };
             
-            if (!payload.code || !payload.name) {
-                alert('Kode dan name supir wajib diisi.');
+            // Include isActive only when editing (when id exists and status field is visible)
+            if (id && statusField && !document.getElementById('driver-status-wrapper').classList.contains('hidden')) {
+                payload.isActive = statusField.value === 'true';
+            }
+            
+            console.log('Payload:', payload);
+            
+            if (!payload.username || !payload.name || !payload.email) {
+                alert('Username, nama, dan email supir wajib diisi.');
                 return;
             }
             
             try {
                 const method = id ? 'PUT' : 'POST';
                 const url = id ? `${API_BASE}/api/drivers/${id}` : `${API_BASE}/api/drivers`;
+                console.log(`Sending ${method} request to ${url}`);
                 const response = await fetch(url, {
                     method,
                     headers: { 'Content-Type': 'application/json' },
@@ -173,14 +190,43 @@ export function setupFormSubmitHandlers() {
                     throw new Error(error.message || 'Gagal menyimpan');
                 }
                 
-                alert(`Supir berhasil ${id ? 'diperbarui' : 'ditambahkan'}.`);
-                document.getElementById('modal-form-driver').classList.add('hidden');
-                // Reload data
-                window.initializeApp?.();
+                const result = await response.json();
+                console.log('✅ Response:', result);
+                
+                // Show generated password for new driver
+                if (!id && result.password) {
+                    const passwordDisplay = document.getElementById('driver-generated-password-display');
+                    const passwordText = document.getElementById('driver-generated-password-text');
+                    const copyBtn = document.getElementById('driver-copy-password-btn');
+                    
+                    if (passwordDisplay && passwordText) {
+                        passwordText.textContent = result.password;
+                        passwordDisplay.classList.remove('hidden');
+                        
+                        // Copy button
+                        if (copyBtn) {
+                            copyBtn.onclick = (e) => {
+                                e.preventDefault();
+                                navigator.clipboard.writeText(result.password);
+                                alert('Password disalin ke clipboard');
+                            };
+                        }
+                    }
+                } else {
+                    alert(`Supir berhasil ${id ? 'diperbarui' : 'ditambahkan'}.`);
+                    document.getElementById('modal-form-driver').classList.add('hidden');
+                    // Reload data
+                    window.initializeApp?.();
+                }
             } catch (error) {
+                console.error('❌ Error:', error);
                 alert(`Gagal: ${error.message}`);
             }
-        });
+        };
+        
+        driverForm.addEventListener('submit', handleDriverSubmit);
+    } else {
+        console.warn('❌ Driver form not found');
     }
     
     // Asset Form

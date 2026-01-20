@@ -17,6 +17,11 @@ function getAllowedAssetCodes(user) {
     return user.managedAssetCodes || [];
   }
   
+  // Supir can't access assets directly
+  if (user.role === 'supir') {
+    return [];
+  }
+  
   return [];
 }
 
@@ -34,6 +39,20 @@ function canManageAsset(user, assetCode) {
   if (user.role === 'admin' && user.adminType === 'khusus') {
     return (user.managedAssetCodes || []).includes(assetCode);
   }
+  
+  // Supir cannot manage assets
+  if (user.role === 'supir') return false;
+  
+  return false;
+}
+
+// Helper to check if user can create drivers
+function canCreateDriver(user) {
+  if (!user) return false;
+  
+  // Only superadmin and admin umum can create drivers
+  if (user.role === 'superadmin') return true;
+  if (user.role === 'admin' && user.adminType === 'umum') return true;
   
   return false;
 }
@@ -59,5 +78,6 @@ function applyAssetFilter(user, query = {}) {
 module.exports = {
   getAllowedAssetCodes,
   canManageAsset,
+  canCreateDriver,
   applyAssetFilter
 };

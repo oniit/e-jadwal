@@ -102,7 +102,7 @@ export const ui = {
         if (!tableBody) return;
         
         tableBody.innerHTML = '';
-        const sorted = [...drivers].sort((a, b) => (a.code || '').localeCompare(b.code || ''));
+        const sorted = [...drivers].sort((a, b) => (a.username || '').localeCompare(b.username || ''));
         
         if (sorted.length === 0) {
             tableBody.innerHTML = `<tr><td colspan="6" class="px-6 py-3 text-center text-gray-500">Tidak ada data</td></tr>`;
@@ -111,13 +111,13 @@ export const ui = {
         
         tableBody.innerHTML = sorted.map(d => {
             const cellClass = "px-6 py-3 whitespace-nowrap text-sm text-gray-500";
-            const statusClass = d.status === 'aktif' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600';
-            const statusLabel = d.status === 'aktif' ? 'Aktif' : 'Tidak Aktif';
+            const statusClass = d.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600';
+            const statusLabel = d.isActive ? 'Aktif' : 'Tidak Aktif';
             return `<tr class="cursor-pointer" data-driver-id="${d._id}">
-                <td class="${cellClass}">${d.code || '-'}</td>
+                <td class="${cellClass}">${d.username || '-'}</td>
                 <td class="${cellClass}">${d.name || '-'}</td>
-                <td class="${cellClass}">${d.noTelp || '-'}</td>
-                <td class="${cellClass}">${d.detail || '-'}</td>
+                <td class="${cellClass}">${d.phone || '-'}</td>
+                <td class="${cellClass}">${d.email || '-'}</td>
                 <td class="${cellClass}">
                     <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold ${statusClass}">${statusLabel}</span>
                 </td>

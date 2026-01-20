@@ -22,7 +22,7 @@ const requestSchema = new Schema({
             quantity: { type: Number, required: true, min: 1 }
         }
     ],
-    driver: { type: Schema.Types.ObjectId, ref: 'Driver' },
+    driver: { type: Schema.Types.ObjectId, ref: 'User' },
     destination: String,
     letterFile: { type: String }, // filename atau path ke file surat
     rejectionReason: String,

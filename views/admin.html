@@ -254,17 +254,17 @@
                             <table class="min-w-full divide-y divide-gray-200 rounded-lg overflow-hidden text-xs">
                                 <thead class="bg-gray-50">
                                     <tr>
-                                        <th class="table-header sortable" data-sort="code">
-                                            Kode <span class="sort-icon"><i class="fa fa-sort"></i></span>
+                                        <th class="table-header sortable" data-sort="username">
+                                            Username <span class="sort-icon"><i class="fa fa-sort"></i></span>
                                         </th>
                                         <th class="table-header sortable" data-sort="name">
                                             Nama <span class="sort-icon"><i class="fa fa-sort"></i></span>
                                         </th>
-                                        <th class="table-header sortable" data-sort="no-telp">
+                                        <th class="table-header sortable" data-sort="phone">
                                             No. Telepon <span class="sort-icon"><i class="fa fa-sort"></i></span>
                                         </th>
-                                        <th class="table-header sortable" data-sort="detail">
-                                            Detail <span class="sort-icon"><i class="fa fa-sort"></i></span>
+                                        <th class="table-header sortable" data-sort="email">
+                                            Email <span class="sort-icon"><i class="fa fa-sort"></i></span>
                                         </th>
                                         <th class="table-header sortable" data-sort="status">
                                             Status <span class="sort-icon"><i class="fa fa-sort"></i></span>
@@ -353,30 +353,42 @@
                     <h3 id="driver-form-title" class="text-2xl font-bold mb-4">Tambah Supir</h3>
                     <form id="form-driver" class="space-y-4">
                         <input type="hidden" id="driver-id">
+                        <div id="driver-generated-password-display" class="hidden bg-yellow-50 border-2 border-yellow-400 p-4 rounded-lg">
+                            <p class="font-semibold text-yellow-800 mb-2">Password Auto-Generated:</p>
+                            <div class="flex items-center gap-2">
+                                <code id="driver-generated-password-text" class="flex-1 bg-white px-3 py-2 rounded border text-lg font-mono"></code>
+                                <button type="button" id="driver-copy-password-btn" class="px-3 py-2 bg-green-600 text-white rounded hover:bg-green-700">
+                                    <i class="fas fa-copy"></i> Copy
+                                </button>
+                            </div>
+                            <p class="text-sm text-yellow-700 mt-2">
+                                <i class="fas fa-exclamation-triangle"></i> Password ini hanya ditampilkan sekali. Pastikan untuk menyalin dan memberikannya kepada supir baru.
+                            </p>
+                        </div>
                         <div>
-                            <label for="driver-code" class="form-label">Kode Supir</label>
-                            <input type="text" id="driver-code" required class="form-input" placeholder="e.g., DRV001">
+                            <label for="driver-username" class="form-label">Username</label>
+                            <input type="text" id="driver-username" required class="form-input" placeholder="e.g., supir001">
                         </div>
                         <div>
                             <label for="driver-name" class="form-label">Nama Lengkap</label>
                             <input type="text" id="driver-name" required class="form-input" placeholder="Nama supir">
                         </div>
                         <div>
-                            <label for="driver-no-telp" class="form-label">No. Telepon</label>
-                            <input type="tel" id="driver-no-telp" class="form-input" placeholder="08xx xxxx xxxx">
+                            <label for="driver-email" class="form-label">Email</label>
+                            <input type="email" id="driver-email" required class="form-input" placeholder="supir@example.com">
                         </div>
                         <div>
-                            <label for="driver-detail" class="form-label">Detail / Catatan</label>
-                            <textarea id="driver-detail" rows="2" class="form-input" placeholder="Catatan tambahan..."></textarea>
+                            <label for="driver-phone" class="form-label">No. Telepon</label>
+                            <input type="tel" id="driver-phone" class="form-input" placeholder="08xx xxxx xxxx">
                         </div>
-                        <div>
-                            <label for="driver-status" class="form-label">Status</label>
+                        <div id="driver-status-wrapper" class="hidden">
+                            <label for="driver-status" class="form-label">Status Aktif</label>
                             <select id="driver-status" class="form-input">
-                                <option value="aktif">Aktif</option>
-                                <option value="tidak aktif">Tidak Aktif</option>
+                                <option value="true">Aktif</option>
+                                <option value="false">Tidak Aktif</option>
                             </select>
                         </div>
-                        <button type="submit" class="w-full add-btn save-btn">Simpan Supir</button>
+                        <button type="submit" class="w-full add-btn save-btn" onclick="console.log('🔘 Button clicked!'); return true;">Simpan Supir</button>
                     </form>
                 </div>
             </div>
@@ -401,6 +413,13 @@
                         <div>
                             <label for="profile-phone" class="form-label">No. Telepon</label>
                             <input type="tel" id="profile-phone" class="form-input">
+                        </div>
+                        <div id="profile-status-wrapper" class="hidden">
+                            <label for="profile-status" class="form-label">Status Aktif</label>
+                            <select id="profile-status" class="form-input">
+                                <option value="true">Aktif</option>
+                                <option value="false">Tidak Aktif</option>
+                            </select>
                         </div>
                         <hr>
                         <h4 class="font-semibold">Ubah Password (Opsional)</h4>
@@ -450,6 +469,13 @@
                         <div>
                             <label for="user-phone" class="form-label">No. Telepon</label>
                             <input type="tel" id="user-phone" class="form-input">
+                        </div>
+                        <div id="user-status-wrapper" class="hidden">
+                            <label for="user-status" class="form-label">Status Aktif</label>
+                            <select id="user-status" class="form-input">
+                                <option value="true">Aktif</option>
+                                <option value="false">Tidak Aktif</option>
+                            </select>
                         </div>
                         <div>
                             <label class="form-label">Tipe Admin</label>

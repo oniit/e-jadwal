@@ -15,6 +15,14 @@ const getAllBookings = async (req, res) => {
             query = { assetCode: { $in: allowedCodes } };
         }
         
+        // Apply filtering for supir - only show bookings assigned to them
+        if (req.user && req.user.role === 'supir') {
+            query = { 
+                driver: req.user._id,
+                bookingType: 'kendaraan'
+            };
+        }
+        
         const bookings = await Booking.find(query).populate('driver');
         res.json(bookings);
     } catch (err) {
@@ -70,8 +78,9 @@ const checkConflict = async (bookingData, id = null) => {
         if (conflictingBooking.assetCode === assetCode) {
             return `Aset "${conflictingBooking.assetName}" sudah dipesan pada rentang waktu tersebut.`;
         }
-        if (conflictingBooking.driver && String(conflictingBooking.driver._id) === String(driver)) {
-            return `Supir "${conflictingBooking.driver.name}" sudah bertugas pada rentang waktu tersebut.`;
+        if (conflictingBooking.driver && conflictingBooking.driver._id && String(conflictingBooking.driver._id) === String(driver)) {
+            const driverName = conflictingBooking.driver.name || conflictingBooking.driver.username || 'Supir';
+            return `Supir "${driverName}" sudah bertugas pada rentang waktu tersebut.`;
         }
     }
     return null;

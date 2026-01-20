@@ -127,7 +127,7 @@ export function populateFormSelectOptions(state) {
 
     const supirSelect = document.getElementById('kendaraan-supir');
     if (supirSelect) {
-        const activeDrivers = drivers.filter(d => d.status === 'aktif');
+        const activeDrivers = drivers.filter(d => d.isActive);
         supirSelect.innerHTML = '<option value="">Tanpa Supir</option>' +
             activeDrivers.map(d => `<option value="${d._id}">${d.name}</option>`).join('');
     }

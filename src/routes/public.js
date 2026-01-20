@@ -3,7 +3,7 @@ const router = express.Router();
 const requestRoutes = require('./request');
 const Booking = require('../models/booking');
 const Asset = require('../models/asset');
-const Driver = require('../models/driver');
+const User = require('../models/user');
 const Request = require('../models/request');
 
 // Public routes - only requests for calendar view
@@ -47,7 +47,7 @@ router.get('/assets', async (req, res) => {
 
 router.get('/drivers', async (req, res) => {
     try {
-        const drivers = await Driver.find({});
+        const drivers = await User.find({ role: 'supir' });
         res.json(drivers);
     } catch (error) {
         res.status(500).json({ message: error.message });

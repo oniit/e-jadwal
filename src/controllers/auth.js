@@ -160,13 +160,16 @@ exports.changePasswordFirstLogin = async (req, res) => {
 // Update Profile
 exports.updateProfile = async (req, res) => {
   try {
-    const { name, email, phone, currentPassword, newPassword } = req.body;
+    const { name, email, phone, currentPassword, newPassword, isActive } = req.body;
     const user = await User.findById(req.user._id);
 
     // Update basic info
     if (name) user.name = name;
     if (email) user.email = email;
     if (phone !== undefined) user.phone = phone;
+    
+    // Only superadmin can update isActive status (not in profile, but in user management)
+    // Regular users and supir cannot change their own isActive status
 
     // Update password if provided
     if (newPassword) {
@@ -196,7 +199,8 @@ exports.updateProfile = async (req, res) => {
         email: user.email,
         name: user.name,
         phone: user.phone,
-        role: user.role
+        role: user.role,
+        isActive: user.isActive
       }
     });
   } catch (error) {
@@ -217,7 +221,8 @@ exports.getCurrentUser = async (req, res) => {
       role: req.user.role,
       adminType: req.user.adminType,
       managedAssetCodes: req.user.managedAssetCodes,
-      firstLogin: req.user.firstLogin
+      firstLogin: req.user.firstLogin,
+      isActive: req.user.isActive
     });
   } catch (error) {
     console.error('Get current user error:', error);

@@ -23,7 +23,12 @@ body {
 
 .save-btn {
     background-color: #166a4c !important;
-    height: 2.2rem;
+    height: 2.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.95rem;
+    padding: 0;
 }
 .save-btn:hover {
     opacity: 0.9;
