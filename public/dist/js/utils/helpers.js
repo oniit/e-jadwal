@@ -66,3 +66,21 @@ export function formatDateForInput(dateStr) {
 export function getAdminState() {
     return window.__adminState || null;
 }
+
+// Normalize driver API payload into a flat array regardless of shape
+export function normalizeDrivers(drivers) {
+    if (Array.isArray(drivers)) {
+        return drivers;
+    }
+    if (drivers && Array.isArray(drivers.data)) {
+        return drivers.data;
+    }
+    if (drivers && Array.isArray(drivers.drivers)) {
+        return drivers.drivers;
+    }
+    if (drivers && typeof drivers === 'object') {
+        const values = Object.values(drivers).filter(v => v && typeof v === 'object');
+        if (values.length) return values;
+    }
+    return [];
+}

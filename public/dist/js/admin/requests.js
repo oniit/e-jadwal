@@ -1,10 +1,12 @@
 // Request handling functions
 import { api } from './api.js';
+import { normalizeDrivers } from '../utils/helpers.js';
 
-export async function handleApproveRequest(id, driver = 'Tanpa Supir', loadAndRender, applyRequestFilters) {
+export async function handleApproveRequest(id, driver = null, loadAndRender, applyRequestFilters) {
     if (!confirm('Setujui request ini?')) return;
     try {
-        await api.approveRequest(id, 'admin', driver || 'Tanpa Supir');
+        const driverPayload = driver ? driver : null; // send null when tanpa supir
+        await api.approveRequest(id, 'admin', driverPayload);
         alert('Request disetujui dan booking dibuat.');
         const modalRequestAction = document.getElementById('modal-request-action');
         if (modalRequestAction) modalRequestAction.classList.add('hidden');
@@ -30,10 +32,7 @@ export async function handleRejectRequest(id, loadAndRender, applyRequestFilters
     }
 }
 
-export function showRequestDetail(request, state, loadAndRender, applyRequestFilters) {
-    console.log('📋 showRequestDetail called with:', request);
-    console.log('📎 letterFile:', request.letterFile);
-    
+export async function showRequestDetail(request, state, loadAndRender, applyRequestFilters) {
     const start = new Date(request.startDate);
     const end = new Date(request.endDate);
     
@@ -101,17 +100,36 @@ export function showRequestDetail(request, state, loadAndRender, applyRequestFil
     }
     
     if (request.status === 'pending') {
-        const drivers = Array.isArray(state.allDrivers) ? state.allDrivers : [];
-        const activeDrivers = drivers.filter(d => d.status === 'aktif');
-        const driverSelectHtml = request.bookingType === 'kendaraan' ? `
-            <div class="mt-3">
-                <label for="req-approve-supir" class="form-label text-sm font-semibold">Pilih Supir</label>
-                <select id="req-approve-supir" class="form-input">
-                    <option value="">Tanpa Supir</option>
-                    ${activeDrivers.map(d => `<option value="${d._id}">${d.name}</option>`).join('')}
-                </select>
-            </div>
-        ` : '';
+        let driverSelectHtml = '';
+        
+        // Only show driver selection for vehicle (kendaraan) requests
+        if (request.bookingType === 'kendaraan') {
+            let drivers = normalizeDrivers(state.allDrivers);
+
+            // Fallback fetch if state is empty (e.g., driver load failed earlier)
+            if (!drivers.length) {
+                try {
+                    const fetchedRaw = await api.fetchDrivers();
+                    drivers = normalizeDrivers(fetchedRaw);
+                    state.allDrivers = drivers;
+                } catch (err) {
+                    console.error('Gagal memuat daftar supir:', err);
+                }
+            }
+
+            // Filter active drivers (isActive === true or undefined/null)
+            const activeDrivers = drivers.filter(d => d.isActive === true || d.isActive === undefined || d.isActive === null);
+            
+            driverSelectHtml = `
+                <div class="mt-3">
+                    <label for="req-approve-supir" class="form-label text-sm font-semibold">Pilih Supir</label>
+                    <select id="req-approve-supir" class="form-input">
+                        <option value="">Tanpa Supir</option>
+                        ${activeDrivers.map(d => `<option value="${d._id}">${d.name}</option>`).join('')}
+                    </select>
+                </div>
+            `;
+        }
 
         detailHtml += `
             ${driverSelectHtml}
@@ -145,7 +163,7 @@ export function showRequestDetail(request, state, loadAndRender, applyRequestFil
                     approveBtn.parentNode.replaceChild(newApproveBtn, approveBtn);
                     newApproveBtn.addEventListener('click', () => {
                         const driverSelect = document.getElementById('req-approve-supir');
-                        const selectedDriver = driverSelect ? (driverSelect.value || '') : '';
+                        const selectedDriver = driverSelect ? (driverSelect.value || null) : null;
                         handleApproveRequest(request._id, selectedDriver, loadAndRender, applyRequestFilters);
                     });
                 }

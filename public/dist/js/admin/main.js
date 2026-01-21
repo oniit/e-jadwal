@@ -116,8 +116,6 @@ function initializeApp() {
                 () => applyDriverFilters(state),
                 () => applyMasterFilters(state)
             );
-            
-            console.log('✅ All data loaded and rendered');
         } catch (error) {
             console.error('Error loading data:', error);
         }

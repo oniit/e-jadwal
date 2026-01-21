@@ -1,5 +1,6 @@
 // Filter Management Functions
 import { ui } from './ui.js';
+import { normalizeDrivers } from '../utils/helpers.js';
 
 // Populate filter dropdown options
 export function populateFilterOptions(state) {
@@ -9,7 +10,6 @@ export function populateFilterOptions(state) {
         state.assets.gedung.forEach(asset => {
             filterGedungAsset.innerHTML += `<option value="${asset.code}">${asset.name}</option>`;
         });
-        console.log('✅ Populated gedung assets:', state.assets.gedung.length);
     }
     
     const filterGedungBarang = document.getElementById('filter-gedung-barang');
@@ -18,7 +18,6 @@ export function populateFilterOptions(state) {
         state.assets.barang.forEach(asset => {
             filterGedungBarang.innerHTML += `<option value="${asset.code}">${asset.name}</option>`;
         });
-        console.log('✅ Populated barang:', state.assets.barang.length);
     }
     
     const filterKendaraanAsset = document.getElementById('filter-kendaraan-asset');
@@ -28,16 +27,16 @@ export function populateFilterOptions(state) {
         state.assets.kendaraan.forEach(asset => {
             filterKendaraanAsset.innerHTML += `<option value="${asset.code}">${asset.name}</option>`;
         });
-        console.log('✅ Populated kendaraan assets:', state.assets.kendaraan.length);
     }
 
-    if (filterKendaraanDriver && state.allDrivers && state.allDrivers.length > 0) {
-        const activeDrivers = state.allDrivers.filter(d => d.isActive);
+    const driverSource = normalizeDrivers(state.allDrivers);
+
+    if (filterKendaraanDriver && driverSource && driverSource.length > 0) {
+        const activeDrivers = driverSource.filter(d => d.isActive !== false);
         filterKendaraanDriver.innerHTML = '<option value="all">Semua Supir</option>';
         activeDrivers.forEach(driver => {
             filterKendaraanDriver.innerHTML += `<option value="${driver._id}">${driver.name}</option>`;
         });
-        console.log('✅ Populated drivers:', activeDrivers.length);
     }
 }
 
@@ -88,10 +87,8 @@ export function setupFilterListeners(applyAdminFilters, applyRequestFilters) {
 
 // Apply filters for admin tabs (gedung/kendaraan)
 export function applyAdminFilters(type, state, filterData) {
-    console.log(`🔍 applyAdminFilters called for type: ${type}`);
     const filterPanel = document.getElementById(`filters-${type}`);
     if (!filterPanel) {
-        console.warn(`⚠️  Filter panel not found for type: ${type}`);
         return;
     }
     
@@ -107,10 +104,7 @@ export function applyAdminFilters(type, state, filterData) {
     const searchQuery = searchInput ? searchInput.value.trim().toLowerCase() : '';
     const driver = driverInput ? driverInput.value : 'all';
     
-    console.log(`📋 Filter values - month: ${month}, asset: ${asset}, barang: ${barang}, driver: ${driver}, search: ${searchQuery}`);
-    console.log(`📦 state.allBookingsCache has ${state.allBookingsCache.length} items`);
     const bookingsToFilter = filterData(state.allBookingsCache, { type, month, asset, barang, driver, searchQuery });
-    console.log(`🎯 Filtered to ${bookingsToFilter.length} bookings, rendering...`);
     ui.renderBookingList(type, bookingsToFilter);
 }
 
@@ -166,10 +160,8 @@ export function filterData(bookings, filters) {
 
 // Apply filters for request tab
 export function applyRequestFilters(state) {
-    console.log('🔍 applyRequestFilters called');
     const filterPanel = document.getElementById('filters-request');
     if (!filterPanel) {
-        console.warn('⚠️  Request filter panel not found');
         return;
     }
     const typeInput = filterPanel.querySelector('#filter-request-type');

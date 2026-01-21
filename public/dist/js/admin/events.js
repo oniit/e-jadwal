@@ -134,18 +134,14 @@ export function setupFormSubmitHandlers() {
     
     const driverForm = document.getElementById('form-driver');
     if (driverForm) {
-        console.log('✅ Driver form found, attaching submit handler');
         const handleDriverSubmit = async (e) => {
             e.preventDefault();
-            console.log('🚗 Driver form submitted');
             const id = document.getElementById('driver-id').value || null;
             const usernameField = document.getElementById('driver-username');
             const nameField = document.getElementById('driver-name');
             const emailField = document.getElementById('driver-email');
             const phoneField = document.getElementById('driver-phone');
             const statusField = document.getElementById('driver-status');
-            
-            console.log('Fields:', { usernameField: !!usernameField, nameField: !!nameField, emailField: !!emailField, phoneField: !!phoneField });
             
             const payload = {
                 username: usernameField?.value?.trim() || '',
@@ -158,8 +154,6 @@ export function setupFormSubmitHandlers() {
                 payload.isActive = statusField.value === 'true';
             }
             
-            console.log('Payload:', payload);
-            
             if (!payload.username || !payload.name || !payload.email) {
                 alert('Username, nama, dan email supir wajib diisi.');
                 return;
@@ -168,7 +162,6 @@ export function setupFormSubmitHandlers() {
             try {
                 const method = id ? 'PUT' : 'POST';
                 const url = id ? `${API_BASE}/api/drivers/${id}` : `${API_BASE}/api/drivers`;
-                console.log(`Sending ${method} request to ${url}`);
                 const response = await fetch(url, {
                     method,
                     headers: { 'Content-Type': 'application/json' },
@@ -182,7 +175,6 @@ export function setupFormSubmitHandlers() {
                 }
                 
                 const result = await response.json();
-                console.log('✅ Response:', result);
                 
                 if (!id && result.password) {
                     const passwordDisplay = document.getElementById('driver-generated-password-display');
@@ -272,13 +264,13 @@ export function setupFormSubmitHandlers() {
 export function setupTableEventDelegation(getAdminState) {
     const requestTable = document.getElementById('request-list-table');
     if (requestTable) {
-        requestTable.addEventListener('click', (e) => {
+        requestTable.addEventListener('click', async (e) => {
             const row = e.target.closest('tr[data-request-id]');
             if (!row) return;
             const state = getAdminState();
             const req = state?.allRequestsCache?.find(r => r._id === row.dataset.requestId);
             if (req && window.showRequestDetail) {
-                window.showRequestDetail(req);
+                await window.showRequestDetail(req);
             }
         });
     }
@@ -300,7 +292,6 @@ export function setupTableEventDelegation(getAdminState) {
                         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                     }
                     const booking = await response.json();
-                    console.log('Booking data fetched:', booking);
                     openGedungModal(booking);
                 } catch (error) {
                     console.error('Error loading booking:', error);
@@ -344,7 +335,6 @@ export function setupTableEventDelegation(getAdminState) {
                         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                     }
                     const booking = await response.json();
-                    console.log('Booking data fetched:', booking);
                     openKendaraanModal(booking);
                 } catch (error) {
                     console.error('Error loading booking:', error);

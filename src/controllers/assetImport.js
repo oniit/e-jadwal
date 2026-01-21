@@ -15,15 +15,8 @@ exports.importFromExcel = async (req, res) => {
             });
         }
 
-        console.log('File received:', {
-            filename: req.file.originalname,
-            size: req.file.size,
-            mimetype: req.file.mimetype
-        });
-
         // Parse Excel file
         const workbook = XLSX.read(req.file.buffer, { type: 'buffer' });
-        console.log('Sheets available:', workbook.SheetNames);
 
         // Get first sheet
         const sheetName = workbook.SheetNames[0];
@@ -47,9 +40,6 @@ exports.importFromExcel = async (req, res) => {
         const headerRow = rawData[0];
         const dataRows = rawData.slice(1);
 
-        console.log('Headers:', headerRow);
-        console.log('Data rows:', dataRows.length);
-
         // Convert to object format
         const rows = dataRows.map((row, idx) => {
             const obj = {};
@@ -61,8 +51,6 @@ exports.importFromExcel = async (req, res) => {
             // Filter out completely empty rows
             return Object.values(row).some(v => v && String(v).trim() !== '');
         });
-
-        console.log('Valid data rows after filter:', rows.length);
 
         if (rows.length === 0) {
             return res.status(400).json({ 

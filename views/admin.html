@@ -246,7 +246,7 @@
                         <div class="flex flex-col gap-3 mb-4 sm:flex-row sm:items-center sm:justify-between">
                             <h3 class="text-xl font-bold color-gedung">Kelola Supir</h3>
                             <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
-                                <input id="filter-driver-search" type="text" class="filter-menu w-full sm:w-64" placeholder="Cari code/name...">
+                                <input id="filter-driver-search" type="text" class="filter-menu w-full sm:w-64" placeholder="Cari...">
                                 <button id="btn-add-driver" class="add-btn px-2 sm:px-3 py-2 text-sm">+ Tambah</button>
                             </div>
                         </div>
@@ -260,11 +260,11 @@
                                         <th class="table-header sortable" data-sort="name">
                                             Nama <span class="sort-icon"><i class="fa fa-sort"></i></span>
                                         </th>
-                                        <th class="table-header sortable" data-sort="phone">
-                                            No. Telepon <span class="sort-icon"><i class="fa fa-sort"></i></span>
-                                        </th>
                                         <th class="table-header sortable" data-sort="email">
                                             Email <span class="sort-icon"><i class="fa fa-sort"></i></span>
+                                        </th>
+                                        <th class="table-header sortable" data-sort="phone">
+                                            No. Telepon <span class="sort-icon"><i class="fa fa-sort"></i></span>
                                         </th>
                                         <th class="table-header sortable" data-sort="status">
                                             Status <span class="sort-icon"><i class="fa fa-sort"></i></span>
@@ -281,7 +281,7 @@
                         <div class="flex flex-col gap-3 mb-4 sm:flex-row sm:items-center sm:justify-between">
                             <h3 class="text-xl font-bold color-gedung">Kelola Admin</h3>
                             <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
-                                <input id="filter-users-search" type="text" class="filter-menu w-full sm:w-64" placeholder="Cari name/username...">
+                                <input id="filter-users-search" type="text" class="filter-menu w-full sm:w-64" placeholder="Cari...">
                                 <button id="btn-add-user" class="add-btn px-2 sm:px-3 py-2 text-sm">+ Tambah</button>
                             </div>
                         </div>
@@ -289,11 +289,21 @@
                             <table class="min-w-full divide-y divide-gray-200 rounded-lg overflow-hidden text-xs">
                                 <thead class="bg-gray-50">
                                     <tr>
-                                        <th class="table-header">Username</th>
-                                        <th class="table-header">Nama</th>
-                                        <th class="table-header">Email</th>
-                                        <th class="table-header">No. Telepon</th>
-                                        <th class="table-header">Status</th>
+                                        <th class="table-header sortable" data-sort="username">
+                                            Username <span class="sort-icon"><i class="fa fa-sort"></i></span>
+                                        </th>
+                                        <th class="table-header sortable" data-sort="name">
+                                            Nama <span class="sort-icon"><i class="fa fa-sort"></i></span>
+                                        </th>
+                                        <th class="table-header sortable" data-sort="email">
+                                            Email <span class="sort-icon"><i class="fa fa-sort"></i></span>
+                                        </th>
+                                        <th class="table-header sortable" data-sort="phone">
+                                            No. Telepon <span class="sort-icon"><i class="fa fa-sort"></i></span>
+                                        </th>
+                                        <th class="table-header sortable" data-sort="status">
+                                            Status <span class="sort-icon"><i class="fa fa-sort"></i></span>
+                                        </th>
                                         <th class="table-header text-right"></th>
                                     </tr>
                                 </thead>
@@ -388,7 +398,7 @@
                                 <option value="false">Tidak Aktif</option>
                             </select>
                         </div>
-                        <button type="submit" class="w-full add-btn save-btn" onclick="console.log('🔘 Button clicked!'); return true;">Simpan Supir</button>
+                        <button type="submit" class="w-full add-btn save-btn">Simpan Supir</button>
                     </form>
                 </div>
             </div>

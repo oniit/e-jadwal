@@ -1,5 +1,6 @@
 // Render Forms HTML and other modal-related functions
 import { updateAssetNumVisibility } from './forms/asset.js';
+import { normalizeDrivers } from '../utils/helpers.js';
 
 // Render Forms - populate empty form containers
 export function renderForms() {
@@ -111,7 +112,7 @@ export function populateFormSelectOptions(state) {
     const kendaraanAssets = Array.isArray(state.assets?.kendaraan) ? state.assets.kendaraan : [];
     const barangAssets = Array.isArray(state.assets?.barang) ? state.assets.barang : [];
     const umumAssets = Array.isArray(state.assets?.umum) ? state.assets.umum : [];
-    const drivers = Array.isArray(state.allDrivers) ? state.allDrivers : [];
+    const drivers = normalizeDrivers(state.allDrivers);
 
     const gedungSelect = document.getElementById('gedung-name');
     if (gedungSelect) {
@@ -127,7 +128,7 @@ export function populateFormSelectOptions(state) {
 
     const supirSelect = document.getElementById('kendaraan-supir');
     if (supirSelect) {
-        const activeDrivers = drivers.filter(d => d.isActive);
+        const activeDrivers = drivers.filter(d => d.isActive !== false);
         supirSelect.innerHTML = '<option value="">Tanpa Supir</option>' +
             activeDrivers.map(d => `<option value="${d._id}">${d.name}</option>`).join('');
     }

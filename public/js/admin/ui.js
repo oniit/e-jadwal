@@ -6,10 +6,8 @@ export const ui = {
         const tableId = `${type}-list-table`;
         const tableBody = document.getElementById(tableId);
         if (!tableBody) {
-            console.warn(`❌ Table element not found for type: ${type}`);
             return;
         }
-        console.log(`📊 Rendering ${type} table with ${bookings.length} bookings`);
         
         tableBody.innerHTML = '';
         const sortedBookings = [...bookings].sort((a, b) => new Date(b.startDate) - new Date(a.startDate));
@@ -116,8 +114,8 @@ export const ui = {
             return `<tr class="cursor-pointer" data-driver-id="${d._id}">
                 <td class="${cellClass}">${d.username || '-'}</td>
                 <td class="${cellClass}">${d.name || '-'}</td>
-                <td class="${cellClass}">${d.phone || '-'}</td>
                 <td class="${cellClass}">${d.email || '-'}</td>
+                <td class="${cellClass}">${d.phone || '-'}</td>
                 <td class="${cellClass}">
                     <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold ${statusClass}">${statusLabel}</span>
                 </td>
