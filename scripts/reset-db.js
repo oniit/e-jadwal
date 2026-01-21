@@ -7,8 +7,8 @@ const resetDatabase = async () => {
     console.log('🔄 Menghubungkan ke database...');
     await connectDB();
 
-    // Daftar collections yang TIDAK akan dihapus
-    const skipCollections = ['users']; // Tambahkan nama collection yang ingin di-skip
+    // Daftar collections yang TIDAK akan dihapus. Tambahkan nama collection yang ingin di-skip
+    const skipCollections = ['users']; 
 
     console.log('📋 Daftar collections yang akan dihapus:');
     const db = mongoose.connection.db;

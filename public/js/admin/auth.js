@@ -312,21 +312,25 @@ export async function loadAdminsList() {
         const tableBody = document.getElementById('users-list-table');
         if (!tableBody) return;
         
-        if (admins.length === 0) {
-            tableBody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-gray-500">Belum ada admin.</td></tr>';
+        tableBody.innerHTML = '';
+        const sorted = [...admins].sort((a, b) => (a.username || '').localeCompare(b.username || ''));
+        
+        if (sorted.length === 0) {
+            tableBody.innerHTML = `<tr><td colspan="6" class="px-6 py-3 text-center text-gray-500">Tidak ada data</td></tr>`;
             return;
         }
         
-        tableBody.innerHTML = admins.map(admin => `
-            <tr class="table-row" data-admin-id="${admin._id}">
-                <td class="px-6 py-3 whitespace-nowrap text-sm text-gray-700 font-mono">${admin.username}</td>
-                <td class="px-6 py-3 whitespace-nowrap text-sm text-gray-900 font-medium">${admin.name}</td>
-                <td class="px-6 py-3 whitespace-nowrap text-sm text-gray-700">${admin.email}</td>
-                <td class="px-6 py-3 whitespace-nowrap text-sm text-gray-700">${admin.phone || '-'}</td>
-                <td class="px-6 py-3 whitespace-nowrap text-sm">
-                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold ${admin.isActive ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}">
-                        ${admin.isActive ? 'Aktif' : 'Nonaktif'}
-                    </span>
+        tableBody.innerHTML = sorted.map(admin => {
+            const cellClass = "px-6 py-3 whitespace-nowrap text-sm text-gray-500";
+            const statusClass = admin.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600';
+            const statusLabel = admin.isActive ? 'Aktif' : 'Tidak Aktif';
+            return `<tr class="cursor-pointer" data-admin-id="${admin._id}">
+                <td class="${cellClass}">${admin.username || '-'}</td>
+                <td class="${cellClass}">${admin.name || '-'}</td>
+                <td class="${cellClass}">${admin.email || '-'}</td>
+                <td class="${cellClass}">${admin.phone || '-'}</td>
+                <td class="${cellClass}">
+                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold ${statusClass}">${statusLabel}</span>
                 </td>
                 <td class="px-6 py-3 text-right text-sm">
                     <div class="flex justify-end gap-3">
@@ -334,8 +338,8 @@ export async function loadAdminsList() {
                         <button class="btn-delete" data-id="${admin._id}" title="Hapus"><i class="fas fa-trash"></i></button>
                     </div>
                 </td>
-            </tr>
-        `).join('');
+            </tr>`;
+        }).join('');
     } catch (error) {
         console.error('Gagal memuat admin:', error);
     }
