@@ -36,10 +36,8 @@
                         <a href="/" class="p-2 text-gray-600 hover:text-gray-800 bg-gray-100 hover:bg-gray-200 rounded-lg" title="Lihat Kalender">
                             <i class="fas fa-calendar-alt"></i>
                         </a>
-                        <div class="flex items-center gap-2 px-3 py-2 bg-gray-100 rounded-lg">
-                            <button id="btn-profile" class="text-gray-600 hover:text-gray-800" title="Profil">
-                                <i class="fas fa-user"></i>
-                            </button>
+                        <div class="flex items-center gap-2 px-3 py-2 bg-gray-100 rounded-lg cursor-pointer hover:bg-gray-200 transition" id="btn-profile">
+                            <i class="fas fa-user"></i>
                             <span id="user-username" class="text-sm font-medium text-gray-700 whitespace-nowrap"></span>
                         </div>
                         <button id="btn-logout" class="p-2 text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 rounded-lg" title="Logout">
@@ -206,7 +204,7 @@
                                     <option value="barang">Barang</option>
                                     <option value="umum">Umum</option>
                                 </select>
-                                <input id="master-search" type="text" class="filter-menu w-full sm:w-64" placeholder="Cari code/name...">
+                                <input id="master-search" type="text" class="filter-menu w-full sm:w-64" placeholder="Cari...">
                                 <button id="btn-export-assets" class="add-btn px-2 sm:px-3 py-2 text-sm whitespace-nowrap bg-green-600 hover:bg-green-700">
                                     <i class="fas fa-file-download"></i> Export
                                 </button>
