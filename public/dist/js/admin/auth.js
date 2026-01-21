@@ -14,7 +14,7 @@ export async function checkAuth() {
         }
 
         const user = await response.json();
-        displayUserName(user.name);
+        displayUserName(user.username);
         
         // Store user role globally for later use
         window.__adminUserRole = user.role;
@@ -74,10 +74,10 @@ export async function checkAuth() {
 }
 
 // Display user name
-function displayUserName(name) {
-    const userNameEl = document.getElementById('user-name');
-    if (userNameEl) {
-        userNameEl.textContent = name;
+function displayUserName(username) {
+    const userUsernameEl = document.getElementById('user-username');
+    if (userUsernameEl) {
+        userUsernameEl.textContent = username;
     }
 }
 

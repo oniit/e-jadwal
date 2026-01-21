@@ -36,9 +36,12 @@
                         <a href="/" class="p-2 text-gray-600 hover:text-gray-800 bg-gray-100 hover:bg-gray-200 rounded-lg" title="Lihat Kalender">
                             <i class="fas fa-calendar-alt"></i>
                         </a>
-                        <button id="btn-profile" class="p-2 text-gray-600 hover:text-gray-800 bg-gray-100 hover:bg-gray-200 rounded-lg" title="Profil">
-                            <i class="fas fa-user"></i>
-                        </button>
+                        <div class="flex items-center gap-2 px-3 py-2 bg-gray-100 rounded-lg">
+                            <button id="btn-profile" class="text-gray-600 hover:text-gray-800" title="Profil">
+                                <i class="fas fa-user"></i>
+                            </button>
+                            <span id="user-username" class="text-sm font-medium text-gray-700 whitespace-nowrap"></span>
+                        </div>
                         <button id="btn-logout" class="p-2 text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 rounded-lg" title="Logout">
                             <i class="fas fa-sign-out-alt"></i>
                         </button>
