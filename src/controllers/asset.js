@@ -88,7 +88,9 @@ const createAsset = async (req, res) => {
             name: payload.name,
             type,
             num: Number.isFinite(parsedNum) ? parsedNum : undefined,
-            detail: payload.detail || ''
+            detail: payload.detail || '',
+            jenis_bmn: payload.jenis_bmn || '',
+            kode_bmn: payload.kode_bmn || ''
         });
 
         const saved = await asset.save();
@@ -120,6 +122,8 @@ const updateAsset = async (req, res) => {
         if (payload.name !== undefined) updateDoc.name = payload.name;
         if (payload.type !== undefined) updateDoc.type = String(payload.type).toLowerCase();
         if (payload.detail !== undefined) updateDoc.detail = payload.detail;
+        if (payload.jenis_bmn !== undefined) updateDoc.jenis_bmn = payload.jenis_bmn;
+        if (payload.kode_bmn !== undefined) updateDoc.kode_bmn = payload.kode_bmn;
 
         const unsetDoc = {};
         if (payload.num === '' || payload.num === null) {
@@ -165,10 +169,23 @@ const deleteAsset = async (req, res) => {
     }
 };
 
+const getBMN = async (_req, res) => {
+    try {
+        const bmnData = await fs.readFile(path.join(__dirname, '..', 'data', 'bmn.json'), 'utf8');
+        const bmn = JSON.parse(bmnData);
+        res.set('Cache-Control', 'no-store');
+        return res.json(bmn);
+    } catch (err) {
+        console.error('[getBMN] Error:', err.message);
+        return res.status(500).json({ message: 'Gagal mengambil data BMN.' });
+    }
+};
+
 module.exports = {
     getAssets,
     getAsset,
     createAsset,
     updateAsset,
     deleteAsset,
+    getBMN,
 };

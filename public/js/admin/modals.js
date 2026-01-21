@@ -70,10 +70,7 @@ export function renderForms() {
     if (formAsset) {
         formAsset.innerHTML = `
             <input type="hidden" id="asset-id">
-            <div>
-                <label for="asset-code" class="form-label text-sm">Kode <span class="text-gray-500 text-xs">(opsional, auto-generate)</span></label>
-                <input id="asset-code" type="text" class="form-input" placeholder="Kosongkan untuk auto-generate">
-            </div>
+            <input type="hidden" id="asset-kode-bmn">
             <div>
                 <label for="asset-name" class="form-label text-sm">Nama</label>
                 <input id="asset-name" type="text" required class="form-input" placeholder="Nama aset">
@@ -86,6 +83,12 @@ export function renderForms() {
                     <option value="barang">Barang</option>
                     <option value="umum">Umum / Lainnya</option>
                 </select>
+            </div>
+            <div>
+                <label for="asset-jenis-bmn" class="form-label text-sm">Jenis BMN (Cari berdasarkan nama)</label>
+                <input type="text" id="asset-jenis-bmn-search" class="form-input mb-2" placeholder="Ketik untuk mencari...">
+                <div id="asset-jenis-bmn-list" class="border rounded max-h-48 overflow-y-auto bg-white hidden"></div>
+                <input type="hidden" id="asset-jenis-bmn">
             </div>
             <div id="asset-num-wrapper" class="hidden">
                 <label for="asset-num" class="form-label text-sm">Qty / Max</label>

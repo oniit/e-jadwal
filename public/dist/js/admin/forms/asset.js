@@ -1,4 +1,5 @@
 // Asset Form Functions
+import { api } from '../api.js';
 
 export function openAssetModal(asset = null) {
     const modal = document.getElementById('modal-asset');
@@ -24,6 +25,9 @@ export function openAssetModal(asset = null) {
         const tipeField = document.getElementById('asset-type');
         const detailField = document.getElementById('asset-detail');
         const numField = document.getElementById('asset-num');
+        const jenisBmnField = document.getElementById('asset-jenis-bmn');
+        const jenisBmnSearchField = document.getElementById('asset-jenis-bmn-search');
+        const kodeBmnField = document.getElementById('asset-kode-bmn');
         
         if (idField) idField.value = asset._id || '';
         if (kodeField) kodeField.value = asset.code || '';
@@ -33,10 +37,16 @@ export function openAssetModal(asset = null) {
         if (numField && asset.num !== undefined && asset.num !== null) {
             numField.value = asset.num;
         }
+        if (jenisBmnField) jenisBmnField.value = asset.jenis_bmn || '';
+        if (jenisBmnSearchField) jenisBmnSearchField.value = asset.jenis_bmn || '';
+        if (kodeBmnField) kodeBmnField.value = asset.kode_bmn || '';
         updateAssetNumVisibility(asset.type);
     } else {
         updateAssetNumVisibility('gedung');
     }
+    
+    // Initialize BMN search
+    initBMNSearch();
     
     modal.classList.remove('hidden');
 }
@@ -49,6 +59,73 @@ export function updateAssetNumVisibility(type) {
     const show = type === 'barang' || type === 'kendaraan';
     wrapper.classList.toggle('hidden', !show);
     input.placeholder = type === 'barang' ? 'Qty (misal: 40)' : 'Max penumpang (misal: 15)';
+}
+
+// BMN search functionality
+let bmnList = [];
+
+async function initBMNSearch() {
+    try {
+        if (bmnList.length === 0) {
+            bmnList = await api.fetch('/api/assets/bmn/list');
+        }
+        
+        const searchInput = document.getElementById('asset-jenis-bmn-search');
+        const listContainer = document.getElementById('asset-jenis-bmn-list');
+        
+        if (!searchInput || !listContainer) return;
+        
+        searchInput.addEventListener('input', (e) => {
+            const query = e.target.value.toLowerCase().trim();
+            
+            if (!query) {
+                listContainer.classList.add('hidden');
+                return;
+            }
+            
+            const filtered = bmnList.filter(item => 
+                item.jenis_bmn.toLowerCase().includes(query) || 
+                item.kode_bmn.toLowerCase().includes(query)
+            );
+            
+            if (filtered.length === 0) {
+                listContainer.innerHTML = '<div class="p-2 text-gray-500">Tidak ada hasil</div>';
+                listContainer.classList.remove('hidden');
+                return;
+            }
+            
+            listContainer.innerHTML = filtered.map(item => `
+                <div class="p-2 border-b cursor-pointer hover:bg-blue-50" data-kode="${item.kode_bmn}" data-jenis="${item.jenis_bmn}">
+                    <div class="font-semibold text-sm">${item.jenis_bmn}</div>
+                    <div class="text-xs text-gray-500">${item.kode_bmn}</div>
+                </div>
+            `).join('');
+            listContainer.classList.remove('hidden');
+            
+            // Add click handlers
+            listContainer.querySelectorAll('div[data-kode]').forEach(el => {
+                el.addEventListener('click', () => {
+                    const jenisBmn = el.getAttribute('data-jenis');
+                    const kodeBmn = el.getAttribute('data-kode');
+                    
+                    document.getElementById('asset-jenis-bmn-search').value = jenisBmn;
+                    document.getElementById('asset-jenis-bmn').value = jenisBmn;
+                    document.getElementById('asset-kode-bmn').value = kodeBmn;
+                    listContainer.classList.add('hidden');
+                });
+            });
+        });
+        
+        // Hide list when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('#asset-jenis-bmn-search') && !e.target.closest('#asset-jenis-bmn-list')) {
+                listContainer.classList.add('hidden');
+            }
+        });
+        
+    } catch (error) {
+        console.error('Error initializing BMN search:', error);
+    }
 }
 
 export function setupAssetTypeChangeHandler() {

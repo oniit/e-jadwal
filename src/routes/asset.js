@@ -27,6 +27,9 @@ router.post('/import/excel', upload.single('file'), assetImportController.import
 router.get('/import/status', assetImportController.getImportStatus);
 router.get('/export/excel', assetExportController.exportAssets);
 
+// BMN list
+router.get('/bmn/list', assetController.getBMN);
+
 // Asset CRUD routes
 router.get('/', assetController.getAssets);
 router.get('/:id', assetController.getAsset);

@@ -215,16 +215,13 @@ export function setupFormSubmitHandlers() {
         assetForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const id = document.getElementById('asset-id').value || null;
-            const codeValue = document.getElementById('asset-code').value.trim();
             const payload = {
                 name: document.getElementById('asset-name').value.trim(),
                 type: document.getElementById('asset-type').value,
                 detail: document.getElementById('asset-detail').value.trim(),
+                jenis_bmn: document.getElementById('asset-jenis-bmn').value.trim() || '',
+                kode_bmn: document.getElementById('asset-kode-bmn').value.trim() || ''
             };
-            
-            if (codeValue) {
-                payload.code = codeValue;
-            }
             
             const numValue = document.getElementById('asset-num').value;
             if (numValue !== '') {
