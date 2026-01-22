@@ -23,11 +23,12 @@ exports.exportAssets = async (req, res) => {
         const workbook = new ExcelJS.Workbook();
         const worksheet = workbook.addWorksheet('Assets');
 
-        // Define columns
+        // Define columns [ubah excel sesuai kebutuhan]
         worksheet.columns = [
             { header: 'Code', key: 'code', width: 15 },
             { header: 'Name', key: 'name', width: 30 },
             { header: 'Type', key: 'type', width: 15 },
+            { header: 'Qty', key: 'qty', width: 10 },
             { header: 'Detail', key: 'detail', width: 50 },
             { header: 'Created At', key: 'createdAt', width: 20 },
         ];
@@ -46,6 +47,7 @@ exports.exportAssets = async (req, res) => {
                 code: asset.code,
                 name: asset.name,
                 type: asset.type,
+                qty: asset.num !== undefined && asset.num !== null ? asset.num : '-',
                 detail: asset.detail || '',
                 createdAt: asset.createdAt.toISOString().split('T')[0]
             });

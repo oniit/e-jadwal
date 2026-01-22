@@ -26,6 +26,7 @@ const FIELD_MAPPING = {
     code: ['Code'],
     type: ['Type'],
     name: ['Name'],
+    qty: ['Qty', 'Quantity', 'Jumlah'],
     jenis_bmn: ['Jenis BMN'],
     kode_bmn: ['Kode Barang'],
     itemName: ['Nama Barang', 'Nama Item'],
@@ -100,6 +101,7 @@ function mapExcelRowToAsset(row, headers, options = {}) {
     const codeIdx = findColumnIndex(headers, FIELD_MAPPING.code);
     const typeIdx = findColumnIndex(headers, FIELD_MAPPING.type);
     const nameIdx = findColumnIndex(headers, FIELD_MAPPING.name);
+    const qtyIdx = findColumnIndex(headers, FIELD_MAPPING.qty);
     const jenisBmnIdx = findColumnIndex(headers, FIELD_MAPPING.jenis_bmn);
     const kodeBmnIdx = findColumnIndex(headers, FIELD_MAPPING.kode_bmn);
     const merkIdx = findColumnIndex(headers, FIELD_MAPPING.merk);
@@ -116,6 +118,22 @@ function mapExcelRowToAsset(row, headers, options = {}) {
     
     // Extract name - more flexible
     data.name = nameIdx !== null ? String(row[nameIdx] || '').trim() : '';
+
+    // Extract quantity (num). Accept numeric, string numbers, or '-' for empty
+    if (qtyIdx !== null) {
+        const rawQty = row[qtyIdx];
+        if (rawQty === undefined || rawQty === null) {
+            data.num = undefined;
+        } else {
+            const str = String(rawQty).trim();
+            if (str === '' || str === '-') {
+                data.num = undefined;
+            } else {
+                const parsed = Number(str);
+                data.num = Number.isFinite(parsed) ? parsed : undefined;
+            }
+        }
+    }
     
     // Extract jenis_bmn dan kode_bmn
     data.jenis_bmn = jenisBmnIdx !== null ? String(row[jenisBmnIdx] || '').trim() : '';
