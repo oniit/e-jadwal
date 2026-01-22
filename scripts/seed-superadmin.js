@@ -18,8 +18,8 @@ const seedSuperAdmin = async () => {
 
     // Create superadmin
     const superadmin = new User({
-      username: 'admin',
-      email: 'admin@uinssc.ac.id',
+      username: 'bmn',
+      email: 'bmn@uinssc.ac.id',
       password: '123',
       name: 'Super Administrator',
       phone: '',

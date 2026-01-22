@@ -164,10 +164,11 @@
                     }, 1500);
                 } else {
                     showAlert(data.message);
+                    changeBtn.disabled = false;
+                    changeBtn.textContent = 'Ubah Password';
                 }
             } catch (error) {
                 showAlert('Terjadi kesalahan saat mengubah password.');
-            } finally {
                 changeBtn.disabled = false;
                 changeBtn.textContent = 'Ubah Password';
             }
