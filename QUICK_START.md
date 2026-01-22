@@ -18,8 +18,8 @@
 
 ### Superadmin
 ```
-Username: adm
-Password: 7
+Username: admin
+Password: 123
 ```
 
 **⚠️ PENTING**: Ganti password setelah login pertama!
@@ -156,6 +156,8 @@ DELETE /auth/admin/:id     Delete admin
 
 1. **Change JWT Secrets**: Edit `.env` sebelum production
    ```env
+   MONGO_URI=
+   PORT=
    JWT_SECRET=your-secret-here
    JWT_REFRESH_SECRET=your-refresh-secret-here
    ```
@@ -182,7 +184,7 @@ DELETE /auth/admin/:id     Delete admin
 ### Cannot login
 ```bash
 # Check if superadmin exists: npm run seed
-# Check credentials: adm / 7
+# Check credentials: admin / 123
 # Clear browser cookies
 ```
 

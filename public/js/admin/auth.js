@@ -75,7 +75,7 @@ export async function checkAuth() {
 
 // Display user name
 function displayUserName(username) {
-    const userUsernameEl = document.getElementById('user-username');
+    const userUsernameEl = document.getElementById('admin-username');
     if (userUsernameEl) {
         userUsernameEl.textContent = username;
     }
