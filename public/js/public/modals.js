@@ -25,8 +25,9 @@ export const showDetailModal = (booking, state, elements) => {
     if (!elements.modal || !elements.modalTitle || !elements.modalBody) return;
     const start = new Date(booking.startDate);
     const end = new Date(booking.endDate);
+    const vehicleIdLabel = booking.assetPlate;
     elements.modalTitle.textContent = booking.bookingType === 'kendaraan' 
-        ? `${booking.assetName} (${booking.assetCode})`
+        ? (vehicleIdLabel ? `${booking.assetName} (${vehicleIdLabel})` : booking.assetName)
         : booking.assetName;
 
     let detailHtml = `<p>${formatScheduleRange(start, end)}</p>`;
@@ -71,8 +72,9 @@ export const showDetailModalFull = (booking, state, elements) => {
     if (!elements.modal || !elements.modalTitle || !elements.modalBody) return;
     const start = new Date(booking.startDate);
     const end = new Date(booking.endDate);
+    const vehicleIdLabel2 = booking.assetPlate;
     elements.modalTitle.textContent = booking.bookingType === 'kendaraan' 
-        ? `${booking.assetName} (${booking.assetCode})`
+        ? (vehicleIdLabel2 ? `${booking.assetName} (${vehicleIdLabel2})` : booking.assetName)
         : booking.assetName;
 
     let detailHtml = `<p>${formatScheduleRange(start, end)}</p>`;

@@ -73,6 +73,14 @@ function sortTable(tableId, sortKey, direction) {
                 valueB = rowB.cells[idx].textContent.trim().toLowerCase();
                 break;
             }
+            case 'plate': {
+                const idx = tableId === 'master-asset-table' ? 3 : -1;
+                if (idx >= 0) {
+                    valueA = rowA.cells[idx].textContent.trim().toLowerCase();
+                    valueB = rowB.cells[idx].textContent.trim().toLowerCase();
+                }
+                break;
+            }
             case 'aset': {
                 const idx = tableId === 'request-list-table' ? 2 : 1;
                 valueA = rowA.cells[idx].textContent.trim().toLowerCase();
@@ -145,7 +153,7 @@ function sortTable(tableId, sortKey, direction) {
                 break;
             }
             case 'detail': {
-                const idx = tableId === 'driver-list-table' ? 3 : 4;
+                const idx = tableId === 'master-asset-table' ? 5 : 4;
                 valueA = rowA.cells[idx].textContent.trim().toLowerCase();
                 valueB = rowB.cells[idx].textContent.trim().toLowerCase();
                 break;

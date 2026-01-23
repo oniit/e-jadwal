@@ -90,6 +90,10 @@ export function renderForms() {
                 <div id="asset-jenis-bmn-list" class="border rounded max-h-48 overflow-y-auto bg-white hidden"></div>
                 <input type="hidden" id="asset-jenis-bmn">
             </div>
+            <div id="asset-plate-wrapper" class="hidden">
+                <label for="asset-plate" class="form-label text-sm">Plat / No Polisi (Opsional)</label>
+                <input id="asset-plate" type="text" class="form-input" placeholder="Contoh: B 1234 CD">
+            </div>
             <div id="asset-num-wrapper" class="hidden">
                 <label for="asset-num" class="form-label text-sm">Qty / Max</label>
                 <input id="asset-num" type="number" min="0" step="1" class="form-input" placeholder="Masukkan angka">
@@ -126,7 +130,11 @@ export function populateFormSelectOptions(state) {
     const kendaraanSelect = document.getElementById('kendaraan-name');
     if (kendaraanSelect) {
         kendaraanSelect.innerHTML = '<option value="">Pilih Kendaraan</option>' +
-            kendaraanAssets.map(a => `<option value="${a.code}">${a.name} (${a.code})</option>`).join('');
+            kendaraanAssets.map(a => {
+                const plate = (a.plate && typeof a.plate === 'string' && a.plate.trim()) ? a.plate.trim() : null;
+                const label = plate ? `${a.name} (${plate})` : a.name;
+                return `<option value="${a.code}">${label}</option>`;
+            }).join('');
     }
 
     const supirSelect = document.getElementById('kendaraan-supir');

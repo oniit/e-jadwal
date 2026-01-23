@@ -28,7 +28,14 @@ const getRequestById = async (req, res) => {
         const { id } = req.params;
         const request = await Request.findById(id).populate('driver');
         if (!request) return res.status(404).json({ message: 'Request tidak ditemukan.' });
-        res.json(request);
+        let responsePayload = request;
+        if (request.bookingType === 'kendaraan' && !request.assetPlate && request.assetCode) {
+            const asset = await Asset.findOne({ code: request.assetCode }).select('plate');
+            if (asset?.plate) {
+                responsePayload = request.toObject ? { ...request.toObject(), assetPlate: asset.plate.trim() } : { ...request, assetPlate: asset.plate.trim() };
+            }
+        }
+        res.json(responsePayload);
     } catch (err) {
         res.status(500).json({ message: err.message });
     }
@@ -39,7 +46,14 @@ const getRequestByCode = async (req, res) => {
         const { code } = req.params;
         const request = await Request.findOne({ requestId: code }).populate('driver');
         if (!request) return res.status(404).json({ message: 'Request tidak ditemukan.' });
-        res.json(request);
+        let responsePayload = request;
+        if (request.bookingType === 'kendaraan' && !request.assetPlate && request.assetCode) {
+            const asset = await Asset.findOne({ code: request.assetCode }).select('plate');
+            if (asset?.plate) {
+                responsePayload = request.toObject ? { ...request.toObject(), assetPlate: asset.plate.trim() } : { ...request, assetPlate: asset.plate.trim() };
+            }
+        }
+        res.json(responsePayload);
     } catch (err) {
         res.status(500).json({ message: err.message });
     }
@@ -143,6 +157,7 @@ const approveRequest = async (req, res) => {
             userName: request.userName,
             assetCode: request.assetCode,
             assetName: request.assetName,
+            assetPlate: request.assetPlate,
             personInCharge: request.personInCharge,
             picPhoneNumber: request.picPhoneNumber,
             notes: request.notes,
@@ -152,6 +167,12 @@ const approveRequest = async (req, res) => {
             destination: request.destination,
             letterFile: request.letterFile  // Copy letterFile dari request ke booking
         };
+
+        // fallback jika request belum memiliki plate tapi asset punya
+        if (!bookingData.assetPlate && request.assetCode) {
+            const asset = await Asset.findOne({ code: request.assetCode }).select('plate');
+            if (asset?.plate) bookingData.assetPlate = asset.plate.trim();
+        }
 
         const booking = new Booking(bookingData);
         await booking.save();
@@ -339,6 +360,19 @@ async function normalizeRequestPayload(body) {
         }
     } else {
         base.borrowedItems = undefined;
+    }
+
+    // Sinkronisasi plat kendaraan jika tersedia di master asset
+    if (base.assetCode) {
+        const asset = await Asset.findOne({ code: base.assetCode }).select('name plate type');
+        if (!base.assetName && asset?.name) {
+            base.assetName = asset.name;
+        }
+        if (asset?.plate) {
+            base.assetPlate = asset.plate.trim();
+        } else {
+            base.assetPlate = undefined;
+        }
     }
     return base;
 }

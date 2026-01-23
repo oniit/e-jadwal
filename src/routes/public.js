@@ -12,8 +12,19 @@ router.use('/requests', requestRoutes);
 // Public endpoints for calendar
 router.get('/bookings', async (req, res) => {
     try {
-        const bookings = await Booking.find({});
-        res.json(bookings);
+        const [bookings, kendaraan] = await Promise.all([
+            Booking.find({}).lean(),
+            Asset.find({ type: 'kendaraan' }).select('code plate').lean()
+        ]);
+        const plateMap = new Map((kendaraan || []).map(a => [a.code, a.plate?.trim()]));
+        const enriched = (bookings || []).map(b => {
+            if (b.bookingType === 'kendaraan' && !b.assetPlate) {
+                const plate = plateMap.get(b.assetCode);
+                return plate ? { ...b, assetPlate: plate } : b;
+            }
+            return b;
+        });
+        res.json(enriched);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -23,8 +34,16 @@ router.get('/bookings', async (req, res) => {
 router.get('/bookings/by-code/:code', async (req, res) => {
     try {
         const { code } = req.params;
-        const booking = await Booking.findOne({ bookingId: code }).populate('driver');
-        if (!booking) return res.status(404).json({ message: 'Booking tidak ditemukan' });
+        const [bookingDoc, kendaraan] = await Promise.all([
+            Booking.findOne({ bookingId: code }).populate('driver'),
+            Asset.find({ type: 'kendaraan' }).select('code plate').lean()
+        ]);
+        if (!bookingDoc) return res.status(404).json({ message: 'Booking tidak ditemukan' });
+        let booking = bookingDoc;
+        if (booking.bookingType === 'kendaraan' && !booking.assetPlate && Array.isArray(kendaraan)) {
+            const plate = kendaraan.find(a => a.code === booking.assetCode)?.plate;
+            if (plate) booking = booking.toObject ? { ...booking.toObject(), assetPlate: plate.trim() } : { ...booking, assetPlate: plate.trim() };
+        }
         res.json(booking);
     } catch (error) {
         res.status(500).json({ message: error.message });

@@ -11,6 +11,7 @@ const requestSchema = new Schema({
     userName: { type: String, required: true },
     assetCode: { type: String, required: true },
     assetName: { type: String, required: true },
+    assetPlate: { type: String, trim: true },
     personInCharge: { type: String, required: true },
     picPhoneNumber: { type: String, required: true },
     notes: String,

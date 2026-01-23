@@ -44,9 +44,10 @@ export const ui = {
                 </tr>`;
             } else {
                 const driverName = typeof b.driver === 'object' && b.driver ? b.driver.name : (b.driver || '-');
+                const plateDisplay = b.assetPlate ? ` (${b.assetPlate})` : '';
                 return `<tr class="table-row cursor-pointer" data-booking-id="${b._id}">
                     <td class="${cellClass}">${createdDate}</td>
-                    <td class="${cellClass} font-medium text-gray-900">${b.assetName}</td>
+                    <td class="${cellClass} font-medium text-gray-900">${b.assetName}${plateDisplay}</td>
                     <td class="${cellClass}">${b.userName}</td>
                     <td class="${cellClass}">${tanggal}</td>
                     <td class="${cellClass}">${driverName}</td>
@@ -137,17 +138,19 @@ export const ui = {
         const sorted = [...assets].sort((a, b) => a.name.localeCompare(b.name));
         
         if (sorted.length === 0) {
-            tableBody.innerHTML = `<tr><td colspan="6" class="px-6 py-3 text-center text-gray-500">Tidak ada data</td></tr>`;
+            tableBody.innerHTML = `<tr><td colspan="7" class="px-6 py-3 text-center text-gray-500">Tidak ada data</td></tr>`;
             return;
         }
         
         tableBody.innerHTML = sorted.map(a => {
             const cellClass = "px-6 py-3 whitespace-nowrap text-sm text-gray-500";
             const badgeClass = "inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700";
+            const plateDisplay = a.type === 'kendaraan' && a.plate ? a.plate.trim() : '-';
             return `<tr class="cursor-pointer" data-asset-id="${a._id}">
                 <td class="${cellClass}">${a.code || '-'}</td>
                 <td class="${cellClass}">${a.name || '-'}</td>
                 <td class="${cellClass}"><span class="${badgeClass}">${a.type || '-'}</span></td>
+                <td class="${cellClass}">${plateDisplay}</td>
                 <td class="${cellClass}">${a.num ?? '-'}</td>
                 <td class="${cellClass}">${a.detail || '-'}</td>
                 <td class="px-6 py-3 text-right text-sm">
@@ -162,10 +165,9 @@ export const ui = {
 
     showDetailModal: function(props, context = 'admin', state) {
         let assetDisplay = props.assetName;
-        if (props.bookingType === 'kendaraan' && state.assets && state.assets.kendaraan) {
-            const kendaraan = state.assets.kendaraan.find(k => k.name === props.assetName);
-            const code = kendaraan && kendaraan.code ? kendaraan.code : '';
-            assetDisplay = code ? `${props.assetName} (${code})` : props.assetName;
+        if (props.bookingType === 'kendaraan') {
+            const plateDisplay = props.assetPlate ? ` (${props.assetPlate})` : '';
+            assetDisplay = `${props.assetName}${plateDisplay}`;
         }
         
         const modalTitle = document.getElementById('modal-title');

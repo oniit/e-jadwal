@@ -103,7 +103,18 @@ async function initializePublicSchedule() {
         const data = await loadCalendarData();
         state.assets = data.assets;
         state.drivers = data.drivers;
-        state.bookings = data.bookings;
+        // Enrich bookings with vehicle plate if available
+        const kendaraanAssets = Array.isArray(data.assets?.kendaraan) ? data.assets.kendaraan : [];
+        const kendaraanByCode = new Map(kendaraanAssets.map(a => [a.code, a]));
+        state.bookings = (data.bookings || []).map(b => {
+            if (b?.bookingType === 'kendaraan') {
+                const asset = kendaraanByCode.get(b.assetCode);
+                // Get plate from asset.plate field if available
+                const plate = (asset && typeof asset.plate === 'string' && asset.plate.trim()) ? asset.plate.trim() : null;
+                return plate ? { ...b, assetPlate: plate } : { ...b, assetPlate: null };
+            }
+            return b;
+        });
         populateAssetFilter(state, elements);
         populateDriverFilter(state, elements);
         calendar.refetchEvents();

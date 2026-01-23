@@ -219,6 +219,7 @@ export function setupFormSubmitHandlers() {
                 name: document.getElementById('asset-name').value.trim(),
                 type: document.getElementById('asset-type').value,
                 detail: document.getElementById('asset-detail').value.trim(),
+                plate: document.getElementById('asset-plate').value.trim() || '',
                 jenis_bmn: document.getElementById('asset-jenis-bmn').value.trim() || '',
                 kode_bmn: document.getElementById('asset-kode-bmn').value.trim() || ''
             };

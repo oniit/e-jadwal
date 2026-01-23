@@ -25,7 +25,13 @@ export const initializeCalendar = (state, elements) => {
         },
         eventClick: (info) => showDetailModal(info.event.extendedProps, state, elements),
         eventContent: (arg) => ({
-            html: `<div class="p-1"><b>${arg.event.extendedProps.bookingType === 'gedung' ? '🏢' : '🚗'} ${arg.event.title}</b></div>`,
+            html: (() => {
+                const isVeh = arg.event.extendedProps.bookingType === 'kendaraan';
+                const plate = arg.event.extendedProps.assetPlate;
+                const suffix = isVeh && plate ? ` (${plate})` : '';
+                const icon = isVeh ? '🚗' : '🏢';
+                return `<div class="p-1"><b>${icon} ${arg.event.title}${suffix}</b></div>`;
+            })(),
         }),
     });
 

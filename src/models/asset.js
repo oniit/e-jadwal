@@ -9,6 +9,7 @@ const assetSchema = new Schema({
     type: { type: String, enum: ALLOWED_TYPES, required: true },
     num: { type: Number, min: 0 },
     detail: { type: String, trim: true },
+    plate: { type: String, trim: true },
     jenis_bmn: { type: String, trim: true },
     kode_bmn: { type: String, trim: true }
 }, { timestamps: true });

@@ -24,6 +24,7 @@ export function openAssetModal(asset = null) {
         const namaField = document.getElementById('asset-name');
         const tipeField = document.getElementById('asset-type');
         const detailField = document.getElementById('asset-detail');
+        const plateField = document.getElementById('asset-plate');
         const numField = document.getElementById('asset-num');
         const jenisBmnField = document.getElementById('asset-jenis-bmn');
         const jenisBmnSearchField = document.getElementById('asset-jenis-bmn-search');
@@ -34,6 +35,7 @@ export function openAssetModal(asset = null) {
         if (namaField) namaField.value = asset.name || '';
         if (tipeField) tipeField.value = asset.type || '';
         if (detailField) detailField.value = asset.detail || '';
+        if (plateField) plateField.value = asset.plate || '';
         if (numField && asset.num !== undefined && asset.num !== null) {
             numField.value = asset.num;
         }
@@ -52,13 +54,24 @@ export function openAssetModal(asset = null) {
 }
 
 export function updateAssetNumVisibility(type) {
-    const wrapper = document.getElementById('asset-num-wrapper');
-    const input = document.getElementById('asset-num');
-    if (!wrapper || !input) return;
+    const numWrapper = document.getElementById('asset-num-wrapper');
+    const numInput = document.getElementById('asset-num');
+    const plateWrapper = document.getElementById('asset-plate-wrapper');
+    const plateInput = document.getElementById('asset-plate');
     
-    const show = type === 'barang' || type === 'kendaraan';
-    wrapper.classList.toggle('hidden', !show);
-    input.placeholder = type === 'barang' ? 'Qty (misal: 40)' : 'Max penumpang (misal: 15)';
+    // Show Qty field only for Barang
+    if (numWrapper && numInput) {
+        const showNum = type === 'barang';
+        numWrapper.classList.toggle('hidden', !showNum);
+        numInput.placeholder = 'Qty (misal: 40)';
+    }
+    
+    // Show Plate field only for Kendaraan
+    if (plateWrapper && plateInput) {
+        const showPlate = type === 'kendaraan';
+        plateWrapper.classList.toggle('hidden', !showPlate);
+        plateInput.placeholder = 'Contoh: B 1234 CD';
+    }
 }
 
 // BMN search functionality

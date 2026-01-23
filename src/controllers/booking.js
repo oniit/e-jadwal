@@ -309,5 +309,18 @@ async function normalizePayload(body) {
     } else {
         base.borrowedItems = undefined;
     }
+
+    // Sinkronisasi plat kendaraan (jika aset kendaraan punya field plate)
+    if (base.assetCode) {
+        const asset = await Asset.findOne({ code: base.assetCode }).select('name plate type');
+        if (!base.assetName && asset?.name) {
+            base.assetName = asset.name;
+        }
+        if (asset?.plate) {
+            base.assetPlate = asset.plate.trim();
+        } else {
+            base.assetPlate = undefined;
+        }
+    }
     return base;
 }
