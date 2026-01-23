@@ -1,6 +1,7 @@
 const ExcelJS = require('exceljs');
 const Asset = require('../models/asset');
 const Booking = require('../models/booking');
+const { getAllowedAssetCodes } = require('../middleware/permissions');
 
 /**
  * Export assets to Excel
@@ -14,6 +15,13 @@ exports.exportAssets = async (req, res) => {
         const query = {};
         if (type && ['gedung', 'kendaraan', 'barang', 'umum'].includes(type)) {
             query.type = type;
+        }
+
+        if (req.user) {
+            const { allowedCodes, unrestricted } = await getAllowedAssetCodes(req.user);
+            if (!unrestricted) {
+                query.code = { $in: allowedCodes }; // empty list produces empty export
+            }
         }
 
         // Fetch assets
@@ -99,6 +107,13 @@ exports.exportBookings = async (req, res) => {
             query.startDate = {};
             if (startDate) query.startDate.$gte = new Date(startDate);
             if (endDate) query.startDate.$lte = new Date(endDate);
+        }
+
+        if (req.user) {
+            const { allowedCodes, unrestricted } = await getAllowedAssetCodes(req.user);
+            if (!unrestricted) {
+                query.assetCode = { $in: allowedCodes }; // empty list produces empty export
+            }
         }
 
         // Fetch bookings with populated references

@@ -2,6 +2,7 @@ const fs = require('fs/promises');
 const path = require('path');
 const Asset = require('../models/asset');
 const { ALLOWED_TYPES } = require('../models/asset');
+const { getAllowedAssetCodes, canManageAsset } = require('../middleware/permissions');
 
 const groupAssets = (assets = []) => {
     const grouped = { gedung: [], kendaraan: [], barang: [], umum: [] };
@@ -30,9 +31,21 @@ const seedAssetsFromFile = async () => {
     }
 };
 
-const getAssets = async (_req, res) => {
+const getAssets = async (req, res) => {
     try {
-        let assets = await Asset.find({}).lean();
+        let filter = {};
+        if (req.user) {
+            const { allowedCodes, unrestricted } = await getAllowedAssetCodes(req.user);
+            if (!unrestricted) {
+                if (!allowedCodes.length) {
+                    res.set('Cache-Control', 'no-store');
+                    return res.json(groupAssets([]));
+                }
+                filter = { code: { $in: allowedCodes } };
+            }
+        }
+
+        let assets = await Asset.find(filter).lean();
         // if (!assets.length) {
         //     await seedAssetsFromFile();
         //     assets = await Asset.find({}).lean();
@@ -52,6 +65,10 @@ const getAsset = async (req, res) => {
 
         const asset = await Asset.findById(id).lean();
         if (!asset) return res.status(404).json({ message: 'Aset tidak ditemukan.' });
+
+        if (req.user && !(await canManageAsset(req.user, asset.code))) {
+            return res.status(403).json({ message: 'Anda tidak memiliki akses ke aset ini.' });
+        }
 
         res.set('Cache-Control', 'no-store');
         return res.json(asset);
@@ -109,6 +126,15 @@ const updateAsset = async (req, res) => {
 
         if (!id) return res.status(400).json({ message: 'ID aset diperlukan.' });
 
+        const existingAsset = await Asset.findById(id);
+        if (!existingAsset) {
+            return res.status(404).json({ message: 'Aset tidak ditemukan.' });
+        }
+
+        if (req.user && !(await canManageAsset(req.user, existingAsset.code))) {
+            return res.status(403).json({ message: 'Anda tidak memiliki akses ke aset ini.' });
+        }
+
         if (payload.type && !ALLOWED_TYPES.includes(String(payload.type).toLowerCase())) {
             return res.status(400).json({ message: `Tipe harus salah satu dari: ${ALLOWED_TYPES.join(', ')}.` });
         }
@@ -143,10 +169,6 @@ const updateAsset = async (req, res) => {
             { new: true, runValidators: true }
         );
 
-        if (!updated) {
-            return res.status(404).json({ message: 'Aset tidak ditemukan.' });
-        }
-
         return res.json(updated);
     } catch (err) {
         console.error('[updateAsset] Error:', err.message);
@@ -159,10 +181,16 @@ const deleteAsset = async (req, res) => {
         const { id } = req.params;
         if (!id) return res.status(400).json({ message: 'ID aset diperlukan.' });
 
-        const deleted = await Asset.findByIdAndDelete(id);
+        const deleted = await Asset.findById(id);
         if (!deleted) {
             return res.status(404).json({ message: 'Aset tidak ditemukan.' });
         }
+
+        if (req.user && !(await canManageAsset(req.user, deleted.code))) {
+            return res.status(403).json({ message: 'Anda tidak memiliki akses ke aset ini.' });
+        }
+
+        await Asset.findByIdAndDelete(id);
 
         return res.json({ message: 'Aset berhasil dihapus.' });
     } catch (err) {

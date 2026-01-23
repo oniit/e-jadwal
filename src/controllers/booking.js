@@ -1,26 +1,25 @@
 const Booking = require('../models/booking');
 const Asset = require('../models/asset');
-const { getAllowedAssetCodes } = require('../middleware/permissions');
+const { getAllowedAssetCodes, canManageAsset } = require('../middleware/permissions');
 
 const getAllBookings = async (req, res) => {
     try {
         let query = {};
         
-        // Apply permission filtering for admin khusus
-        if (req.user && req.user.role === 'admin' && req.user.adminType === 'khusus') {
-            const allowedCodes = getAllowedAssetCodes(req.user);
-            if (allowedCodes.length === 0) {
-                return res.json([]); // No assets to view
-            }
-            query = { assetCode: { $in: allowedCodes } };
-        }
-        
-        // Apply filtering for supir - only show bookings assigned to them
         if (req.user && req.user.role === 'supir') {
-            query = { 
+            // Supir only sees their own vehicle bookings
+            query = {
                 driver: req.user._id,
                 bookingType: 'kendaraan'
             };
+        } else if (req.user) {
+            const { allowedCodes, unrestricted } = await getAllowedAssetCodes(req.user);
+            if (!unrestricted) {
+                if (!allowedCodes.length) {
+                    return res.json([]); // No assets to view
+                }
+                query = { assetCode: { $in: allowedCodes } };
+            }
         }
         
         const bookings = await Booking.find(query).populate('driver');
@@ -35,6 +34,12 @@ const getBookingByCode = async (req, res) => {
         const { code } = req.params;
         const booking = await Booking.findOne({ bookingId: code }).populate('driver');
         if (!booking) return res.status(404).json({ message: 'Booking tidak ditemukan.' });
+        if (req.user && req.user.role === 'supir' && booking.driver && String(booking.driver._id) !== String(req.user._id)) {
+            return res.status(403).json({ message: 'Anda tidak memiliki akses ke booking ini.' });
+        }
+        if (req.user && req.user.role !== 'supir' && !(await canManageAsset(req.user, booking.assetCode))) {
+            return res.status(403).json({ message: 'Anda tidak memiliki akses ke aset ini.' });
+        }
         res.json(booking);
     } catch (err) {
         res.status(500).json({ message: err.message });
@@ -48,6 +53,12 @@ const getBooking = async (req, res) => {
         
         const booking = await Booking.findById(id).populate('driver');
         if (!booking) return res.status(404).json({ message: 'Booking tidak ditemukan.' });
+        if (req.user && req.user.role === 'supir' && booking.driver && String(booking.driver._id) !== String(req.user._id)) {
+            return res.status(403).json({ message: 'Anda tidak memiliki akses ke booking ini.' });
+        }
+        if (req.user && req.user.role !== 'supir' && !(await canManageAsset(req.user, booking.assetCode))) {
+            return res.status(403).json({ message: 'Anda tidak memiliki akses ke aset ini.' });
+        }
         res.json(booking);
     } catch (err) {
         res.status(500).json({ message: err.message });
@@ -164,6 +175,10 @@ function getJakartaMinutesOfDay(date) {
 const createBooking = async (req, res) => {
     try {
         const payload = await normalizePayload(req.body);
+
+        if (req.user && !(await canManageAsset(req.user, payload.assetCode))) {
+            return res.status(403).json({ message: 'Anda tidak memiliki akses ke aset ini.' });
+        }
         // Otomatis set jam gedung ke 07:00-16:00 jika di luar jam operasional
         if (payload.bookingType === 'gedung') {
             const sMin = getJakartaMinutesOfDay(payload.startDate);
@@ -212,7 +227,22 @@ const createBooking = async (req, res) => {
 const updateBooking = async (req, res) => {
     try {
         const { id } = req.params;
+        const existingBooking = await Booking.findById(id);
+        if (!existingBooking) {
+            return res.status(404).json({ message: 'Data peminjaman tidak ditemukan.' });
+        }
+
+        if (req.user && req.user.role === 'supir' && existingBooking.driver && String(existingBooking.driver) !== String(req.user._id)) {
+            return res.status(403).json({ message: 'Anda tidak memiliki akses ke booking ini.' });
+        }
+
         const payload = await normalizePayload(req.body);
+        const targetAssetCode = payload.assetCode || existingBooking.assetCode;
+        payload.assetCode = targetAssetCode;
+        payload.bookingType = payload.bookingType || existingBooking.bookingType;
+        if (req.user && !(await canManageAsset(req.user, targetAssetCode))) {
+            return res.status(403).json({ message: 'Anda tidak memiliki akses ke aset ini.' });
+        }
         // Otomatis set jam gedung ke 07:00-16:00 jika di luar jam operasional
         if (payload.bookingType === 'gedung') {
             const sMin = getJakartaMinutesOfDay(payload.startDate);
@@ -246,9 +276,6 @@ const updateBooking = async (req, res) => {
         }
 
         const updatedBooking = await Booking.findByIdAndUpdate(id, payload, { new: true, runValidators: true });
-        if (!updatedBooking) {
-            return res.status(404).json({ message: 'Data peminjaman tidak ditemukan.' });
-        }
         res.json(updatedBooking);
     } catch (err) {
         res.status(400).json({ message: err.message });
@@ -258,10 +285,17 @@ const updateBooking = async (req, res) => {
 const deleteBooking = async (req, res) => {
     try {
         const { id } = req.params;
-        const deletedBooking = await Booking.findByIdAndDelete(id);
-        if (!deletedBooking) {
+        const booking = await Booking.findById(id);
+        if (!booking) {
             return res.status(404).json({ message: 'Data peminjaman tidak ditemukan.' });
         }
+        if (req.user && req.user.role === 'supir' && booking.driver && String(booking.driver) !== String(req.user._id)) {
+            return res.status(403).json({ message: 'Anda tidak memiliki akses ke booking ini.' });
+        }
+        if (req.user && !(await canManageAsset(req.user, booking.assetCode))) {
+            return res.status(403).json({ message: 'Anda tidak memiliki akses ke aset ini.' });
+        }
+        await Booking.findByIdAndDelete(id);
         res.json({ message: 'Data peminjaman berhasil dihapus.' });
     } catch (err) {
         res.status(500).json({ message: err.message });

@@ -235,6 +235,12 @@ export const ui = {
                     </div>
                 `;
             }
+            
+            if (props.createdAt) {
+                const createdDate = new Date(props.createdAt);
+                const adminName = props.approvedBy || props.createdBy || 'Admin';
+                detailsHtml += `<p class="text-sm text-gray-500 mt-2"><em>${createdDate.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })} oleh ${adminName}</em></p>`;
+            }
         }
         
         modalBody.innerHTML = detailsHtml;

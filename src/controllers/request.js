@@ -1,19 +1,21 @@
 const Request = require('../models/request');
 const Booking = require('../models/booking');
 const Asset = require('../models/asset');
-const { getAllowedAssetCodes } = require('../middleware/permissions');
+const { getAllowedAssetCodes, canManageAsset } = require('../middleware/permissions');
 
 const getAllRequests = async (req, res) => {
     try {
         let query = {};
-        
-        // Apply permission filtering for admin khusus
-        if (req.user && req.user.role === 'admin' && req.user.adminType === 'khusus') {
-            const allowedCodes = getAllowedAssetCodes(req.user);
-            if (allowedCodes.length === 0) {
-                return res.json([]); // No assets to view
+
+        // Apply permission filtering for restricted admins
+        if (req.user) {
+            const { allowedCodes, unrestricted } = await getAllowedAssetCodes(req.user);
+            if (!unrestricted) {
+                if (!allowedCodes.length) {
+                    return res.json([]); // No assets to view
+                }
+                query = { assetCode: { $in: allowedCodes } };
             }
-            query = { assetCode: { $in: allowedCodes } };
         }
         
         const requests = await Request.find(query).populate('driver').sort({ createdAt: -1 });
@@ -28,6 +30,14 @@ const getRequestById = async (req, res) => {
         const { id } = req.params;
         const request = await Request.findById(id).populate('driver');
         if (!request) return res.status(404).json({ message: 'Request tidak ditemukan.' });
+
+        // Enforce asset visibility for restricted admins
+        if (req.user) {
+            const { allowedCodes, unrestricted } = await getAllowedAssetCodes(req.user);
+            if (!unrestricted && request.assetCode && !allowedCodes.includes(request.assetCode)) {
+                return res.status(403).json({ message: 'Anda tidak memiliki akses ke aset ini.' });
+            }
+        }
         let responsePayload = request;
         if (request.bookingType === 'kendaraan' && !request.assetPlate && request.assetCode) {
             const asset = await Asset.findOne({ code: request.assetCode }).select('plate');
@@ -46,6 +56,14 @@ const getRequestByCode = async (req, res) => {
         const { code } = req.params;
         const request = await Request.findOne({ requestId: code }).populate('driver');
         if (!request) return res.status(404).json({ message: 'Request tidak ditemukan.' });
+
+        // Enforce asset visibility for restricted admins
+        if (req.user) {
+            const { allowedCodes, unrestricted } = await getAllowedAssetCodes(req.user);
+            if (!unrestricted && request.assetCode && !allowedCodes.includes(request.assetCode)) {
+                return res.status(403).json({ message: 'Anda tidak memiliki akses ke aset ini.' });
+            }
+        }
         let responsePayload = request;
         if (request.bookingType === 'kendaraan' && !request.assetPlate && request.assetCode) {
             const asset = await Asset.findOne({ code: request.assetCode }).select('plate');
@@ -72,6 +90,19 @@ const createRequest = async (req, res) => {
         }
         
         const payload = await normalizeRequestPayload(bodyData);
+
+        // Restrict asset choice for admins with limited access
+        if (req.user) {
+            const { allowedCodes, unrestricted } = await getAllowedAssetCodes(req.user);
+            if (!unrestricted) {
+                if (!allowedCodes.length) {
+                    return res.status(403).json({ message: 'Anda tidak memiliki akses ke aset ini.' });
+                }
+                if (payload.assetCode && !allowedCodes.includes(payload.assetCode)) {
+                    return res.status(403).json({ message: 'Anda tidak memiliki akses ke aset ini.' });
+                }
+            }
+        }
         
         // Add letterFile if uploaded
         if (req.file) {
@@ -114,6 +145,10 @@ const approveRequest = async (req, res) => {
 
         const request = await Request.findById(id).populate('driver');
         if (!request) return res.status(404).json({ message: 'Request tidak ditemukan.' });
+
+        if (!(await canManageAsset(req.user, request.assetCode))) {
+            return res.status(403).json({ message: 'Anda tidak memiliki akses ke aset ini.' });
+        }
 
         if (request.status !== 'pending') {
             return res.status(400).json({ message: 'Hanya request pending yang bisa disetujui.' });
@@ -203,6 +238,10 @@ const rejectRequest = async (req, res) => {
         const request = await Request.findById(id);
         if (!request) return res.status(404).json({ message: 'Request tidak ditemukan.' });
 
+        if (!(await canManageAsset(req.user, request.assetCode))) {
+            return res.status(403).json({ message: 'Anda tidak memiliki akses ke aset ini.' });
+        }
+
         if (request.status !== 'pending') {
             return res.status(400).json({ message: 'Hanya request pending yang bisa ditolak.' });
         }
@@ -220,10 +259,14 @@ const rejectRequest = async (req, res) => {
 const deleteRequest = async (req, res) => {
     try {
         const { id } = req.params;
-        const deletedRequest = await Request.findByIdAndDelete(id);
-        if (!deletedRequest) {
+        const existingRequest = await Request.findById(id);
+        if (!existingRequest) {
             return res.status(404).json({ message: 'Request tidak ditemukan.' });
         }
+        if (!(await canManageAsset(req.user, existingRequest.assetCode))) {
+            return res.status(403).json({ message: 'Anda tidak memiliki akses ke aset ini.' });
+        }
+        await Request.findByIdAndDelete(id);
         res.json({ message: 'Request berhasil dihapus.' });
     } catch (err) {
         res.status(500).json({ message: err.message });
