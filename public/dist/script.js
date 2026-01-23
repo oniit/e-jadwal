@@ -325,7 +325,8 @@
             
             if (booking.submissionDate) {
                 const subDate = new Date(booking.submissionDate);
-                detailHtml += `<p class="text-sm text-gray-500 mt-2"><em>Diajukan: ${subDate.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</em></p>`;
+                const adminName = booking.approvedBy || booking.createdBy || 'Admin';
+                detailHtml += `<p class="text-sm text-gray-500 mt-2"><em>${subDate.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })} oleh ${adminName}</em></p>`;
             }
 
             elements.modalBody.innerHTML = detailHtml;

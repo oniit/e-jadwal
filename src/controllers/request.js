@@ -174,12 +174,17 @@ const approveRequest = async (req, res) => {
             if (asset?.plate) bookingData.assetPlate = asset.plate.trim();
         }
 
+        // Track who approved and created the booking
+        if (req.user && req.user.name) {
+            bookingData.createdBy = req.user.name;
+        }
+
         const booking = new Booking(bookingData);
         await booking.save();
 
         // Update request status dan simpan bookingId
         request.status = 'approved';
-        request.approvedBy = approvedBy || 'admin';
+        request.approvedBy = approvedBy || (req.user ? req.user.name : 'Admin');
         request.approvedAt = new Date();
         request.bookingId = booking.bookingId;
         await request.save();

@@ -196,6 +196,11 @@ const createBooking = async (req, res) => {
             }
         }
 
+        // Track who created this booking
+        if (req.user && req.user.name) {
+            payload.createdBy = req.user.name;
+        }
+
         const booking = new Booking(payload);
         const newBooking = await booking.save();
         res.status(201).json(newBooking);

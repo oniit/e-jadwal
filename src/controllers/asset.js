@@ -89,6 +89,7 @@ const createAsset = async (req, res) => {
             type,
             num: Number.isFinite(parsedNum) ? parsedNum : undefined,
             detail: payload.detail || '',
+            plate: payload.plate || '',
             jenis_bmn: payload.jenis_bmn || '',
             kode_bmn: payload.kode_bmn || ''
         });
@@ -122,6 +123,7 @@ const updateAsset = async (req, res) => {
         if (payload.name !== undefined) updateDoc.name = payload.name;
         if (payload.type !== undefined) updateDoc.type = String(payload.type).toLowerCase();
         if (payload.detail !== undefined) updateDoc.detail = payload.detail;
+        if (payload.plate !== undefined) updateDoc.plate = payload.plate;
         if (payload.jenis_bmn !== undefined) updateDoc.jenis_bmn = payload.jenis_bmn;
         if (payload.kode_bmn !== undefined) updateDoc.kode_bmn = payload.kode_bmn;
 

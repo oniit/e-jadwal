@@ -25,6 +25,7 @@ const bookingSchema = new Schema({
     driver: { type: Schema.Types.ObjectId, ref: 'User' },
     destination: String,
     letterFile: { type: String }, // reference ke file surat dari request
+    createdBy: { type: String }, // username admin yang membuat booking
 }, { timestamps: true });
 
 function generateBookingId() {
