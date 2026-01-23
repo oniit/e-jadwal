@@ -23,11 +23,14 @@ exports.exportAssets = async (req, res) => {
         const workbook = new ExcelJS.Workbook();
         const worksheet = workbook.addWorksheet('Assets');
 
-        // Define columns [ubah excel sesuai kebutuhan]
+        // Define columns in requested order
         worksheet.columns = [
             { header: 'Code', key: 'code', width: 15 },
             { header: 'Name', key: 'name', width: 30 },
             { header: 'Type', key: 'type', width: 15 },
+            { header: 'Kode BMN', key: 'kode_bmn', width: 18 },
+            { header: 'Jenis BMN', key: 'jenis_bmn', width: 80 },
+            { header: 'Plat', key: 'plate', width: 18 },
             { header: 'Qty', key: 'qty', width: 10 },
             { header: 'Detail', key: 'detail', width: 50 },
             { header: 'Created At', key: 'createdAt', width: 20 },
@@ -47,9 +50,12 @@ exports.exportAssets = async (req, res) => {
                 code: asset.code,
                 name: asset.name,
                 type: asset.type,
+                kode_bmn: asset.kode_bmn || '-',
+                jenis_bmn: asset.jenis_bmn || '-',
+                plate: asset.plate || '-',
                 qty: asset.num !== undefined && asset.num !== null ? asset.num : '-',
                 detail: asset.detail || '',
-                createdAt: asset.createdAt.toISOString().split('T')[0]
+                createdAt: asset.createdAt ? asset.createdAt.toISOString().split('T')[0] : '-',
             });
         });
 

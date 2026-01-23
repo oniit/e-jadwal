@@ -24,7 +24,6 @@ exports.importFromExcel = async (req, res) => {
 
         // Get raw data with header as 1st row
         const rawData = XLSX.utils.sheet_to_json(worksheet, { defval: '', header: 1 });
-        console.log('Raw data rows:', rawData.length);
 
         // First row is header, rest is data
         if (rawData.length < 2) {
