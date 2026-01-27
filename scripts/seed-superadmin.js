@@ -7,7 +7,6 @@ const seedSuperAdmin = async () => {
   try {
     await connectDB();
 
-    // Check if superadmin already exists
     const existingSuperAdmin = await User.findOne({ role: 'superadmin' });
 
     if (existingSuperAdmin) {
@@ -16,7 +15,6 @@ const seedSuperAdmin = async () => {
       process.exit(0);
     }
 
-    // Create superadmin
     const superadmin = new User({
       username: 'bmn',
       email: 'bmn@uinssc.ac.id',

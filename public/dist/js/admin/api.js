@@ -1,4 +1,3 @@
-// API Helper Functions
 const API_BASE = window.location.origin;
 
 export const api = {

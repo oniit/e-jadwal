@@ -1,8 +1,6 @@
-// Filter Management Functions
 import { ui } from './ui.js';
 import { normalizeDrivers } from '../utils/helpers.js';
 
-// Populate filter dropdown options
 export function populateFilterOptions(state) {
     const filterGedungAsset = document.getElementById('filter-gedung-asset');
     if (filterGedungAsset && state.assets && state.assets.gedung) {
@@ -40,7 +38,6 @@ export function populateFilterOptions(state) {
     }
 }
 
-// Set default filter values
 export function setDefaultFilters() {
     const today = new Date();
     const ym = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
@@ -55,7 +52,6 @@ export function setDefaultFilters() {
     if (kendaraanMonth) kendaraanMonth.value = ym;
 }
 
-// Setup filter event listeners
 export function setupFilterListeners(applyAdminFilters, applyRequestFilters) {
     const filtersGedung = document.getElementById('filters-gedung');
     const filtersKendaraan = document.getElementById('filters-kendaraan');
@@ -85,7 +81,6 @@ export function setupFilterListeners(applyAdminFilters, applyRequestFilters) {
     }
 }
 
-// Apply filters for admin tabs (gedung/kendaraan)
 export function applyAdminFilters(type, state, filterData) {
     const filterPanel = document.getElementById(`filters-${type}`);
     if (!filterPanel) {
@@ -108,7 +103,6 @@ export function applyAdminFilters(type, state, filterData) {
     ui.renderBookingList(type, bookingsToFilter);
 }
 
-// Filter booking data
 export function filterData(bookings, filters) {
     return bookings.filter(b => {
         if (b.bookingType !== filters.type) return false;
@@ -158,7 +152,6 @@ export function filterData(bookings, filters) {
     });
 }
 
-// Apply filters for request tab
 export function applyRequestFilters(state) {
     const filterPanel = document.getElementById('filters-request');
     if (!filterPanel) {
@@ -200,7 +193,6 @@ export function applyRequestFilters(state) {
     ui.renderRequestList(filtered);
 }
 
-// Setup management filters (driver & asset)
 export function setupManagementFilters(applyDriverFilters, applyMasterFilters) {
     const driverSearch = document.getElementById('filter-driver-search');
     if (driverSearch) {
@@ -217,7 +209,6 @@ export function setupManagementFilters(applyDriverFilters, applyMasterFilters) {
     }
 }
 
-// Apply driver filters
 export function applyDriverFilters(state) {
     const searchInput = document.getElementById('filter-driver-search');
     const query = searchInput ? searchInput.value.trim().toLowerCase() : '';
@@ -232,7 +223,6 @@ export function applyDriverFilters(state) {
     ui.renderDriverList(filtered);
 }
 
-// Apply master asset filters
 export function applyMasterFilters(state) {
     const typeSelect = document.getElementById('master-filter-type');
     const searchInput = document.getElementById('master-search');

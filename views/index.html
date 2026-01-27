@@ -58,6 +58,27 @@
                     <h3 class="text-2xl font-bold mb-4">Form Request Peminjaman</h3>
                     <form id="form-request" class="space-y-4"></form>
                 </div>
+                        </div>
+
+                        <!-- Modal Kode Request -->
+                        <div id="request-code-modal" class="modal-backdrop hidden">
+                            <div class="modal-content max-w-xs sm:max-w-lg mx-auto">
+                                <button class="modal-close-btn">&times;</button>
+                                <h3 class="text-2xl font-bold mb-4 text-yellow-800">Kode Request</h3>
+                                <div class="bg-yellow-50 border-2 border-yellow-400 p-4 rounded-lg mb-4">
+                                    <p class="font-semibold text-yellow-800 mb-2">Kode Request Auto-Generated:</p>
+                                    <div class="flex items-center gap-2">
+                                        <code id="request-code-text" class="flex-1 bg-white px-3 py-2 rounded border text-lg font-mono"></code>
+                                        <button type="button" id="request-code-copy-btn" class="px-3 py-2 bg-green-600 text-white rounded hover:bg-green-700">
+                                            <i class="fas fa-copy"></i> Copy
+                                        </button>
+                                    </div>
+                                    <p class="text-sm text-yellow-700 mt-2">
+                                        <i class="fas fa-exclamation-triangle"></i> Kode ini hanya ditampilkan satu kali. Pastikan untuk menyalin kode ini dan <b>memantau status peminjaman</b> melalui ikon pencarian (di sebelah kiri tombol request).
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
             </div>
         </main>
     </div>

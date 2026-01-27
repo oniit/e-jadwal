@@ -1,7 +1,5 @@
-// Authentication and Profile Management
 const API_BASE = window.location.origin;
 
-// Check authentication
 export async function checkAuth() {
     try {
         const response = await fetch(`${API_BASE}/auth/me`, {
@@ -16,10 +14,8 @@ export async function checkAuth() {
         const user = await response.json();
         displayUserName(user.username);
         
-        // Store user role globally for later use
         window.__adminUserRole = user.role;
         
-        // Show admin tab only for superadmin
         if (user.role === 'superadmin') {
             const usersTab = document.getElementById('admin-tab-users');
             if (usersTab) {
@@ -27,32 +23,27 @@ export async function checkAuth() {
             }
         }
         
-        // Hide tabs for supir - only show kendaraan
         if (user.role === 'supir') {
             const tabContainer = document.querySelector('.flex.space-x-1.p-1.rounded-xl.bg-gray-100');
             if (tabContainer) {
                 tabContainer.classList.add('hidden');
             }
             
-            // Hide all content except kendaraan
             document.querySelectorAll('[id^="admin-content-"]').forEach(div => {
                 div.classList.add('hidden');
             });
             
-            // Show only kendaraan content
             const kendaraanContent = document.getElementById('admin-content-kendaraan');
             if (kendaraanContent) {
                 kendaraanContent.classList.remove('hidden');
             }
             
-            // Hide filter panel for supir
             const filterKendaraan = document.getElementById('filters-kendaraan');
             if (filterKendaraan) {
                 filterKendaraan.classList.add('hidden');
             }
         }
         
-        // Hide tabs for admin khusus - only show request and gedung
         if (user.role === 'admin' && user.adminType === 'khusus') {
             const tabsToHide = ['admin-tab-kendaraan', 'admin-tab-driver', 'admin-tab-master', 'admin-tab-users'];
             tabsToHide.forEach(tabId => {
@@ -62,7 +53,6 @@ export async function checkAuth() {
                 }
             });
             
-            // Filter managedAssetCodes to only show gedung assets
             if (user.managedAssetCodes && Array.isArray(user.managedAssetCodes)) {
                 window.__adminKhususGedungOnly = user.managedAssetCodes.filter(code => code.startsWith('GD'));
             }
@@ -73,7 +63,6 @@ export async function checkAuth() {
     }
 }
 
-// Display user name
 function displayUserName(username) {
     const userUsernameEl = document.getElementById('admin-username');
     if (userUsernameEl) {
@@ -81,7 +70,6 @@ function displayUserName(username) {
     }
 }
 
-// Setup logout
 export function setupLogout() {
     const logoutBtn = document.getElementById('btn-logout');
     if (logoutBtn) {
@@ -100,9 +88,7 @@ export function setupLogout() {
     }
 }
 
-// Setup modal handlers
 export function setupModalHandlers() {
-    // Profile modal
     const profileBtn = document.getElementById('btn-profile');
     const profileModal = document.getElementById('modal-profile');
     
@@ -119,14 +105,13 @@ export function setupModalHandlers() {
                 }
                 
                 const data = await response.json();
-                const user = data.user || data; // Support both wrapped and unwrapped response
+                const user = data.user || data;
                 
                 document.getElementById('profile-username').value = user.username || '';
                 document.getElementById('profile-name').value = user.name || '';
                 document.getElementById('profile-email').value = user.email || '';
                 document.getElementById('profile-phone').value = user.phone || '';
                 
-                // Hide status field - only visible when superadmin edits other users
                 const statusWrapper = document.getElementById('profile-status-wrapper');
                 if (statusWrapper) {
                     statusWrapper.classList.add('hidden');
@@ -140,14 +125,12 @@ export function setupModalHandlers() {
         });
     }
     
-    // Close modals
     document.querySelectorAll('.modal-close-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
             e.target.closest('.modal-backdrop').classList.add('hidden');
         });
     });
     
-    // Close modal when clicking outside
     document.querySelectorAll('.modal-backdrop').forEach(backdrop => {
         backdrop.addEventListener('click', (e) => {
             if (e.target === backdrop) {
@@ -157,7 +140,6 @@ export function setupModalHandlers() {
     });
 }
 
-// Setup profile form
 export function setupProfileForm() {
     const profileForm = document.getElementById('form-profile');
     if (profileForm) {
@@ -174,7 +156,6 @@ export function setupProfileForm() {
             try {
                 const updateData = { name, email, phone };
                 
-                // Include isActive if status field is visible
                 if (statusField && !document.getElementById('profile-status-wrapper').classList.contains('hidden')) {
                     updateData.isActive = statusField.value === 'true';
                 }
@@ -207,7 +188,6 @@ export function setupProfileForm() {
         });
     }
     
-    // Setup admin user management form
     setupAdminUserForm();
 }
 
@@ -225,7 +205,6 @@ function setupAdminUserForm() {
             document.getElementById('user-admin-umum').checked = true;
             document.getElementById('user-managed-assets-wrapper').classList.add('hidden');
             
-            // Hide status field for new user
             const userStatusWrapper = document.getElementById('user-status-wrapper');
             if (userStatusWrapper) {
                 userStatusWrapper.classList.add('hidden');
@@ -247,14 +226,12 @@ function setupAdminUserForm() {
             managedAssetCodes: []
         };
         
-        // Include isActive if status field is visible (editing existing user)
         const userStatusWrapper = document.getElementById('user-status-wrapper');
         const userStatusField = document.getElementById('user-status');
         if (userId && userStatusWrapper && !userStatusWrapper.classList.contains('hidden') && userStatusField) {
             payload.isActive = userStatusField.value === 'true';
         }
         
-        // Collect checked assets for admin khusus
         if (payload.adminType === 'khusus') {
             const checkedAssets = document.querySelectorAll('input[name="managed-asset"]:checked');
             payload.managedAssetCodes = Array.from(checkedAssets).map(cb => cb.value);
@@ -283,7 +260,6 @@ function setupAdminUserForm() {
             
             const result = await response.json();
             
-            // Show password only for new admins
             if (!userId && result.generatedPassword) {
                 document.getElementById('generated-password-text').textContent = result.generatedPassword;
                 document.getElementById('generated-password-display').classList.remove('hidden');
@@ -302,7 +278,6 @@ function setupAdminUserForm() {
     });
 }
 
-// Load and render admins list
 export async function loadAdminsList() {
     try {
         const response = await fetch(`${API_BASE}/auth/admins`, { credentials: 'include' });
@@ -345,7 +320,6 @@ export async function loadAdminsList() {
     }
 }
 
-// Setup admin table event delegation
 export function setupAdminTableEvents() {
     const tableBody = document.getElementById('users-list-table');
     if (!tableBody) return;
@@ -374,7 +348,6 @@ export function setupAdminTableEvents() {
                 document.getElementById('user-admin-umum').checked = adminType === 'umum';
                 document.getElementById('user-admin-khusus').checked = adminType === 'khusus';
                 
-                // Show status field for editing
                 const userStatusWrapper = document.getElementById('user-status-wrapper');
                 const userStatusField = document.getElementById('user-status');
                 if (userStatusWrapper && userStatusField) {
@@ -384,7 +357,6 @@ export function setupAdminTableEvents() {
                 
                 if (adminType === 'khusus') {
                     document.getElementById('user-managed-assets-wrapper').classList.remove('hidden');
-                    // Admin khusus hanya untuk gedung
                     const assetsResponse = await fetch(`${API_BASE}/api/assets`, { credentials: 'include' });
                     const assetsData = await assetsResponse.json();
                     const assets = assetsData.gedung || [];
@@ -434,7 +406,6 @@ export function setupAdminTableEvents() {
     });
 }
 
-// Setup User Form for Admin Type
 export function setupUserAdminTypeHandlers() {
     const adminTypeRadios = document.querySelectorAll('input[name="user-admin-type"]');
     const managedAssetsWrapper = document.getElementById('user-managed-assets-wrapper');
@@ -443,11 +414,9 @@ export function setupUserAdminTypeHandlers() {
         radio.addEventListener('change', async (e) => {
             if (e.target.value === 'khusus') {
                 managedAssetsWrapper?.classList.remove('hidden');
-                // Populate assets
                 try {
                     const response = await fetch(`${API_BASE}/api/assets`, { credentials: 'include' });
                     const assetsData = await response.json();
-                    // Admin khusus hanya untuk gedung
                     const assets = assetsData.gedung || [];
                     const container = document.getElementById('user-managed-assets');
                     if (container && assets && assets.length > 0) {
@@ -468,9 +437,7 @@ export function setupUserAdminTypeHandlers() {
     });
 }
 
-// Initialize admin functionality
 export function setupAdminManagement() {
-    // Load admins list on page load if user is superadmin
     fetch(`${API_BASE}/auth/me`, { credentials: 'include' })
         .then(r => r.json())
         .then(user => {

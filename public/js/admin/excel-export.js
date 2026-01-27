@@ -1,21 +1,14 @@
-/**
- * Excel Export Handler for Admin Panel
- */
-
 export function initializeExcelExport() {
-    // Export Assets button
     const btnExportAssets = document.getElementById('btn-export-assets');
     if (btnExportAssets) {
         btnExportAssets.addEventListener('click', () => exportAssets());
     }
 
-    // Export Gedung bookings button
     const btnExportGedung = document.getElementById('btn-export-gedung');
     if (btnExportGedung) {
         btnExportGedung.addEventListener('click', () => exportBookings('gedung'));
     }
 
-    // Export Kendaraan bookings button
     const btnExportKendaraan = document.getElementById('btn-export-kendaraan');
     if (btnExportKendaraan) {
         btnExportKendaraan.addEventListener('click', () => exportBookings('kendaraan'));
@@ -24,23 +17,18 @@ export function initializeExcelExport() {
 
 async function exportAssets() {
     try {
-        // Get current filter type
         const filterType = document.getElementById('master-filter-type')?.value || 'all';
         
-        // Build query params
         const params = new URLSearchParams();
         if (filterType !== 'all') {
             params.append('type', filterType);
         }
 
-        // Show loading
         showLoadingToast('Mengexport data aset...');
 
-        // Download file
         const url = `/api/assets/export/excel${params.toString() ? '?' + params.toString() : ''}`;
         window.location.href = url;
 
-        // Show success after delay
         setTimeout(() => {
             showSuccessToast('Export berhasil! File sedang didownload...');
         }, 500);
@@ -53,10 +41,8 @@ async function exportAssets() {
 
 async function exportBookings(type) {
     try {
-        // Get current filters
         const monthFilter = document.getElementById(`filter-${type}-month`)?.value;
         
-        // Build query params
         const params = new URLSearchParams();
         params.append('type', type);
         
@@ -68,14 +54,11 @@ async function exportBookings(type) {
             params.append('endDate', endDate.toISOString().split('T')[0]);
         }
 
-        // Show loading
         showLoadingToast(`Mengexport data peminjaman ${type}...`);
 
-        // Download file
         const url = `/api/bookings/export/excel?${params.toString()}`;
         window.location.href = url;
 
-        // Show success after delay
         setTimeout(() => {
             showSuccessToast('Export berhasil! File sedang didownload...');
         }, 500);

@@ -196,7 +196,6 @@ export function setupFormSubmitHandlers() {
                 } else {
                     alert(`Supir berhasil ${id ? 'diperbarui' : 'ditambahkan'}.`);
                     document.getElementById('modal-form-driver').classList.add('hidden');
-                    // Reload data
                     window.initializeApp?.();
                 }
             } catch (error) {

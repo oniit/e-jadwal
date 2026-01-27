@@ -1,5 +1,3 @@
-// Filter UI management
-
 export const populateAssetFilter = (state, elements) => {
     if (!elements.assetFilter) return;
     const assets = state.assets[state.viewType] || [];

@@ -1,5 +1,3 @@
-// Utility functions for public calendar
-
 export const formatScheduleRange = (start, end) => {
     const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
     

@@ -1,5 +1,3 @@
-// State management for public calendar
-
 export const createState = () => ({
     assets: { gedung: [], kendaraan: [], barang: [] },
     drivers: [],

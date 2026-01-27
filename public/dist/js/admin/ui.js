@@ -1,4 +1,3 @@
-// UI Rendering Functions
 import { initTableSorting } from './table-sort.js';
 
 export const ui = {
@@ -60,7 +59,6 @@ export const ui = {
             }
         }).join('');
         
-        // Re-initialize table sorting after rendering
         initTableSorting();
     },
 

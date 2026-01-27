@@ -1,5 +1,3 @@
-// Table Sorting Functions
-
 export function initTableSorting() {
     const sortableHeaders = document.querySelectorAll('th.sortable');
     if (!sortableHeaders.length) return;

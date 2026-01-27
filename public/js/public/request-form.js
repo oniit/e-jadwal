@@ -383,10 +383,33 @@ export const handleRequestSubmit = async (e, state, elements, calendar) => {
         
         const result = await submitRequest(requestData, letterFile);
         
-        alert(`Request berhasil diajukan! ID Request: ${result.requestId}`);
-        form.reset();
-        elements.modalFormRequest.classList.add('hidden');
-        calendar.refetchEvents();
+        const codeModal = document.getElementById('request-code-modal');
+        const codeText = document.getElementById('request-code-text');
+        const copyBtn = document.getElementById('request-code-copy-btn');
+        const closeBtn = codeModal.querySelector('.modal-close-btn');
+
+        if (codeModal && codeText && copyBtn && closeBtn) {
+            codeText.textContent = result.requestId;
+            codeModal.classList.remove('hidden');
+            copyBtn.onclick = () => {
+                navigator.clipboard.writeText(result.requestId);
+                copyBtn.innerHTML = '<i class="fas fa-check"></i> Copied';
+                setTimeout(() => {
+                    copyBtn.innerHTML = '<i class="fas fa-copy"></i> Copy';
+                }, 1500);
+            };
+            closeBtn.onclick = () => {
+                codeModal.classList.add('hidden');
+                form.reset();
+                elements.modalFormRequest.classList.add('hidden');
+                calendar.refetchEvents();
+            };
+        } else {
+            alert(`Request berhasil diajukan! ID Request: ${result.requestId}`);
+            form.reset();
+            elements.modalFormRequest.classList.add('hidden');
+            calendar.refetchEvents();
+        }
     } catch (err) {
         alert(`Error: ${err.message}`);
     }

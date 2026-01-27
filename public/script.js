@@ -193,12 +193,6 @@
 
             let detailHtml = `<p>${formatScheduleRange(start, end)}</p>`;
 
-            // Show Booking ID when available (calendar events are bookings)
-            // if (booking.bookingId) {
-            //     detailHtml += `<p><strong>Booking ID:</strong> <code class="bg-gray-100 px-2 py-1 rounded text-sm">${booking.bookingId}</code></p>`;
-            // }
-
-            // Optionally show status badge when present
             if (booking.status) {
                 const statusMap = {
                     pending: { label: 'Pending', color: 'bg-yellow-100 text-yellow-800' },
@@ -320,9 +314,7 @@
             if (booking.notes) {
                 detailHtml += `<p><strong>Catatan:</strong> ${booking.notes}</p>`;
             }
-            
-            // Letter file is only visible to admin, not in public calendar
-            
+                        
             if (booking.submissionDate) {
                 const subDate = new Date(booking.submissionDate);
                 const adminName = booking.approvedBy || booking.createdBy || 'Admin';
@@ -701,11 +693,9 @@
             }
 
             try {
-                // Use FormData to support file upload
                 const formData = new FormData();
                 formData.append('data', JSON.stringify(requestData));
                 
-                // Add surat file if selected
                 const suratInput = form.querySelector('#req-surat');
                 if (suratInput && suratInput.files && suratInput.files[0]) {
                     formData.append('letterFile', suratInput.files[0]);
@@ -726,6 +716,7 @@
                 }
                 
                 alert(`Request berhasil diajukan! ID Request: ${result.requestId}`);
+                                alert(`Request berhasil diajukan!\nKode request: ${result.requestId}\n\nKode ini hanya ditampilkan satu kali. Pastikan untuk menyalin kode ini dan <b>memantau status peminjaman</b> melalui ikon pencarian (di sebelah kiri tombol request).`);
                 form.reset();
                 elements.modalFormRequest.classList.add('hidden');
                 calendar.refetchEvents();
@@ -794,15 +785,12 @@
                         const trimmedCode = code.trim();
                         let data;
                         
-                        // Check format: YYMMDD-XXXXX = Booking ID
                         if (/^\d{6}-[A-Z0-9]{5}$/i.test(trimmedCode)) {
                             data = await fetchBookingByCode(trimmedCode);
                         } 
-                        // Check format: 5 random chars (alphanumeric) = Request ID
                         else if (/^[A-Z0-9]{5}$/i.test(trimmedCode)) {
                             data = await fetchJson(`/api/public/requests/by-code/${trimmedCode}`);
                         }
-                        // Unknown format, try both
                         else {
                             try {
                                 data = await fetchBookingByCode(trimmedCode);

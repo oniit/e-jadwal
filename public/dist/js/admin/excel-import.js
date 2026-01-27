@@ -1,39 +1,29 @@
-/**
- * Excel Import Handler for Admin Panel
- */
-
 export async function initializeExcelImport() {
     const btnImport = document.getElementById('btn-import-excel');
     const fileInput = document.getElementById('file-excel-import');
 
     if (!btnImport || !fileInput) return;
 
-    // Open file dialog
     btnImport.addEventListener('click', () => {
         fileInput.click();
     });
 
-    // Handle file selection
     fileInput.addEventListener('change', async (e) => {
         const file = e.target.files[0];
         if (!file) return;
 
-        // Validate file type
         if (!file.name.endsWith('.xlsx') && !file.name.endsWith('.xls')) {
             showError('File harus berformat Excel (.xlsx atau .xls)');
             return;
         }
 
-        // Start import
         await uploadExcelFile(file);
 
-        // Reset file input
         fileInput.value = '';
     });
 }
 
 async function uploadExcelFile(file) {
-    // Show loading dialog
     const progressModal = createProgressModal();
     document.body.appendChild(progressModal);
 
@@ -55,10 +45,7 @@ async function uploadExcelFile(file) {
             return;
         }
 
-        // Show results
         showImportResults(result);
-
-        // User will reload manually setelah lihat hasil
 
     } catch (error) {
         progressModal.remove();
@@ -135,12 +122,10 @@ function showImportResults(result) {
 
     document.body.appendChild(modal);
 
-    // Close button
     modal.querySelector('.modal-close-btn').addEventListener('click', () => {
         modal.remove();
     });
 
-    // Click outside to close
     modal.addEventListener('click', (e) => {
         if (e.target === modal) modal.remove();
     });
@@ -155,5 +140,4 @@ function showError(message) {
     `;
     document.body.appendChild(alert);
 
-    // Tidak auto-hilang, harus di-close manual
 }
